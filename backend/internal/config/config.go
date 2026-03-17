@@ -71,8 +71,9 @@ type Config struct {
 	R2PublicURL       string // public base URL for serving uploaded files
 
 	// AI Services
-	ClaudeAPIKey           string
-	GoogleVisionCredentials  string // credentials JSON or API key for Google Vision
+	ClaudeAPIKey               string
+	OpenAIAPIKey               string
+	GoogleVisionCredentials    string // credentials JSON or API key for Google Vision
 	GoogleTranslateCredentials string // credentials JSON or API key for Google Translate
 
 	// Meilisearch
@@ -131,6 +132,7 @@ func Load() (*Config, error) {
 		R2Bucket:          getEnv("R2_BUCKET", "seva-uploads"),
 		R2PublicURL:       getEnv("R2_PUBLIC_URL", ""),
 		ClaudeAPIKey:                getEnv("CLAUDE_API_KEY", ""),
+		OpenAIAPIKey:                getEnv("OPENAI_API_KEY", ""),
 		GoogleVisionCredentials:     getEnv("GOOGLE_VISION_CREDENTIALS", ""),
 		GoogleTranslateCredentials:  getEnv("GOOGLE_TRANSLATE_CREDENTIALS", ""),
 		MeilisearchURL:    getEnv("MEILISEARCH_URL", ""),

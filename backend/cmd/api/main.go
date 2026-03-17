@@ -168,8 +168,11 @@ func main() {
 	if cfg.ClaudeAPIKey != "" {
 		claudeClient = aiadapter.NewClaudeClient(cfg.ClaudeAPIKey)
 		log.Info().Msg("Claude AI client configured")
+	} else if cfg.OpenAIAPIKey != "" {
+		claudeClient = aiadapter.NewOpenAIClient(cfg.OpenAIAPIKey)
+		log.Info().Msg("OpenAI client configured (as chat/vision provider)")
 	} else {
-		log.Warn().Msg("CLAUDE_API_KEY not set, AI chat will use rule-based fallback")
+		log.Warn().Msg("No AI chat provider configured, using rule-based fallback")
 	}
 
 	if cfg.GoogleVisionCredentials != "" {
