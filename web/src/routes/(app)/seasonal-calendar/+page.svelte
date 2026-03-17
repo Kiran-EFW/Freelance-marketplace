@@ -249,10 +249,13 @@
 					<Badge variant="info" size="sm">{t('crop_calendar.this_month')}</Badge>
 				{/if}
 			</h2>
-			<span class="flex items-center gap-1 text-sm {season.color}">
-				<svelte:component this={season.icon} class="h-4 w-4" />
-				{season.name}
-			</span>
+			{#if season.icon}
+				{@const SeasonIcon = season.icon}
+				<span class="flex items-center gap-1 text-sm {season.color}">
+					<SeasonIcon class="h-4 w-4" />
+					{season.name}
+				</span>
+			{/if}
 		</div>
 	</div>
 
@@ -291,7 +294,7 @@
 					<Card>
 						<div class="flex items-start gap-4">
 							<div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400">
-								<svelte:component this={CropIcon} class="h-6 w-6" />
+								<CropIcon class="h-6 w-6" />
 							</div>
 							<div class="flex-1 min-w-0">
 								<div class="flex items-center gap-2">
@@ -351,7 +354,7 @@
 					<Card>
 						<div class="flex items-center gap-4 opacity-60">
 							<div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gray-100 text-gray-400 dark:bg-gray-800 dark:text-gray-500">
-								<svelte:component this={CropIcon} class="h-5 w-5" />
+								<CropIcon class="h-5 w-5" />
 							</div>
 							<div class="flex-1 min-w-0">
 								<div class="flex items-center gap-2">

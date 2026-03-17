@@ -176,8 +176,9 @@
 				<Input label="Address" bind:value={address} icon={MapPin} />
 				<Input label="Postcode" bind:value={postcode} />
 				<div>
-					<label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Preferred Language</label>
+					<label for="preferred-language" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Preferred Language</label>
 					<select
+						id="preferred-language"
 						bind:value={language}
 						class="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
 					>
@@ -212,6 +213,9 @@
 						<button
 							type="button"
 							onclick={() => (isOnline = !isOnline)}
+							aria-label="Toggle online status"
+							role="switch"
+							aria-checked={isOnline}
 							class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors {isOnline ? 'bg-secondary-600' : 'bg-gray-300 dark:bg-gray-600'}"
 						>
 							<span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform {isOnline ? 'translate-x-6' : 'translate-x-1'}"></span>
@@ -239,6 +243,9 @@
 						<button
 							type="button"
 							onclick={pref.toggle}
+							aria-label="Toggle {pref.label}"
+							role="switch"
+							aria-checked={pref.bind()}
 							class="relative inline-flex h-6 w-11 items-center rounded-full transition-colors {pref.bind() ? 'bg-primary-600' : 'bg-gray-300 dark:bg-gray-600'}"
 						>
 							<span class="inline-block h-4 w-4 transform rounded-full bg-white transition-transform {pref.bind() ? 'translate-x-6' : 'translate-x-1'}"></span>

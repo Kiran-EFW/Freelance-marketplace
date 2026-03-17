@@ -32,8 +32,9 @@ const (
 	TypeSendSeasonalReminder = "notification:seasonal_reminder"
 	TypeGenerateSEOContent   = "content:generate_seo"
 	TypeIndexProvider        = "search:index_provider"
-	TypeCleanExpiredOTPs     = "maintenance:clean_expired_otps"
-	TypeComputeLeaderboard   = "leaderboard:compute"
+	TypeCleanExpiredOTPs       = "maintenance:clean_expired_otps"
+	TypeComputeLeaderboard     = "leaderboard:compute"
+	TypeProcessRecurringJobs   = "recurring:process_due"
 )
 
 // SendSMSPayload is the data passed to the SMS sending task.
@@ -172,6 +173,7 @@ func NewWorker(redisAddr string, deps *Deps) *Worker {
 	w.mux.HandleFunc(TypeIndexProvider, w.handleIndexProvider)
 	w.mux.HandleFunc(TypeCleanExpiredOTPs, w.handleCleanExpiredOTPs)
 	w.mux.HandleFunc(TypeComputeLeaderboard, w.handleComputeLeaderboard)
+	w.mux.HandleFunc(TypeProcessRecurringJobs, w.handleProcessRecurringJobs)
 
 	return w
 }
@@ -987,4 +989,163 @@ func NewComputeLeaderboardTask(postcode, categoryID string) (*asynq.Task, error)
 		return nil, err
 	}
 	return asynq.NewTask(TypeComputeLeaderboard, payload, asynq.Queue("low")), nil
+}
+
+// NewProcessRecurringJobsTask creates a new task that processes due recurring schedules.
+func NewProcessRecurringJobsTask() (*asynq.Task, error) {
+	return asynq.NewTask(TypeProcessRecurringJobs, nil, asynq.Queue("default")), nil
+}
+
+// handleProcessRecurringJobs queries recurring_schedules where next_occurrence <= NOW()
+// and status = 'active', creates new job records for each, and updates next_occurrence
+// based on the frequency.
+func (w *Worker) handleProcessRecurringJobs(_ context.Context, _ *asynq.Task) error {
+	log.Info().Msg("processing due recurring job schedules")
+
+	if w.deps == nil || w.deps.DB == nil {
+		log.Warn().Msg("DB not available, skipping recurring job processing")
+		return nil
+	}
+
+	ctx := context.Background()
+
+	// Fetch up to 100 due schedules at a time.
+	rows, err := w.deps.DB.Query(ctx,
+		`SELECT id, customer_id, provider_id, category_id, title, description,
+		        frequency, day_of_week, day_of_month, preferred_time, amount, currency,
+		        next_occurrence, total_occurrences, max_occurrences
+		 FROM recurring_schedules
+		 WHERE next_occurrence <= NOW()
+		   AND status = 'active'
+		 ORDER BY next_occurrence ASC
+		 LIMIT 100`,
+	)
+	if err != nil {
+		return fmt.Errorf("query due recurring schedules: %w", err)
+	}
+	defer rows.Close()
+
+	type schedule struct {
+		ID               string
+		CustomerID       string
+		ProviderID       string
+		CategoryID       string
+		Title            string
+		Description      string
+		Frequency        string
+		DayOfWeek        *int
+		DayOfMonth       *int
+		PreferredTime    string
+		Amount           float64
+		Currency         string
+		NextOccurrence   time.Time
+		TotalOccurrences int
+		MaxOccurrences   *int
+	}
+
+	var schedules []schedule
+	for rows.Next() {
+		var s schedule
+		var dayOfWeek, dayOfMonth, maxOcc *int
+		if err := rows.Scan(
+			&s.ID, &s.CustomerID, &s.ProviderID, &s.CategoryID,
+			&s.Title, &s.Description, &s.Frequency,
+			&dayOfWeek, &dayOfMonth, &s.PreferredTime,
+			&s.Amount, &s.Currency, &s.NextOccurrence,
+			&s.TotalOccurrences, &maxOcc,
+		); err != nil {
+			log.Error().Err(err).Msg("failed to scan recurring schedule row in worker")
+			continue
+		}
+		s.DayOfWeek = dayOfWeek
+		s.DayOfMonth = dayOfMonth
+		s.MaxOccurrences = maxOcc
+		schedules = append(schedules, s)
+	}
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("iterate recurring schedule rows: %w", err)
+	}
+
+	processedCount := 0
+	for _, s := range schedules {
+		// Check max_occurrences limit.
+		if s.MaxOccurrences != nil && s.TotalOccurrences >= *s.MaxOccurrences {
+			// Max reached: set status to cancelled.
+			_, _ = w.deps.DB.Exec(ctx,
+				`UPDATE recurring_schedules SET status = 'cancelled' WHERE id = $1`, s.ID)
+			log.Info().Str("schedule_id", s.ID).Msg("recurring schedule reached max occurrences, cancelled")
+			continue
+		}
+
+		// Create a new job from this schedule.
+		_, err := w.deps.DB.Exec(ctx,
+			`INSERT INTO jobs (customer_id, assigned_provider_id, category_id, description, status, quoted_price, currency, is_recurring, scheduled_at)
+			 VALUES ($1, $2, $3, $4, 'pending', $5, $6, true, $7)`,
+			s.CustomerID, s.ProviderID, s.CategoryID,
+			fmt.Sprintf("[Recurring] %s - %s", s.Title, s.Description),
+			s.Amount, s.Currency, s.NextOccurrence,
+		)
+		if err != nil {
+			log.Error().Err(err).Str("schedule_id", s.ID).Msg("failed to create job from recurring schedule")
+			continue
+		}
+
+		// Calculate the next occurrence.
+		now := time.Now().UTC()
+		var nextOccurrence time.Time
+		switch s.Frequency {
+		case "daily":
+			nextOccurrence = s.NextOccurrence.AddDate(0, 0, 1)
+		case "weekly":
+			nextOccurrence = s.NextOccurrence.AddDate(0, 0, 7)
+		case "biweekly":
+			nextOccurrence = s.NextOccurrence.AddDate(0, 0, 14)
+		case "monthly":
+			nextOccurrence = s.NextOccurrence.AddDate(0, 1, 0)
+		case "quarterly":
+			nextOccurrence = s.NextOccurrence.AddDate(0, 3, 0)
+		default:
+			nextOccurrence = s.NextOccurrence.AddDate(0, 0, 7) // fallback to weekly
+		}
+
+		// Ensure next occurrence is in the future.
+		for nextOccurrence.Before(now) {
+			switch s.Frequency {
+			case "daily":
+				nextOccurrence = nextOccurrence.AddDate(0, 0, 1)
+			case "weekly":
+				nextOccurrence = nextOccurrence.AddDate(0, 0, 7)
+			case "biweekly":
+				nextOccurrence = nextOccurrence.AddDate(0, 0, 14)
+			case "monthly":
+				nextOccurrence = nextOccurrence.AddDate(0, 1, 0)
+			case "quarterly":
+				nextOccurrence = nextOccurrence.AddDate(0, 3, 0)
+			default:
+				nextOccurrence = nextOccurrence.AddDate(0, 0, 7)
+			}
+		}
+
+		// Update schedule with new next_occurrence and increment total_occurrences.
+		_, err = w.deps.DB.Exec(ctx,
+			`UPDATE recurring_schedules
+			 SET next_occurrence = $2, last_occurrence = $3, total_occurrences = total_occurrences + 1
+			 WHERE id = $1`,
+			s.ID, nextOccurrence, now,
+		)
+		if err != nil {
+			log.Error().Err(err).Str("schedule_id", s.ID).Msg("failed to update recurring schedule next occurrence")
+			continue
+		}
+
+		processedCount++
+		log.Info().
+			Str("schedule_id", s.ID).
+			Str("title", s.Title).
+			Time("next_occurrence", nextOccurrence).
+			Msg("recurring job created and schedule updated")
+	}
+
+	log.Info().Int("processed", processedCount).Int("total_due", len(schedules)).Msg("recurring job processing complete")
+	return nil
 }

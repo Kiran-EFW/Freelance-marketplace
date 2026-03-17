@@ -87,7 +87,7 @@
 							<div class="flex items-start justify-between gap-2">
 								<div>
 									<h3 class="font-medium text-gray-900 dark:text-white">{review.providerName}</h3>
-									<a href="#" class="text-xs text-primary-600 hover:text-primary-700">{review.jobTitle}</a>
+									<span class="text-xs text-primary-600">{review.jobTitle}</span>
 								</div>
 								<span class="text-xs text-gray-500 dark:text-gray-400 shrink-0">{review.date}</span>
 							</div>
@@ -112,7 +112,7 @@
 							<div class="flex items-start justify-between gap-2">
 								<div>
 									<h3 class="font-medium text-gray-900 dark:text-white">{review.reviewerName}</h3>
-									<a href="#" class="text-xs text-primary-600 hover:text-primary-700">{review.jobTitle}</a>
+									<span class="text-xs text-primary-600">{review.jobTitle}</span>
 								</div>
 								<span class="text-xs text-gray-500 dark:text-gray-400 shrink-0">{review.date}</span>
 							</div>

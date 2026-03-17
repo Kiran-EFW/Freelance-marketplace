@@ -339,8 +339,8 @@
 
 					{#if selectedRole === 'provider'}
 						<div>
-							<label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{t('auth.skills_services')}</label>
-							<div class="space-y-3">
+							<span class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300" id="skills-label">{t('auth.skills_services')}</span>
+							<div class="space-y-3" role="group" aria-labelledby="skills-label">
 								{#each topLevelCategories as category}
 									{@const subcategories = getSubcategories(category.id)}
 									{#if subcategories.length > 0}
@@ -369,10 +369,11 @@
 						</div>
 
 						<div>
-							<label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
+							<label for="service-radius" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
 								{t('auth.service_radius_value', { radius: serviceRadius })}
 							</label>
 							<input
+								id="service-radius"
 								type="range"
 								bind:value={serviceRadius}
 								min="1"
@@ -399,8 +400,8 @@
 
 					<!-- Preferred Payment Method -->
 					<div>
-						<label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{t('auth.preferred_payment')}</label>
-						<div class="grid gap-2">
+						<span class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300" id="payment-label">{t('auth.preferred_payment')}</span>
+						<div class="grid gap-2" role="group" aria-labelledby="payment-label">
 							{#each selectedJurisdiction.paymentMethods as method}
 								{@const IconComponent = getPaymentIcon(method.icon)}
 								<button

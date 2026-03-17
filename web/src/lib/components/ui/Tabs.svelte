@@ -33,7 +33,7 @@
 </script>
 
 <div class="border-b border-gray-200 dark:border-gray-700 {className}">
-	<nav class="-mb-px flex gap-4 overflow-x-auto" role="tablist">
+	<div class="-mb-px flex gap-4 overflow-x-auto" role="tablist">
 		{#each tabs as tab}
 			<button
 				type="button"
@@ -56,5 +56,5 @@
 				{/if}
 			</button>
 		{/each}
-	</nav>
+	</div>
 </div>

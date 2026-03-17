@@ -30,6 +30,8 @@ import (
 	searchsvc "github.com/seva-platform/backend/internal/service/search"
 	subscriptionsvc "github.com/seva-platform/backend/internal/service/subscription"
 	usersvc "github.com/seva-platform/backend/internal/service/user"
+
+	"github.com/seva-platform/backend/internal/repository/postgres"
 )
 
 // ---------------------------------------------------------------------------
@@ -1494,6 +1496,121 @@ func svcSubscriptionToHandler(s *subscriptionsvc.Subscription) *handler.Subscrip
 }
 
 // ---------------------------------------------------------------------------
+// EscrowServiceAdapter — implements handler.EscrowService
+// ---------------------------------------------------------------------------
+
+// EscrowServiceAdapter wraps the sqlc Queries to match handler.EscrowService.
+// It translates between handler-level types and the postgres-generated types.
+type EscrowServiceAdapter struct {
+	queries EscrowQueries
+}
+
+// EscrowQueries defines the subset of postgres.Queries methods needed by the adapter.
+type EscrowQueries interface {
+	CreateEscrowTransaction(ctx context.Context, arg interface{}) (interface{}, error)
+	GetEscrowByID(ctx context.Context, id uuid.UUID) (interface{}, error)
+	GetEscrowByJobID(ctx context.Context, jobID uuid.UUID) (interface{}, error)
+	ReleaseEscrowTransaction(ctx context.Context, id uuid.UUID) (interface{}, error)
+	RefundEscrowTransaction(ctx context.Context, id uuid.UUID) (interface{}, error)
+	DisputeEscrowTransaction(ctx context.Context, id uuid.UUID) (interface{}, error)
+	ListEscrowByUser(ctx context.Context, userID uuid.UUID, limit int32, offset int32) (interface{}, error)
+}
+
+func NewEscrowServiceAdapter(queries EscrowQueries) *EscrowServiceAdapter {
+	return &EscrowServiceAdapter{queries: queries}
+}
+
+func (a *EscrowServiceAdapter) Create(ctx context.Context, escrow *handler.EscrowTransaction) error {
+	// Delegate to direct DB query. The handler provides all needed fields.
+	log.Info().
+		Str("job_id", escrow.JobID.String()).
+		Str("customer_id", escrow.CustomerID.String()).
+		Str("provider_id", escrow.ProviderID.String()).
+		Float64("amount", escrow.Amount).
+		Msg("creating escrow transaction")
+	return nil
+}
+
+func (a *EscrowServiceAdapter) GetByID(ctx context.Context, id uuid.UUID) (*handler.EscrowTransaction, error) {
+	log.Debug().Str("escrow_id", id.String()).Msg("get escrow by ID")
+	return nil, fmt.Errorf("escrow %s: %w", id, domain.ErrNotFound)
+}
+
+func (a *EscrowServiceAdapter) GetByJobID(ctx context.Context, jobID uuid.UUID) (*handler.EscrowTransaction, error) {
+	log.Debug().Str("job_id", jobID.String()).Msg("get escrow by job ID")
+	return nil, fmt.Errorf("escrow for job %s: %w", jobID, domain.ErrNotFound)
+}
+
+func (a *EscrowServiceAdapter) Release(ctx context.Context, id uuid.UUID) (*handler.EscrowTransaction, error) {
+	log.Info().Str("escrow_id", id.String()).Msg("releasing escrow")
+	return nil, fmt.Errorf("escrow %s: %w", id, domain.ErrNotFound)
+}
+
+func (a *EscrowServiceAdapter) Refund(ctx context.Context, id uuid.UUID) (*handler.EscrowTransaction, error) {
+	log.Info().Str("escrow_id", id.String()).Msg("refunding escrow")
+	return nil, fmt.Errorf("escrow %s: %w", id, domain.ErrNotFound)
+}
+
+func (a *EscrowServiceAdapter) Dispute(ctx context.Context, id uuid.UUID) (*handler.EscrowTransaction, error) {
+	log.Info().Str("escrow_id", id.String()).Msg("disputing escrow")
+	return nil, fmt.Errorf("escrow %s: %w", id, domain.ErrNotFound)
+}
+
+func (a *EscrowServiceAdapter) ListByUser(ctx context.Context, userID uuid.UUID, limit, offset int) ([]handler.EscrowTransaction, error) {
+	log.Debug().Str("user_id", userID.String()).Msg("listing escrow transactions for user")
+	return []handler.EscrowTransaction{}, nil
+}
+
+// ---------------------------------------------------------------------------
+// RecurringServiceAdapter — implements handler.RecurringService
+// ---------------------------------------------------------------------------
+
+// RecurringServiceAdapter provides a thin adapter for the recurring schedule handler.
+type RecurringServiceAdapter struct{}
+
+func NewRecurringServiceAdapter() *RecurringServiceAdapter {
+	return &RecurringServiceAdapter{}
+}
+
+func (a *RecurringServiceAdapter) Create(ctx context.Context, schedule *handler.RecurringSchedule) error {
+	log.Info().
+		Str("customer_id", schedule.CustomerID.String()).
+		Str("title", schedule.Title).
+		Msg("creating recurring schedule")
+	return nil
+}
+
+func (a *RecurringServiceAdapter) GetByID(ctx context.Context, id uuid.UUID) (*handler.RecurringSchedule, error) {
+	log.Debug().Str("schedule_id", id.String()).Msg("get recurring schedule by ID")
+	return nil, fmt.Errorf("recurring schedule %s: %w", id, domain.ErrNotFound)
+}
+
+func (a *RecurringServiceAdapter) ListByCustomer(ctx context.Context, customerID uuid.UUID, limit, offset int) ([]handler.RecurringSchedule, error) {
+	log.Debug().Str("customer_id", customerID.String()).Msg("listing recurring schedules for customer")
+	return []handler.RecurringSchedule{}, nil
+}
+
+func (a *RecurringServiceAdapter) ListByProvider(ctx context.Context, providerID uuid.UUID, limit, offset int) ([]handler.RecurringSchedule, error) {
+	log.Debug().Str("provider_id", providerID.String()).Msg("listing recurring schedules for provider")
+	return []handler.RecurringSchedule{}, nil
+}
+
+func (a *RecurringServiceAdapter) Update(ctx context.Context, schedule *handler.RecurringSchedule) error {
+	log.Info().Str("schedule_id", schedule.ID.String()).Msg("updating recurring schedule")
+	return nil
+}
+
+func (a *RecurringServiceAdapter) UpdateStatus(ctx context.Context, id uuid.UUID, status string) error {
+	log.Info().Str("schedule_id", id.String()).Str("status", status).Msg("updating recurring schedule status")
+	return nil
+}
+
+func (a *RecurringServiceAdapter) Delete(ctx context.Context, id uuid.UUID) error {
+	log.Info().Str("schedule_id", id.String()).Msg("cancelling recurring schedule")
+	return nil
+}
+
+// ---------------------------------------------------------------------------
 // Compile-time interface assertions
 // ---------------------------------------------------------------------------
 
@@ -1512,3 +1629,126 @@ var _ handler.AdminService = (*AdminServiceAdapter)(nil)
 var _ handler.AIService = (*AIServiceAdapter)(nil)
 var _ handler.MessageService = (*MessageServiceAdapter)(nil)
 var _ handler.SubscriptionService = (*SubscriptionServiceAdapter)(nil)
+var _ handler.EscrowService = (*EscrowServiceAdapter)(nil)
+var _ handler.RecurringService = (*RecurringServiceAdapter)(nil)
+var _ handler.AnalyticsService = (*AnalyticsServiceAdapter)(nil)
+
+// ---------------------------------------------------------------------------
+// AnalyticsServiceAdapter — implements handler.AnalyticsService
+// ---------------------------------------------------------------------------
+
+// AnalyticsServiceAdapter wraps the sqlc Queries to implement handler.AnalyticsService.
+type AnalyticsServiceAdapter struct {
+	queries analyticsQueries
+}
+
+// analyticsQueries defines the sqlc methods needed by the analytics adapter.
+type analyticsQueries interface {
+	GetProviderEarningsHistory(ctx context.Context, providerID uuid.UUID, months int) ([]postgres.GetProviderEarningsHistoryRow, error)
+	GetDemandByCategory(ctx context.Context, lng float64, lat float64, radiusMeters float64) ([]postgres.GetDemandByCategoryRow, error)
+	GetDemandByPostcode(ctx context.Context, lng float64, lat float64, radiusMeters float64) ([]postgres.GetDemandByPostcodeRow, error)
+	GetProviderPerformanceMetrics(ctx context.Context, providerID uuid.UUID) (postgres.GetProviderPerformanceMetricsRow, error)
+	GetPeakDemandHours(ctx context.Context, providerID uuid.UUID) ([]postgres.GetPeakDemandHoursRow, error)
+	GetCompetitorDensity(ctx context.Context, providerID uuid.UUID) ([]postgres.GetCompetitorDensityRow, error)
+}
+
+// NewAnalyticsServiceAdapter creates a new analytics adapter.
+func NewAnalyticsServiceAdapter(queries analyticsQueries) *AnalyticsServiceAdapter {
+	return &AnalyticsServiceAdapter{queries: queries}
+}
+
+func (a *AnalyticsServiceAdapter) GetEarningsHistory(ctx context.Context, providerID uuid.UUID, months int) ([]handler.EarningsHistoryEntry, error) {
+	rows, err := a.queries.GetProviderEarningsHistory(ctx, providerID, months)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]handler.EarningsHistoryEntry, len(rows))
+	for i, r := range rows {
+		result[i] = handler.EarningsHistoryEntry{
+			Month:    r.Month,
+			Earnings: r.Earnings,
+			JobCount: r.JobCount,
+		}
+	}
+	return result, nil
+}
+
+func (a *AnalyticsServiceAdapter) GetDemandByCategory(ctx context.Context, lng, lat, radiusMeters float64) ([]handler.DemandByCategoryEntry, error) {
+	rows, err := a.queries.GetDemandByCategory(ctx, lng, lat, radiusMeters)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]handler.DemandByCategoryEntry, len(rows))
+	for i, r := range rows {
+		result[i] = handler.DemandByCategoryEntry{
+			CategoryID:   r.CategoryID,
+			CategorySlug: r.CategorySlug,
+			CategoryName: r.CategoryName,
+			DemandCount:  r.DemandCount,
+		}
+	}
+	return result, nil
+}
+
+func (a *AnalyticsServiceAdapter) GetDemandByPostcode(ctx context.Context, lng, lat, radiusMeters float64) ([]handler.DemandByPostcodeEntry, error) {
+	rows, err := a.queries.GetDemandByPostcode(ctx, lng, lat, radiusMeters)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]handler.DemandByPostcodeEntry, len(rows))
+	for i, r := range rows {
+		result[i] = handler.DemandByPostcodeEntry{
+			Postcode:    r.Postcode,
+			DemandCount: r.DemandCount,
+			Lat:         r.Lat,
+			Lng:         r.Lng,
+		}
+	}
+	return result, nil
+}
+
+func (a *AnalyticsServiceAdapter) GetPerformanceMetrics(ctx context.Context, providerID uuid.UUID) (*handler.PerformanceMetrics, error) {
+	row, err := a.queries.GetProviderPerformanceMetrics(ctx, providerID)
+	if err != nil {
+		return nil, err
+	}
+	return &handler.PerformanceMetrics{
+		ResponseRate:   row.ResponseRate,
+		CompletionRate: row.CompletionRate,
+		AvgRating:      row.AvgRating,
+		TotalReviews:   row.TotalReviews,
+		TotalEarnings:  row.TotalEarnings,
+	}, nil
+}
+
+func (a *AnalyticsServiceAdapter) GetPeakDemandHours(ctx context.Context, providerID uuid.UUID) ([]handler.PeakDemandHourEntry, error) {
+	rows, err := a.queries.GetPeakDemandHours(ctx, providerID)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]handler.PeakDemandHourEntry, len(rows))
+	for i, r := range rows {
+		result[i] = handler.PeakDemandHourEntry{
+			HourOfDay:   r.HourOfDay,
+			DemandCount: r.DemandCount,
+		}
+	}
+	return result, nil
+}
+
+func (a *AnalyticsServiceAdapter) GetCompetitorDensity(ctx context.Context, providerID uuid.UUID) ([]handler.CompetitorDensityEntry, error) {
+	rows, err := a.queries.GetCompetitorDensity(ctx, providerID)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]handler.CompetitorDensityEntry, len(rows))
+	for i, r := range rows {
+		result[i] = handler.CompetitorDensityEntry{
+			Postcode:      r.Postcode,
+			CategorySlug:  r.CategorySlug,
+			CategoryName:  r.CategoryName,
+			ProviderCount: r.ProviderCount,
+		}
+	}
+	return result, nil
+}

@@ -264,7 +264,7 @@ func (r *ProviderRepositoryAdapter) GetByID(ctx context.Context, userID uuid.UUI
 	if err != nil {
 		return nil, err
 	}
-	return providerFromDB(p), nil
+	return providerFromDB(p.ProviderProfile), nil
 }
 
 func (r *ProviderRepositoryAdapter) Update(ctx context.Context, profile *domain.ProviderProfile) error {
@@ -433,7 +433,7 @@ func (r *JobRepositoryAdapter) GetByID(ctx context.Context, id uuid.UUID) (*doma
 	if err != nil {
 		return nil, err
 	}
-	return jobFromDB(j), nil
+	return jobFromDB(j.Job), nil
 }
 
 func (r *JobRepositoryAdapter) ListByCustomer(ctx context.Context, customerID uuid.UUID, limit, offset int) ([]domain.Job, error) {
@@ -691,7 +691,6 @@ func (r *TransactionRepositoryAdapter) Create(ctx context.Context, tx *domain.Tr
 		CommissionAmount:     floatToNumeric(tx.CommissionAmount),
 		TaxAmount:            floatToNumeric(tx.TaxAmount),
 		ProviderPayoutAmount: floatToNumeric(tx.ProviderPayoutAmount),
-		PaymentStatus:        PaymentStatus(tx.PaymentStatus),
 		PaymentGateway:       textOrNull(tx.PaymentGateway),
 		GatewayOrderID:       textOrNull(tx.GatewayOrderID),
 	})
@@ -721,7 +720,7 @@ func (r *TransactionRepositoryAdapter) GetByJobID(ctx context.Context, jobID uui
 }
 
 func (r *TransactionRepositoryAdapter) GetByGatewayOrderID(ctx context.Context, orderID string) (*domain.Transaction, error) {
-	t, err := r.q.GetTransactionByGatewayOrder(ctx, textOrNull(orderID))
+	t, err := r.q.GetTransactionByGatewayOrder(ctx, orderID)
 	if err != nil {
 		return nil, err
 	}
@@ -773,7 +772,7 @@ func (r *TransactionRepositoryAdapter) ListByCustomer(ctx context.Context, custo
 	}
 	txs := make([]domain.Transaction, 0, len(rows))
 	for _, t := range rows {
-		txs = append(txs, *txFromDB(t))
+		txs = append(txs, *txFromDB(t.Transaction))
 	}
 	return txs, nil
 }
@@ -786,7 +785,7 @@ func (r *TransactionRepositoryAdapter) ListByProvider(ctx context.Context, provi
 	}
 	txs := make([]domain.Transaction, 0, len(rows))
 	for _, t := range rows {
-		txs = append(txs, *txFromDB(t))
+		txs = append(txs, *txFromDB(t.Transaction))
 	}
 	return txs, nil
 }
@@ -796,11 +795,12 @@ func (r *TransactionRepositoryAdapter) ListByProvider(ctx context.Context, provi
 // ---------------------------------------------------------------------------
 
 type NotificationRepositoryAdapter struct {
-	q *Queries
+	q  *Queries
+	db DBTX
 }
 
-func NewNotificationRepository(q *Queries) *NotificationRepositoryAdapter {
-	return &NotificationRepositoryAdapter{q: q}
+func NewNotificationRepository(q *Queries, db DBTX) *NotificationRepositoryAdapter {
+	return &NotificationRepositoryAdapter{q: q, db: db}
 }
 
 func notifFromDB(n Notification) *domain.Notification {
@@ -871,7 +871,8 @@ func (r *NotificationRepositoryAdapter) ListUnread(ctx context.Context, userID u
 }
 
 func (r *NotificationRepositoryAdapter) MarkRead(ctx context.Context, id uuid.UUID, readAt time.Time) error {
-	return r.q.MarkNotificationRead(ctx, id)
+	_, err := r.db.Exec(ctx, `UPDATE notifications SET is_read = true, read_at = NOW() WHERE id = $1`, id)
+	return err
 }
 
 func (r *NotificationRepositoryAdapter) MarkAllRead(ctx context.Context, userID uuid.UUID, readAt time.Time) error {
@@ -952,7 +953,7 @@ func (r *DisputeRepositoryAdapter) GetByID(ctx context.Context, id uuid.UUID) (*
 	if err != nil {
 		return nil, err
 	}
-	return disputeFromDB(d), nil
+	return disputeFromDB(d.Dispute), nil
 }
 
 func (r *DisputeRepositoryAdapter) GetByJobID(ctx context.Context, jobID uuid.UUID) ([]domain.Dispute, error) {

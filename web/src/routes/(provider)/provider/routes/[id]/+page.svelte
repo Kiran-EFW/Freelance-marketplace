@@ -47,7 +47,7 @@
 		loading = true;
 		error = '';
 		try {
-			const res = await api.routes.get(routeId);
+			const res = await api.routes.get(routeId!);
 			const data = res.data as any;
 			route = {
 				id: data.id,
@@ -141,7 +141,7 @@
 		optimizedStops = [];
 		try {
 			const stopIds = newStops.map((s) => s.id);
-			await api.routes.reorderStops(routeId, stopIds);
+			await api.routes.reorderStops(routeId!, stopIds);
 		} catch (err) {
 			// Revert on failure silently - next fetch will correct
 		}
@@ -149,7 +149,7 @@
 
 	async function removeStop(id: string) {
 		try {
-			await api.routes.removeStop(routeId, id);
+			await api.routes.removeStop(routeId!, id);
 			stops = stops.filter((s) => s.id !== id);
 			stops.forEach((s, i) => (s.order = i + 1));
 			showOptimized = false;
@@ -163,7 +163,7 @@
 	async function optimizeRoute() {
 		isOptimizing = true;
 		try {
-			const res = await api.routes.optimize(routeId);
+			const res = await api.routes.optimize(routeId!);
 			const data = res.data as any;
 			if (data.stops && Array.isArray(data.stops)) {
 				optimizedStops = data.stops.map((s: any, i: number) => ({
@@ -193,7 +193,7 @@
 		if (optimizedStops.length > 0) {
 			try {
 				const stopIds = optimizedStops.map((s) => s.id);
-				await api.routes.reorderStops(routeId, stopIds);
+				await api.routes.reorderStops(routeId!, stopIds);
 				stops = [...optimizedStops];
 				optimizedStops = [];
 				showOptimized = false;
@@ -206,7 +206,7 @@
 	async function addStop() {
 		if (!newStopCustomer.trim() || !newStopAddress.trim()) return;
 		try {
-			const res = await api.routes.addStop(routeId, {
+			const res = await api.routes.addStop(routeId!, {
 				customer_name: newStopCustomer.trim(),
 				address: newStopAddress.trim(),
 				postcode: newStopPostcode.trim(),
@@ -236,6 +236,8 @@
 			toastError(err instanceof Error ? err.message : 'Failed to add stop');
 		}
 	}
+
+	let editable = $state(true);
 
 	const totalDuration = $derived(stops.reduce((sum, s) => sum + s.duration, 0));
 	const totalTrees = $derived(stops.reduce((sum, s) => sum + s.treeCount, 0));

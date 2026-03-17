@@ -12,6 +12,9 @@
 		name?: string;
 		required?: boolean;
 		maxlength?: number;
+		min?: number;
+		max?: number;
+		step?: number;
 		class?: string;
 		oninput?: (e: Event) => void;
 		onchange?: (e: Event) => void;
@@ -30,6 +33,9 @@
 		name = '',
 		required = false,
 		maxlength,
+		min,
+		max,
+		step,
 		class: className = '',
 		oninput,
 		onchange
@@ -64,6 +70,9 @@
 			{disabled}
 			{required}
 			{maxlength}
+			{min}
+			{max}
+			{step}
 			bind:value
 			{oninput}
 			{onchange}

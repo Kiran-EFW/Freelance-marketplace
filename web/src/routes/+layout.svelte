@@ -1,8 +1,9 @@
 <script lang="ts">
 	import '../app.css';
-	import { Bell, Menu, X, ChevronDown, User, LayoutDashboard, Settings, LogOut, Briefcase, Search, Award, MapPin, MessageSquare, Leaf } from 'lucide-svelte';
+	import { Bell, Menu, X, ChevronDown, User, LayoutDashboard, Settings, LogOut, Briefcase, Search, Award, MapPin, MessageSquare, Leaf, Building2, Shield, CalendarClock } from 'lucide-svelte';
 	import { messages as messagesApi } from '$lib/api/client';
 	import { subscribe as authSubscribe, logout, type AuthState } from '$lib/stores/auth';
+	import { wsManager, type ConnectionStatus, type WSNewMessagePayload } from '$lib/api/websocket';
 	import Avatar from '$lib/components/ui/Avatar.svelte';
 	import Toast from '$lib/components/ui/Toast.svelte';
 	import LanguageSwitcher from '$lib/components/ui/LanguageSwitcher.svelte';
@@ -21,6 +22,7 @@
 	let mobileMenuOpen = $state(false);
 	let userDropdownOpen = $state(false);
 	let unreadMessageCount = $state(0);
+	let wsStatus = $state<ConnectionStatus>('disconnected');
 
 	$effect(() => {
 		const unsub = authSubscribe((state) => {
@@ -35,13 +37,36 @@
 		}
 	});
 
+	// Initialize WebSocket when authenticated
 	$effect(() => {
 		if (authState.user) {
+			// Connect WebSocket
+			wsManager.connect();
+
+			// Subscribe to connection status
+			const unsubStatus = wsManager.subscribeStatus((status) => {
+				wsStatus = status;
+			});
+
+			// Subscribe to new messages for unread count updates
+			const unsubNewMsg = wsManager.on<WSNewMessagePayload>('new_message', () => {
+				// Increment unread count when a new message arrives
+				unreadMessageCount += 1;
+			});
+
+			// Fetch initial unread count and poll as fallback
 			fetchUnreadMessageCount();
 			const interval = setInterval(fetchUnreadMessageCount, 30000);
-			return () => clearInterval(interval);
+
+			return () => {
+				clearInterval(interval);
+				unsubStatus();
+				unsubNewMsg();
+				wsManager.disconnect();
+			};
 		} else {
 			unreadMessageCount = 0;
+			wsManager.disconnect();
 		}
 	});
 
@@ -99,6 +124,12 @@
 					<Leaf class="h-4 w-4" />
 					{t('nav.seasonal_calendar')}
 				</a>
+				{#if isLoggedIn}
+					<a href="/recurring" class="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
+						<CalendarClock class="h-4 w-4" />
+						{t('recurring.title')}
+					</a>
+				{/if}
 				{#if isLoggedIn && isProviderUser}
 					<a href="/provider/dashboard" class="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
 						{t('nav.provider_hub')}
@@ -115,6 +146,12 @@
 			<div class="hidden items-center gap-3 md:flex">
 				<LanguageSwitcher />
 				{#if isLoggedIn}
+					<!-- Connection status dot -->
+					<span
+						class="h-2 w-2 rounded-full {wsStatus === 'connected' ? 'bg-green-500' : wsStatus === 'reconnecting' || wsStatus === 'connecting' ? 'bg-yellow-500 animate-pulse' : 'bg-gray-400'}"
+						title={wsStatus === 'connected' ? 'Real-time connected' : wsStatus === 'reconnecting' ? 'Reconnecting...' : 'Offline'}
+					></span>
+
 					<!-- Messages -->
 					<a href="/messages" class="relative rounded-lg p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800">
 						<MessageSquare class="h-5 w-5" />
@@ -175,6 +212,18 @@
 								<a href="/points" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700" onclick={() => (userDropdownOpen = false)}>
 									<Award class="h-4 w-4" />
 									{t('nav.points')}
+								</a>
+								<a href="/organization" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700" onclick={() => (userDropdownOpen = false)}>
+									<Building2 class="h-4 w-4" />
+									{t('nav.organization')}
+								</a>
+								<a href="/safety" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700" onclick={() => (userDropdownOpen = false)}>
+									<Shield class="h-4 w-4" />
+									{t('nav.safety')}
+								</a>
+								<a href="/recurring" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700" onclick={() => (userDropdownOpen = false)}>
+									<CalendarClock class="h-4 w-4" />
+									{t('recurring.title')}
 								</a>
 								<div class="border-t border-gray-100 dark:border-gray-700">
 									<button
@@ -268,9 +317,21 @@
 						<a href="/points" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
 							{t('nav.points')}
 						</a>
+						<a href="/organization" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
+							{t('nav.organization')}
+						</a>
+						<a href="/safety" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
+							{t('nav.safety')}
+						</a>
+						<a href="/recurring" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
+							{t('recurring.title')}
+						</a>
 						{#if isProviderUser}
 							<a href="/provider/dashboard" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
 								{t('nav.provider_hub')}
+							</a>
+							<a href="/provider/analytics" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
+								{t('analytics.title')}
 							</a>
 						{/if}
 						{#if isAdminUser}
@@ -337,9 +398,9 @@
 				<div>
 					<h3 class="text-sm font-semibold text-gray-900 dark:text-white">{t('footer.support')}</h3>
 					<ul class="mt-3 space-y-2 text-sm text-gray-500 dark:text-gray-400">
-						<li><a href="#" class="hover:text-primary-600">{t('footer.help_center')}</a></li>
-						<li><a href="#" class="hover:text-primary-600">{t('footer.privacy_policy')}</a></li>
-						<li><a href="#" class="hover:text-primary-600">{t('footer.terms')}</a></li>
+						<li><a href="/help" class="hover:text-primary-600">{t('footer.help_center')}</a></li>
+						<li><a href="/privacy" class="hover:text-primary-600">{t('footer.privacy_policy')}</a></li>
+						<li><a href="/terms" class="hover:text-primary-600">{t('footer.terms')}</a></li>
 					</ul>
 				</div>
 			</div>

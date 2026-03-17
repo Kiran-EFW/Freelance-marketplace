@@ -264,8 +264,9 @@
 			Please provide a reason for rejecting {selectedApplication?.name}'s application. This will be shared with the applicant.
 		</p>
 		<div>
-			<label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Reason</label>
+			<label for="reject-reason" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Reason</label>
 			<textarea
+				id="reject-reason"
 				bind:value={rejectReason}
 				rows="3"
 				placeholder="Explain why the application is being rejected..."

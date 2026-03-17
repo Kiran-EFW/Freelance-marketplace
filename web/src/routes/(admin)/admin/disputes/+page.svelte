@@ -314,8 +314,9 @@
 			Assign a mediator to dispute <strong>{selectedDispute?.id}</strong>.
 		</p>
 		<div>
-			<label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Select Mediator</label>
+			<label for="select-mediator" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Select Mediator</label>
 			<select
+				id="select-mediator"
 				bind:value={selectedMediator}
 				class="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
 			>

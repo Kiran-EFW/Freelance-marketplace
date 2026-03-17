@@ -152,6 +152,24 @@ const (
 	PricingModelNegotiable PricingModel = "negotiable"
 )
 
+type RecurrenceFrequency string
+
+const (
+	RecurrenceFrequencyDaily     RecurrenceFrequency = "daily"
+	RecurrenceFrequencyWeekly    RecurrenceFrequency = "weekly"
+	RecurrenceFrequencyBiweekly  RecurrenceFrequency = "biweekly"
+	RecurrenceFrequencyMonthly   RecurrenceFrequency = "monthly"
+	RecurrenceFrequencyQuarterly RecurrenceFrequency = "quarterly"
+)
+
+type ScheduleStatus string
+
+const (
+	ScheduleStatusActive    ScheduleStatus = "active"
+	ScheduleStatusPaused    ScheduleStatus = "paused"
+	ScheduleStatusCancelled ScheduleStatus = "cancelled"
+)
+
 // --- Table models ---
 
 type Jurisdiction struct {

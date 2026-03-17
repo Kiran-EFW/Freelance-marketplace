@@ -18,7 +18,7 @@ var validTransitions = map[domain.JobStatus][]domain.JobStatus{
 	domain.JobStatusAccepted:   {domain.JobStatusInProgress, domain.JobStatusCancelled},
 	domain.JobStatusInProgress: {domain.JobStatusCompleted, domain.JobStatusDisputed, domain.JobStatusCancelled},
 	domain.JobStatusCompleted:  {domain.JobStatusDisputed},
-	domain.JobStatusDisputed:   {domain.JobStatusResolved},
+	domain.JobStatusDisputed:   {JobStatusResolved},
 	domain.JobStatusCancelled:  {},
 }
 

@@ -142,8 +142,9 @@
 	<div class="space-y-4">
 		<Input label="Route Name" bind:value={newRouteName} required placeholder="e.g., Koramangala Route" />
 		<div>
-			<label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
+			<label for="route-description" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
 			<textarea
+				id="route-description"
 				bind:value={newRouteDesc}
 				rows="2"
 				placeholder="What type of service is this route for?"
@@ -151,8 +152,9 @@
 			></textarea>
 		</div>
 		<div>
-			<label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Recurrence</label>
+			<label for="route-recurrence" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Recurrence</label>
 			<select
+				id="route-recurrence"
 				bind:value={newRouteRecurrence}
 				class="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
 			>

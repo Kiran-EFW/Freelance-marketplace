@@ -25,8 +25,8 @@
 	onMount(async () => {
 		try {
 			const [jobRes, quotesRes] = await Promise.all([
-				api.jobs.get(jobId),
-				api.quotes.listForJob(jobId).catch(() => ({ data: [] }))
+				api.jobs.get(jobId!),
+				api.quotes.listForJob(jobId!).catch(() => ({ data: [] }))
 			]);
 			job = jobRes.data;
 			jobQuotes = quotesRes.data || [];
@@ -39,10 +39,10 @@
 
 	async function acceptQuote(quoteId: string) {
 		try {
-			await api.quotes.accept(jobId, quoteId);
+			await api.quotes.accept(jobId!, quoteId);
 			toastSuccess('Quote accepted!');
 			// Refresh job data
-			const jobRes = await api.jobs.get(jobId);
+			const jobRes = await api.jobs.get(jobId!);
 			job = jobRes.data;
 		} catch (err) {
 			toastError(err instanceof Error ? err.message : 'Failed to accept quote');
@@ -51,7 +51,7 @@
 
 	async function rejectQuote(quoteId: string) {
 		try {
-			await api.quotes.reject(jobId, quoteId);
+			await api.quotes.reject(jobId!, quoteId);
 			toastSuccess('Quote declined');
 			jobQuotes = jobQuotes.filter(q => q.id !== quoteId);
 		} catch (err) {
@@ -61,9 +61,9 @@
 
 	async function cancelJob() {
 		try {
-			await api.jobs.cancel(jobId);
+			await api.jobs.cancel(jobId!);
 			toastSuccess('Job cancelled');
-			const jobRes = await api.jobs.get(jobId);
+			const jobRes = await api.jobs.get(jobId!);
 			job = jobRes.data;
 		} catch (err) {
 			toastError(err instanceof Error ? err.message : 'Failed to cancel job');
@@ -74,7 +74,7 @@
 		if (!reviewRating) return;
 		submittingReview = true;
 		try {
-			await api.reviews.create(jobId, {
+			await api.reviews.create(jobId!, {
 				rating: reviewRating,
 				comment: reviewComment
 			});
@@ -259,8 +259,10 @@
 			<h2 class="text-lg font-semibold text-gray-900 dark:text-white">Leave a Review</h2>
 			<div class="mt-4 space-y-4">
 				<div>
-					<label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Rating</label>
-					<StarRating bind:rating={reviewRating} editable size="lg" />
+					<span class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300" id="rating-label">Rating</span>
+					<div role="group" aria-labelledby="rating-label">
+						<StarRating bind:rating={reviewRating} editable size="lg" />
+					</div>
 				</div>
 				<div>
 					<label for="review" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Comment</label>

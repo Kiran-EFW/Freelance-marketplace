@@ -836,6 +836,319 @@ export const messages = {
 };
 
 // ---------------------------------------------------------------------------
+// Analytics API (Provider)
+// ---------------------------------------------------------------------------
+
+export const analytics = {
+	getEarnings(params?: {
+		period?: '7d' | '30d' | '90d' | '12m';
+	}): Promise<ApiResponse<{ history: { month: string; earnings: number; job_count: number }[]; period: number }>> {
+		return request('/analytics/earnings', { params });
+	},
+
+	getDemand(params: {
+		lat: number;
+		lng: number;
+		radius?: number;
+	}): Promise<ApiResponse<{
+		postcodes: { postcode: string; demand_count: number; lat: number; lng: number }[];
+		categories: { category_id: string; category_slug: string; category_name: string; demand_count: number }[];
+		center: { lat: number; lng: number };
+		radius_km: number;
+	}>> {
+		return request('/analytics/demand', { params });
+	},
+
+	getPerformance(): Promise<ApiResponse<{
+		response_rate: number;
+		completion_rate: number;
+		avg_rating: number;
+		total_reviews: number;
+		total_earnings: number;
+	}>> {
+		return request('/analytics/performance');
+	},
+
+	getPeakHours(): Promise<ApiResponse<{ hour_of_day: number; demand_count: number }[]>> {
+		return request('/analytics/peak-hours');
+	},
+
+	getCompetitors(): Promise<ApiResponse<{
+		postcode: string;
+		category_slug: string;
+		category_name: string;
+		provider_count: number;
+	}[]>> {
+		return request('/analytics/competitors');
+	},
+
+	getInsights(): Promise<ApiResponse<{
+		type: string;
+		title: string;
+		message: string;
+		impact: string;
+	}[]>> {
+		return request('/analytics/insights');
+	}
+};
+
+// ---------------------------------------------------------------------------
+// SMS/IVR Admin API
+// ---------------------------------------------------------------------------
+
+export const smsIvr = {
+	getStats(): Promise<ApiResponse<{
+		total_sms: number;
+		sms_today: number;
+		total_calls: number;
+		calls_today: number;
+		avg_call_duration: number;
+		success_rate: number;
+		active_conversations: number;
+		top_category: string;
+	}>> {
+		return request('/admin/sms-ivr/stats');
+	},
+
+	getSMSConversations(params?: {
+		page?: number;
+		per_page?: number;
+	}): Promise<PaginatedResponse<{
+		phone: string;
+		last_message: string;
+		last_reply: string;
+		timestamp: string;
+		state: string;
+		message_count: number;
+	}>> {
+		return request('/admin/sms-ivr/sms', { params });
+	},
+
+	getCallLogs(params?: {
+		page?: number;
+		per_page?: number;
+	}): Promise<PaginatedResponse<{
+		call_sid: string;
+		from: string;
+		duration: string;
+		status: string;
+		language: string;
+		category: string;
+		timestamp: string;
+	}>> {
+		return request('/admin/sms-ivr/calls', { params });
+	},
+
+	getConfig(): Promise<ApiResponse<{
+		sms_enabled: boolean;
+		ivr_enabled: boolean;
+		default_language: string;
+		session_ttl_minutes: number;
+		twilio_configured: boolean;
+	}>> {
+		return request('/admin/sms-ivr/config');
+	},
+
+	updateConfig(data: {
+		sms_enabled?: boolean;
+		ivr_enabled?: boolean;
+		default_language?: string;
+		session_ttl_minutes?: number;
+	}): Promise<ApiResponse<{ message: string }>> {
+		return request('/admin/sms-ivr/config', { method: 'PATCH', body: data });
+	}
+};
+
+// ---------------------------------------------------------------------------
+// Organizations (B2B) API
+// ---------------------------------------------------------------------------
+
+export const organizations = {
+	create(data: {
+		name: string;
+		type: string;
+		address?: string;
+		postcode?: string;
+		city?: string;
+		state?: string;
+		country?: string;
+		contact_phone?: string;
+		contact_email?: string;
+	}): Promise<ApiResponse<any>> {
+		return request('/organizations', { method: 'POST', body: data });
+	},
+
+	get(id: string): Promise<ApiResponse<any>> {
+		return request(`/organizations/${id}`);
+	},
+
+	getStats(id: string): Promise<ApiResponse<any>> {
+		return request(`/organizations/${id}/stats`);
+	},
+
+	addMember(orgId: string, data: { user_id: string; role?: string }): Promise<ApiResponse<any>> {
+		return request(`/organizations/${orgId}/members`, { method: 'POST', body: data });
+	},
+
+	listMembers(orgId: string, params?: { page?: number; limit?: number }): Promise<ApiResponse<any>> {
+		return request(`/organizations/${orgId}/members`, { params });
+	},
+
+	removeMember(orgId: string, userId: string): Promise<ApiResponse<any>> {
+		return request(`/organizations/${orgId}/members/${userId}`, { method: 'DELETE' });
+	},
+
+	createServiceRequest(orgId: string, data: {
+		category_id: string;
+		title: string;
+		description?: string;
+		priority?: string;
+		scheduled_at?: string;
+		notes?: string;
+	}): Promise<ApiResponse<any>> {
+		return request(`/organizations/${orgId}/requests`, { method: 'POST', body: data });
+	},
+
+	listServiceRequests(orgId: string, params?: {
+		page?: number;
+		limit?: number;
+		status?: string;
+		priority?: string;
+	}): Promise<ApiResponse<any>> {
+		return request(`/organizations/${orgId}/requests`, { params });
+	},
+
+	assignProvider(orgId: string, requestId: string, providerId: string): Promise<ApiResponse<any>> {
+		return request(`/organizations/${orgId}/requests/${requestId}/assign`, {
+			method: 'PUT',
+			body: { provider_id: providerId }
+		});
+	},
+
+	updateRequestStatus(orgId: string, requestId: string, status: string): Promise<ApiResponse<any>> {
+		return request(`/organizations/${orgId}/requests/${requestId}/status`, {
+			method: 'PUT',
+			body: { status }
+		});
+	}
+};
+
+// ---------------------------------------------------------------------------
+// Safety API
+// ---------------------------------------------------------------------------
+
+export const safety = {
+	triggerSOS(data: {
+		latitude: number;
+		longitude: number;
+		job_id?: string;
+		notes?: string;
+	}): Promise<ApiResponse<any>> {
+		return request('/safety/sos', { method: 'POST', body: data });
+	},
+
+	resolveSOS(id: string, data: { status?: string; notes?: string }): Promise<ApiResponse<any>> {
+		return request(`/safety/sos/${id}/resolve`, { method: 'PUT', body: data });
+	},
+
+	listAlerts(params?: { page?: number; limit?: number }): Promise<ApiResponse<any>> {
+		return request('/safety/sos', { params });
+	},
+
+	shareLocation(data: {
+		job_id: string;
+		latitude: number;
+		longitude: number;
+		accuracy?: number;
+	}): Promise<ApiResponse<any>> {
+		return request('/safety/location', { method: 'POST', body: data });
+	},
+
+	getProviderLocation(jobId: string, params?: { page?: number; limit?: number }): Promise<ApiResponse<any>> {
+		return request(`/safety/location/${jobId}`, { params });
+	},
+
+	listEmergencyContacts(): Promise<ApiResponse<any>> {
+		return request('/safety/contacts');
+	},
+
+	addEmergencyContact(data: {
+		name: string;
+		phone: string;
+		relationship?: string;
+	}): Promise<ApiResponse<any>> {
+		return request('/safety/contacts', { method: 'POST', body: data });
+	},
+
+	removeEmergencyContact(id: string): Promise<ApiResponse<any>> {
+		return request(`/safety/contacts/${id}`, { method: 'DELETE' });
+	},
+
+	generateVerificationOTP(jobId: string): Promise<ApiResponse<any>> {
+		return request(`/safety/verify/${jobId}`);
+	}
+};
+
+// ---------------------------------------------------------------------------
+// Recurring Schedules API
+// ---------------------------------------------------------------------------
+
+export const recurring = {
+	list(params?: {
+		page?: number;
+		limit?: number;
+		role?: 'customer' | 'provider';
+	}): Promise<ApiResponse<any[]>> {
+		return request('/recurring', { params });
+	},
+
+	get(id: string): Promise<ApiResponse<any>> {
+		return request(`/recurring/${id}`);
+	},
+
+	create(data: {
+		provider_id: string;
+		category_id: string;
+		title: string;
+		description?: string;
+		frequency: 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'quarterly';
+		day_of_week?: number;
+		day_of_month?: number;
+		preferred_time?: string;
+		amount: number;
+		currency?: string;
+		max_occurrences?: number;
+	}): Promise<ApiResponse<any>> {
+		return request('/recurring', { method: 'POST', body: data });
+	},
+
+	update(id: string, data: {
+		title?: string;
+		description?: string;
+		frequency?: string;
+		day_of_week?: number;
+		day_of_month?: number;
+		preferred_time?: string;
+		amount?: number;
+		max_occurrences?: number;
+	}): Promise<ApiResponse<any>> {
+		return request(`/recurring/${id}`, { method: 'PUT', body: data });
+	},
+
+	pause(id: string): Promise<ApiResponse<any>> {
+		return request(`/recurring/${id}/pause`, { method: 'PUT' });
+	},
+
+	resume(id: string): Promise<ApiResponse<any>> {
+		return request(`/recurring/${id}/resume`, { method: 'PUT' });
+	},
+
+	cancel(id: string): Promise<void> {
+		return request(`/recurring/${id}`, { method: 'DELETE' });
+	}
+};
+
+// ---------------------------------------------------------------------------
 // SEO API
 // ---------------------------------------------------------------------------
 
@@ -867,6 +1180,11 @@ const api = {
 	ai,
 	seo,
 	messages,
+	analytics,
+	smsIvr,
+	organizations,
+	safety,
+	recurring,
 	setTokens,
 	clearTokens,
 	getAccessToken

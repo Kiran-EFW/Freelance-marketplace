@@ -179,11 +179,11 @@
 			{:else}
 				<!-- OTP Verification Step -->
 				<form onsubmit={verifyOtp} class="mt-6">
-					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+					<span class="block text-sm font-medium text-gray-700 dark:text-gray-300" id="otp-label">
 						{t('auth.verification_code')}
-					</label>
+					</span>
 					<!-- OTP Digit Inputs -->
-					<div class="mt-2 flex justify-center gap-2" onpaste={handleOtpPaste}>
+					<div class="mt-2 flex justify-center gap-2" role="group" aria-labelledby="otp-label" onpaste={handleOtpPaste}>
 						{#each otpDigits as digit, i}
 							<input
 								bind:this={otpInputs[i]}

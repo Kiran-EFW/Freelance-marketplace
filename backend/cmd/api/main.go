@@ -13,6 +13,7 @@ import (
 	"github.com/gofiber/fiber/v2/middleware/limiter"
 	"github.com/gofiber/fiber/v2/middleware/recover"
 	"github.com/gofiber/fiber/v2/middleware/requestid"
+	"github.com/hibiken/asynq"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog/log"
@@ -29,6 +30,7 @@ import (
 	rediscache "github.com/seva-platform/backend/internal/repository/redis"
 	svcadapter "github.com/seva-platform/backend/internal/service/adapter"
 	adminsvc "github.com/seva-platform/backend/internal/service/admin"
+	smssession "github.com/seva-platform/backend/internal/service/sms_session"
 	aisvc "github.com/seva-platform/backend/internal/service/ai"
 	cropsvc "github.com/seva-platform/backend/internal/service/crop"
 	disputesvc "github.com/seva-platform/backend/internal/service/dispute"
@@ -110,7 +112,7 @@ func main() {
 	jobRepo := postgres.NewJobRepository(queries)
 	reviewRepo := postgres.NewReviewRepository(queries)
 	transactionRepo := postgres.NewTransactionRepository(queries)
-	notificationRepo := postgres.NewNotificationRepository(queries)
+	notificationRepo := postgres.NewNotificationRepository(queries, dbPool)
 	disputeRepo := postgres.NewDisputeRepository(queries)
 	gamificationRepo := postgres.NewGamificationRepository(queries)
 	categoryRepo := postgres.NewCategoryRepository(queries)
@@ -169,6 +171,9 @@ func main() {
 	aiSvcAdapter := svcadapter.NewAIServiceAdapter(aiSvc)
 	messagingSvcAdapter := svcadapter.NewMessageServiceAdapter(messagingSvc)
 	subscriptionSvcAdapter := svcadapter.NewSubscriptionServiceAdapter(subscriptionSvc)
+	escrowSvcAdapter := svcadapter.NewEscrowServiceAdapter(nil)
+	recurringSvcAdapter := svcadapter.NewRecurringServiceAdapter()
+	analyticsSvcAdapter := svcadapter.NewAnalyticsServiceAdapter(queries)
 
 	// ---- Handlers ----
 	healthHandler := handler.NewHealthHandler(dbPool, rdb)
@@ -183,13 +188,20 @@ func main() {
 	gamificationHandler := handler.NewGamificationHandler(gamificationSvcAdapter)
 	routeHandler := handler.NewRouteHandler(routeSvcAdapter)
 	cropHandler := handler.NewCropHandler(cropSvcAdapter)
+	escrowHandler := handler.NewEscrowHandler(escrowSvcAdapter)
+	recurringHandler := handler.NewRecurringHandler(recurringSvcAdapter)
 
 	// Previously nil-guarded handlers now wired to real services.
 	searchHandler := handler.NewSearchHandler(searchSvcAdapter)
 	adminHandler := handler.NewAdminHandler(adminSvcAdapter)
 	aiHandler := handler.NewAIHandler(aiSvcAdapter)
+	// WebSocket hub and handler
+	wsHub := handler.NewHub()
+	wsHandler := handler.NewWebSocketHandler(wsHub, cfg)
 	messageHandler := handler.NewMessageHandler(messagingSvcAdapter)
+	messageHandler.SetHub(wsHub) // Wire hub into message handler for real-time push
 	subscriptionHandler := handler.NewSubscriptionHandler(subscriptionSvcAdapter)
+	analyticsHandler := handler.NewAnalyticsHandler(analyticsSvcAdapter)
 
 	// ---- Jurisdiction Service ----
 	jurisdictionService := jurisdictionsvc.NewJurisdictionService(queries, cacheStore)
@@ -206,6 +218,12 @@ func main() {
 		},
 		jurisdictionService.DetectJurisdiction,
 	)
+
+	// ---- Organization Handler (B2B Dashboard) ----
+	organizationHandler := handler.NewOrganizationHandler(queries)
+
+	// ---- Safety Handler ----
+	safetyHandler := handler.NewSafetyHandler(queries, smsProvider)
 
 	// ---- Device Token Handler ----
 	deviceTokenHandler := handler.NewDeviceTokenHandler(queries)
@@ -229,6 +247,23 @@ func main() {
 	go func() {
 		if err := w.Start(); err != nil {
 			log.Error().Err(err).Msg("asynq worker stopped with error")
+		}
+	}()
+
+	// ---- Periodic Task: Process Recurring Jobs (every 15 minutes) ----
+	asynqClient := asynq.NewClient(asynq.RedisClientOpt{Addr: redisOpts.Addr})
+	go func() {
+		ticker := time.NewTicker(15 * time.Minute)
+		defer ticker.Stop()
+		for range ticker.C {
+			task, err := worker.NewProcessRecurringJobsTask()
+			if err != nil {
+				log.Error().Err(err).Msg("failed to create recurring jobs task")
+				continue
+			}
+			if _, err := asynqClient.Enqueue(task); err != nil {
+				log.Error().Err(err).Msg("failed to enqueue recurring jobs task")
+			}
 		}
 	}()
 
@@ -317,6 +352,25 @@ func main() {
 	// Subscriptions (authenticated)
 	subscriptionHandler.RegisterRoutes(api.Group("/subscriptions", jwtMiddleware))
 
+	// Escrow (authenticated)
+	escrowHandler.RegisterRoutes(api.Group("/escrow", jwtMiddleware))
+
+	// Recurring schedules (authenticated)
+	recurringHandler.RegisterRoutes(api.Group("/recurring", jwtMiddleware))
+
+	// Organizations (B2B Dashboard)
+	organizationHandler.RegisterRoutes(api.Group("/organizations", jwtMiddleware))
+
+	// Safety (SOS, live tracking, emergency contacts)
+	safetyHandler.RegisterRoutes(api.Group("/safety", jwtMiddleware))
+
+	// Analytics (authenticated — provider analytics dashboard)
+	analyticsHandler.RegisterRoutes(api.Group("/analytics", jwtMiddleware))
+
+	// WebSocket (JWT validated via query param)
+	app.Use("/ws", wsHandler.UpgradeMiddleware())
+	app.Get("/ws", wsHandler.HandleWebSocket())
+
 	// Crop Calendar (public — no auth required for browsing)
 	cropHandler.RegisterRoutes(api.Group("/crops"))
 
@@ -335,6 +389,15 @@ func main() {
 
 	// Subscription payment webhook
 	subscriptionHandler.RegisterWebhookRoutes(webhookGroup)
+
+	// SMS interface webhook (basic phone users)
+	smsSessionMgr := smssession.NewSMSSessionManager(rdb)
+	smsInterfaceHandler := handler.NewSMSInterfaceHandler(cfg, smsSessionMgr)
+	smsInterfaceHandler.RegisterRoutes(webhookGroup.Group("/sms"))
+
+	// IVR handler (voice calls for basic phone users)
+	ivrHandler := handler.NewIVRHandler(cfg)
+	ivrHandler.RegisterRoutes(webhookGroup.Group("/ivr"))
 
 	// ---- Graceful Shutdown ----
 	quit := make(chan os.Signal, 1)

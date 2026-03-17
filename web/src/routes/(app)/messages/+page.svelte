@@ -3,12 +3,14 @@
 	import { t } from '$lib/i18n/index.svelte';
 	import { messages as messagesApi } from '$lib/api/client';
 	import { subscribe as authSubscribe, type AuthState } from '$lib/stores/auth';
+	import { wsManager, type WSNewMessagePayload } from '$lib/api/websocket';
 	import Avatar from '$lib/components/ui/Avatar.svelte';
 	import type { Conversation } from '$lib/types';
 
 	let conversations = $state<Conversation[]>([]);
 	let loading = $state(true);
 	let error = $state<string | null>(null);
+	let onlineUsers = $state<Set<string>>(new Set());
 	let authState = $state<AuthState>({
 		user: null,
 		loading: false,
@@ -27,6 +29,35 @@
 	$effect(() => {
 		if (authState.user) {
 			loadConversations();
+
+			// Subscribe to WebSocket new_message events to update conversation list
+			const unsubNewMsg = wsManager.on<WSNewMessagePayload>('new_message', (payload) => {
+				// Update conversation list when a new message arrives
+				const convIdx = conversations.findIndex((c) => c.id === payload.conversation_id);
+				if (convIdx >= 0) {
+					const conv = { ...conversations[convIdx] };
+					conv.last_message_at = payload.created_at;
+					conv.last_message_preview = payload.content.length > 100
+						? payload.content.substring(0, 100) + '...'
+						: payload.content;
+					conv.unread_count = (conv.unread_count || 0) + 1;
+					// Move to top
+					conversations = [conv, ...conversations.filter((_, i) => i !== convIdx)];
+				} else {
+					// New conversation, reload
+					loadConversations();
+				}
+			});
+
+			// Subscribe to online status
+			const unsubOnline = wsManager.subscribeOnline((users) => {
+				onlineUsers = users;
+			});
+
+			return () => {
+				unsubNewMsg();
+				unsubOnline();
+			};
 		}
 	});
 
@@ -47,6 +78,11 @@
 	function getOtherParticipantId(conv: Conversation): string {
 		if (!authState.user) return '';
 		return conv.participant_1 === authState.user.id ? conv.participant_2 : conv.participant_1;
+	}
+
+	function isOtherUserOnline(conv: Conversation): boolean {
+		const otherId = getOtherParticipantId(conv);
+		return onlineUsers.has(otherId);
 	}
 
 	function formatTime(dateStr?: string): string {
@@ -126,6 +162,9 @@
 					>
 						<div class="relative flex-shrink-0">
 							<Avatar name={conv.other_user?.name || otherId.substring(0, 8)} size="md" />
+							{#if isOtherUserOnline(conv)}
+								<span class="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white bg-green-500 dark:border-gray-800"></span>
+							{/if}
 						</div>
 						<div class="min-w-0 flex-1">
 							<div class="flex items-center justify-between">

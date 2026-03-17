@@ -148,8 +148,21 @@ func (s *AdminService) ListUsers(ctx context.Context, userType *string, status *
 
 	// Count total matching users.
 	countQuery := `SELECT COUNT(*) FROM users WHERE 1=1`
+	countArgs := []interface{}{}
 	if userType != nil && *userType != "" {
-		countQuery += fmt.Sprintf(" AND type = $1")
+		countQuery += " AND type = $1"
+		countArgs = append(countArgs, *userType)
+	}
+	if status != nil && *status != "" {
+		if *status == "active" {
+			countQuery += " AND is_active = true"
+		} else if *status == "suspended" || *status == "inactive" {
+			countQuery += " AND is_active = false"
+		}
+	}
+	var totalCount int64
+	if err := s.db.QueryRow(ctx, countQuery, countArgs...).Scan(&totalCount); err != nil {
+		log.Warn().Err(err).Msg("failed to count users")
 	}
 
 	query += " ORDER BY created_at DESC"
@@ -185,7 +198,7 @@ func (s *AdminService) ListUsers(ctx context.Context, userType *string, status *
 		users = append(users, u)
 	}
 
-	return users, len(users), nil
+	return users, int(totalCount), nil
 }
 
 // ListPendingKYC returns provider profiles with pending verification status.

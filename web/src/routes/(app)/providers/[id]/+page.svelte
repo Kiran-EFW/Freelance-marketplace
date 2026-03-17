@@ -25,8 +25,8 @@
 	onMount(async () => {
 		try {
 			const [providerRes, reviewsRes] = await Promise.all([
-				api.providers.get(providerId),
-				api.reviews.listForProvider(providerId, { per_page: 10 }).catch(() => ({ data: [] }))
+				api.providers.get(providerId!),
+				api.reviews.listForProvider(providerId!, { per_page: 10 }).catch(() => ({ data: [] }))
 			]);
 
 			const p = providerRes.data;

@@ -7,6 +7,7 @@
 		Shield,
 		BarChart3,
 		AlertTriangle,
+		MessageSquare,
 		Menu,
 		X
 	} from 'lucide-svelte';
@@ -19,7 +20,8 @@
 		{ href: '/admin/users', label: 'Users', icon: Users },
 		{ href: '/admin/kyc', label: 'KYC Verification', icon: Shield },
 		{ href: '/admin/disputes', label: 'Disputes', icon: AlertTriangle },
-		{ href: '/admin/analytics', label: 'Analytics', icon: BarChart3 }
+		{ href: '/admin/analytics', label: 'Analytics', icon: BarChart3 },
+		{ href: '/admin/sms-ivr', label: 'SMS/IVR', icon: MessageSquare }
 	];
 
 	function isActive(href: string): boolean {
@@ -46,7 +48,7 @@
 	<!-- Mobile sidebar overlay -->
 	{#if mobileMenuOpen}
 		<div class="fixed inset-0 z-40 lg:hidden">
-			<button onclick={() => (mobileMenuOpen = false)} class="absolute inset-0 bg-black/50"></button>
+			<button onclick={() => (mobileMenuOpen = false)} aria-label="Close sidebar menu" class="absolute inset-0 bg-black/50"></button>
 			<aside class="absolute left-0 top-0 h-full w-64 bg-gray-50 dark:bg-gray-900">
 				<div class="p-6">
 					<h2 class="text-sm font-semibold uppercase tracking-wider text-gray-500 dark:text-gray-400">

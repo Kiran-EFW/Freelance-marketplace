@@ -58,11 +58,17 @@ type MessageService interface {
 // MessageHandler handles messaging endpoints.
 type MessageHandler struct {
 	service MessageService
+	hub     *Hub
 }
 
 // NewMessageHandler creates a new MessageHandler.
 func NewMessageHandler(svc MessageService) *MessageHandler {
 	return &MessageHandler{service: svc}
+}
+
+// SetHub sets the WebSocket hub for real-time message delivery.
+func (h *MessageHandler) SetHub(hub *Hub) {
+	h.hub = hub
 }
 
 // RegisterRoutes mounts messaging routes on the given Fiber router group.
@@ -410,6 +416,22 @@ func (h *MessageHandler) SendMessage(c *fiber.Ctx) error {
 		log.Warn().Err(err).Str("conversation_id", conversationID.String()).Msg("failed to update conversation last message")
 	}
 
+	// Push via WebSocket to the recipient for real-time delivery
+	if h.hub != nil {
+		recipientID := conversation.Participant1
+		if recipientID == userID {
+			recipientID = conversation.Participant2
+		}
+		h.hub.BroadcastNewMessage(recipientID, WSNewMessagePayload{
+			ID:             created.ID,
+			ConversationID: created.ConversationID,
+			SenderID:       created.SenderID,
+			Content:        created.Content,
+			MessageType:    created.MessageType,
+			CreatedAt:      created.CreatedAt,
+		})
+	}
+
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"data": created,
 	})
@@ -468,6 +490,19 @@ func (h *MessageHandler) MarkRead(c *fiber.Ctx) error {
 				"code":    "INTERNAL_ERROR",
 				"message": "failed to mark messages as read",
 			},
+		})
+	}
+
+	// Notify the other participant that their messages were read
+	if h.hub != nil {
+		otherID := conversation.Participant1
+		if otherID == userID {
+			otherID = conversation.Participant2
+		}
+		h.hub.BroadcastMessageRead(otherID, WSMessageReadPayload{
+			ConversationID: conversationID,
+			ReaderID:       userID,
+			ReadAt:         time.Now().UTC(),
 		})
 	}
 

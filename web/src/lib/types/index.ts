@@ -57,10 +57,19 @@ export interface User {
 	avatar_url?: string;
 	is_verified: boolean;
 	is_active: boolean;
+	address?: string;
 	postcode?: string;
+	language?: string;
 	preferred_language?: string;
 	points_balance?: number;
 	level?: UserLevel;
+	notification_preferences?: {
+		job_updates?: boolean;
+		quotes?: boolean;
+		marketing?: boolean;
+		sms?: boolean;
+	};
+	provider_profile?: ProviderProfile;
 	created_at: string;
 	updated_at: string;
 }
@@ -87,6 +96,9 @@ export interface ProviderProfile {
 	portfolio_images: string[];
 	certifications: Certification[];
 	total_jobs_completed?: number;
+	completed_jobs_count?: number;
+	languages?: string[];
+	working_hours?: string;
 	created_at: string;
 	updated_at: string;
 }
@@ -144,6 +156,7 @@ export interface Job {
 	accepted_quote_id?: string;
 	assigned_provider_id?: string;
 	assigned_provider?: ProviderProfile;
+	provider?: ProviderProfile;
 	created_at: string;
 	updated_at: string;
 }
@@ -326,6 +339,7 @@ export interface Route {
 	name: string;
 	description?: string;
 	stops: RouteStop[];
+	next_visit?: string;
 	next_visit_date?: string;
 	recurrence?: 'daily' | 'weekly' | 'biweekly' | 'monthly';
 	is_active: boolean;
@@ -401,6 +415,16 @@ export interface AdminStats {
 	pending_kyc: number;
 	user_growth_rate: number;
 	job_growth_rate: number;
+	users_growth?: number;
+	providers_growth?: number;
+	jobs_growth?: number;
+	revenue?: number;
+	revenue_growth?: number;
+	active_jobs?: number;
+	completion_rate?: number;
+	revenue_chart?: { month?: string; label?: string; amount?: number; revenue?: number }[];
+	revenue_trend?: { month?: string; label?: string; amount?: number; revenue?: number }[];
+	recent_activity?: { id: string; type: string; action?: string; title?: string; detail?: string; description?: string; time?: string; created_at?: string }[];
 }
 
 export interface KYCApplication {
@@ -438,6 +462,10 @@ export interface ProviderDashboard {
 export interface ProviderEarnings {
 	total: number;
 	pending: number;
+	total_earnings?: number;
+	pending_payout?: number;
+	chart_data?: { label?: string; date?: string; period?: string; amount?: number; earnings?: number }[];
+	breakdown?: { label?: string; date?: string; period?: string; amount?: number; earnings?: number }[];
 	daily: { date: string; amount: number }[];
 	weekly: { week: string; amount: number }[];
 	monthly: { month: string; amount: number }[];
@@ -529,6 +557,12 @@ export interface PaginatedResponse<T> {
 	page: number;
 	per_page: number;
 	total_pages: number;
+	meta?: {
+		total?: number;
+		total_pages?: number;
+		page?: number;
+		per_page?: number;
+	};
 }
 
 export interface ApiError {
@@ -604,11 +638,138 @@ export interface CreateRouteRequest {
 }
 
 export interface AddRouteStopRequest {
-	customer_id: string;
+	customer_id?: string;
+	customer_name?: string;
 	address: string;
 	postcode: string;
 	latitude?: number;
 	longitude?: number;
 	notes?: string;
 	tree_count?: number;
+}
+
+// --- Organization (B2B) ---
+
+export type OrgType = 'housing_society' | 'company' | 'institution';
+export type OrgStatus = 'active' | 'suspended' | 'pending';
+export type OrgRole = 'admin' | 'manager' | 'member';
+export type MemberStatus = 'active' | 'inactive' | 'invited';
+export type RequestPriority = 'low' | 'medium' | 'high' | 'urgent';
+export type ServiceRequestStatus = 'pending' | 'assigned' | 'in_progress' | 'completed' | 'cancelled';
+
+export interface Organization {
+	id: string;
+	name: string;
+	type: OrgType;
+	address?: string;
+	postcode?: string;
+	city?: string;
+	state?: string;
+	country: string;
+	contact_phone?: string;
+	contact_email?: string;
+	logo_url?: string;
+	settings?: Record<string, unknown>;
+	status: OrgStatus;
+	created_at: string;
+	updated_at: string;
+}
+
+export interface OrganizationMember {
+	id: string;
+	org_id: string;
+	user_id: string;
+	role: OrgRole;
+	joined_at: string;
+	status: MemberStatus;
+	user_name?: string;
+	user_phone?: string;
+	user_email?: string;
+}
+
+export interface OrganizationServiceRequest {
+	id: string;
+	org_id: string;
+	requested_by: string;
+	category_id: string;
+	title: string;
+	description?: string;
+	priority: RequestPriority;
+	status: ServiceRequestStatus;
+	assigned_provider_id?: string;
+	scheduled_at?: string;
+	completed_at?: string;
+	notes?: string;
+	created_at: string;
+	updated_at: string;
+	requester_name?: string;
+	category_slug?: string;
+	category_name?: string;
+	provider_name?: string;
+}
+
+export interface OrgStats {
+	total_requests: number;
+	pending_requests: number;
+	completed_requests: number;
+	in_progress_requests: number;
+	assigned_requests: number;
+	active_members: number;
+}
+
+export interface CreateOrganizationRequest {
+	name: string;
+	type: OrgType;
+	address?: string;
+	postcode?: string;
+	city?: string;
+	state?: string;
+	country?: string;
+	contact_phone?: string;
+	contact_email?: string;
+}
+
+export interface CreateServiceRequestPayload {
+	category_id: string;
+	title: string;
+	description?: string;
+	priority?: RequestPriority;
+	scheduled_at?: string;
+	notes?: string;
+}
+
+// --- Safety ---
+
+export type SOSAlertStatus = 'active' | 'responded' | 'resolved' | 'false_alarm';
+
+export interface SOSAlert {
+	id: string;
+	user_id: string;
+	job_id?: string;
+	latitude: number;
+	longitude: number;
+	status: SOSAlertStatus;
+	emergency_contacts_notified: boolean;
+	notes?: string;
+	created_at: string;
+	resolved_at?: string;
+}
+
+export interface LocationShare {
+	id: string;
+	job_id: string;
+	user_id: string;
+	latitude: number;
+	longitude: number;
+	accuracy?: number;
+	shared_at: string;
+}
+
+export interface EmergencyContact {
+	id: string;
+	user_id: string;
+	name: string;
+	phone: string;
+	relationship?: string;
+	created_at: string;
 }

@@ -34,6 +34,7 @@
 	let open = $state(false);
 	let searchQuery = $state('');
 	let dropdownEl: HTMLDivElement | undefined = $state();
+	const selectId = `select-${Math.random().toString(36).slice(2, 9)}`;
 
 	const filteredOptions = $derived(
 		searchable && searchQuery
@@ -67,12 +68,13 @@
 
 <div class="relative {className}" bind:this={dropdownEl}>
 	{#if label}
-		<label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{label}</label>
+		<span id="{selectId}-label" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{label}</span>
 	{/if}
 
 	<button
 		type="button"
 		{disabled}
+		aria-labelledby={label ? `${selectId}-label` : undefined}
 		onclick={() => { if (!disabled) open = !open; }}
 		class="flex w-full items-center justify-between rounded-lg border px-4 py-2.5 text-left text-sm transition-colors
 			{error

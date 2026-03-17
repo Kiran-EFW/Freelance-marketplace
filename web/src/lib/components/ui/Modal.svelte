@@ -49,10 +49,13 @@
 
 {#if open}
 	<!-- Backdrop -->
+	<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 	<div
 		class="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4"
 		onclick={handleBackdrop}
+		onkeydown={(e) => { if (e.key === 'Escape') close(); }}
 		role="dialog"
+		tabindex="-1"
 		aria-modal="true"
 		aria-labelledby={title ? 'modal-title' : undefined}
 	>
