@@ -163,7 +163,22 @@
 		"gardening_landscaping": "Trädgårdsarbete & Landskapsarkitektur",
 		"tree_cutting_pruning": "Trädfällning & Beskärning",
 		"pest_spraying": "Skadedjursbekämpning",
-		"irrigation_well_services": "Bevattning & Brunnstjänster"
+		"irrigation_well_services": "Bevattning & Brunnstjänster",
+		"coconut_tree_climbing": "Kokospalmklättring & Skörd",
+		"tractor_farm_equipment": "Traktor & Jordbruksmaskiner",
+		"ploughing_land_prep": "Plöjning & Markberedning",
+		"crop_harvesting": "Skörd & Tröskning",
+		"seed_sapling_supply": "Frö & Plantor",
+		"fertilizer_manure": "Gödsel & Naturgödsel",
+		"soil_testing": "Jordanalys",
+		"borewell_drilling": "Brunnsborrning",
+		"farm_fencing": "Gårdsstängsel",
+		"organic_farming": "Ekologiskt jordbruk rådgivning",
+		"dairy_animal_husbandry": "Mjölkproduktion & Djurhållning",
+		"aquaculture_fisheries": "Vattenbruk & Fiske",
+		"farm_labor": "Lantarbetare",
+		"crop_transport": "Skördetransport & Lagring",
+		"agri_consulting": "Jordbruksrådgivning"
 	},
 	"location": {
 		"detecting": "Söker din plats...",

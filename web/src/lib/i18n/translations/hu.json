@@ -163,7 +163,22 @@
 		"gardening_landscaping": "Kertészet és Tájépítészet",
 		"tree_cutting_pruning": "Fakivágás és Metszés",
 		"pest_spraying": "Kártevő-irtás",
-		"irrigation_well_services": "Öntözés és Kútszolgáltatás"
+		"irrigation_well_services": "Öntözés és Kútszolgáltatás",
+		"coconut_tree_climbing": "Kókuszpálma mászás és Betakarítás",
+		"tractor_farm_equipment": "Traktor és Mezőgazdasági gépek",
+		"ploughing_land_prep": "Szántás és Talaj-előkészítés",
+		"crop_harvesting": "Betakarítás és Cséplés",
+		"seed_sapling_supply": "Vetőmag és Csemeték",
+		"fertilizer_manure": "Műtrágya és Istállótrágya",
+		"soil_testing": "Talajvizsgálat",
+		"borewell_drilling": "Kútfúrás",
+		"farm_fencing": "Tanyakerítés",
+		"organic_farming": "Biogazdálkodási tanácsadás",
+		"dairy_animal_husbandry": "Tejgazdaság és Állattenyésztés",
+		"aquaculture_fisheries": "Akvakultúra és Halászat",
+		"farm_labor": "Mezőgazdasági munkások",
+		"crop_transport": "Terményszállítás és Tárolás",
+		"agri_consulting": "Mezőgazdasági tanácsadás"
 	},
 	"location": {
 		"detecting": "Tartózkodási hely meghatározása...",

@@ -163,7 +163,22 @@
 		"gardening_landscaping": "बागान आरो ल्यान्डस्केपिं",
 		"tree_cutting_pruning": "बिफां खनना आरो सानना",
 		"pest_spraying": "रोगो गारलांनाय",
-		"irrigation_well_services": "दैसा आरो बिलि हेफाजत"
+		"irrigation_well_services": "दैसा आरो बिलि हेफाजत",
+		"coconut_tree_climbing": "नारिकेल बिफां गोग्गो जानाय आरो रायजानाय",
+		"tractor_farm_equipment": "ट्रेक्टर आरो हालाम सोनाब",
+		"ploughing_land_prep": "हालोनाय आरो हा दैथाय",
+		"crop_harvesting": "बार बायनाय आरो गावनाय",
+		"seed_sapling_supply": "बिबार आरो गोजौ जथायनाय",
+		"fertilizer_manure": "सार आरो गोबोर",
+		"soil_testing": "हा सानगिरि आरो बिजिरनाय",
+		"borewell_drilling": "बरवेल खननाय",
+		"farm_fencing": "हालाम बेराय",
+		"organic_farming": "जैबिक हालाम सुफुंनाय",
+		"dairy_animal_husbandry": "दुध आरो दौजौ रायजानाय",
+		"aquaculture_fisheries": "ना रायजानाय आरो दै हालाम",
+		"farm_labor": "हालाम गामि",
+		"crop_transport": "बार लाबानाय आरो थांनाय",
+		"agri_consulting": "हालाम सुफुंनाय"
 	},
 	"location": {
 		"detecting": "नोंनि जायगा नागिर दं...",

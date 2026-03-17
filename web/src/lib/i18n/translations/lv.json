@@ -163,7 +163,22 @@
 		"gardening_landscaping": "Dārzkopība un Ainavu veidošana",
 		"tree_cutting_pruning": "Koku ciršana un Atzarošana",
 		"pest_spraying": "Kaitēkļu apkarošana",
-		"irrigation_well_services": "Apūdeņošana un Aku pakalpojumi"
+		"irrigation_well_services": "Apūdeņošana un Aku pakalpojumi",
+		"coconut_tree_climbing": "Kāpšana kokospalma un Ražas novākšana",
+		"tractor_farm_equipment": "Traktors un Lauksaimniecības tehnika",
+		"ploughing_land_prep": "Aršana un Augsnes sagatavošana",
+		"crop_harvesting": "Ražas novākšana un Kulšana",
+		"seed_sapling_supply": "Sēklas un Stādi",
+		"fertilizer_manure": "Mēslojums un Kūtsmēsli",
+		"soil_testing": "Augsnes analīze",
+		"borewell_drilling": "Urbšana akā",
+		"farm_fencing": "Saimniecības žogs",
+		"organic_farming": "Bioloģiskās lauksaimniecības konsultācijas",
+		"dairy_animal_husbandry": "Piensaimniecība un Lopkopība",
+		"aquaculture_fisheries": "Akvakultūra un Zivsaimniecība",
+		"farm_labor": "Lauku strādnieki",
+		"crop_transport": "Ražas pārvadāšana un Uzglabāšana",
+		"agri_consulting": "Lauksaimniecības konsultācijas"
 	},
 	"location": {
 		"detecting": "Nosaka jūsu atrašanās vietu...",

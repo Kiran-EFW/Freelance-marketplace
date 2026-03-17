@@ -163,7 +163,22 @@
 		"gardening_landscaping": "Tuinieren & Landschapsarchitectuur",
 		"tree_cutting_pruning": "Bomen kappen & Snoeien",
 		"pest_spraying": "Ongediertebestrijding",
-		"irrigation_well_services": "Irrigatie & Putdiensten"
+		"irrigation_well_services": "Irrigatie & Putdiensten",
+		"coconut_tree_climbing": "Kokospalm klimmen & Oogst",
+		"tractor_farm_equipment": "Tractor & Landbouwmachines",
+		"ploughing_land_prep": "Ploegen & Grondvoorbereiding",
+		"crop_harvesting": "Oogst & Dorsen",
+		"seed_sapling_supply": "Zaad & Zaailingen",
+		"fertilizer_manure": "Kunstmest & Mest",
+		"soil_testing": "Bodemonderzoek & Analyse",
+		"borewell_drilling": "Putboring",
+		"farm_fencing": "Boerderijhek",
+		"organic_farming": "Biologische landbouw advies",
+		"dairy_animal_husbandry": "Melkveehouderij & Veeteelt",
+		"aquaculture_fisheries": "Aquacultuur & Visserij",
+		"farm_labor": "Landarbeiders",
+		"crop_transport": "Oogsttransport & Opslag",
+		"agri_consulting": "Landbouwadvies"
 	},
 	"location": {
 		"detecting": "Je locatie wordt bepaald...",

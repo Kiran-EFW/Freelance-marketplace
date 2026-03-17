@@ -163,7 +163,22 @@
 		"gardening_landscaping": "ತೋಟಗಾರಿಕೆ ಮತ್ತು ಭೂದೃಶ್ಯ",
 		"tree_cutting_pruning": "ಮರ ಕಡಿಯುವುದು ಮತ್ತು ಕತ್ತರಿಸುವುದು",
 		"pest_spraying": "ಕೀಟ ಸಿಂಪಡಣೆ",
-		"irrigation_well_services": "ನೀರಾವರಿ ಮತ್ತು ಬಾವಿ ಸೇವೆಗಳು"
+		"irrigation_well_services": "ನೀರಾವರಿ ಮತ್ತು ಬಾವಿ ಸೇವೆಗಳು",
+		"coconut_tree_climbing": "ತೆಂಗಿನ ಮರ ಹತ್ತುವುದು ಮತ್ತು ಕೊಯ್ಲು",
+		"tractor_farm_equipment": "ಟ್ರ್ಯಾಕ್ಟರ್ ಮತ್ತು ಕೃಷಿ ಉಪಕರಣಗಳು",
+		"ploughing_land_prep": "ಉಳುಮೆ ಮತ್ತು ಭೂಮಿ ತಯಾರಿ",
+		"crop_harvesting": "ಬೆಳೆ ಕೊಯ್ಲು ಮತ್ತು ಒಕ್ಕಣೆ",
+		"seed_sapling_supply": "ಬೀಜ ಮತ್ತು ಸಸಿ ಪೂರೈಕೆ",
+		"fertilizer_manure": "ಗೊಬ್ಬರ ಮತ್ತು ಸಾವಯವ ಗೊಬ್ಬರ",
+		"soil_testing": "ಮಣ್ಣು ಪರೀಕ್ಷೆ ಮತ್ತು ವಿಶ್ಲೇಷಣೆ",
+		"borewell_drilling": "ಬೋರ್‌ವೆಲ್ ಕೊರೆಯುವಿಕೆ",
+		"farm_fencing": "ಕೃಷಿ ಬೇಲಿ",
+		"organic_farming": "ಸಾವಯವ ಕೃಷಿ ಸಲಹೆ",
+		"dairy_animal_husbandry": "ಹೈನುಗಾರಿಕೆ ಮತ್ತು ಪಶುಸಂಗೋಪನೆ",
+		"aquaculture_fisheries": "ಮೀನು ಸಾಕಣೆ ಮತ್ತು ಜಲಕೃಷಿ",
+		"farm_labor": "ಕೃಷಿ ಕಾರ್ಮಿಕರು",
+		"crop_transport": "ಬೆಳೆ ಸಾಗಣೆ ಮತ್ತು ಸಂಗ್ರಹ",
+		"agri_consulting": "ಕೃಷಿ ಸಲಹೆ"
 	},
 	"location": {
 		"detecting": "ನಿಮ್ಮ ಸ್ಥಳವನ್ನು ಪತ್ತೆಹಚ್ಚಲಾಗುತ್ತಿದೆ...",

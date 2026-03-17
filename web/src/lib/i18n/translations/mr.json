@@ -163,7 +163,22 @@
 		"gardening_landscaping": "बागकाम आणि लँडस्केपिंग",
 		"tree_cutting_pruning": "झाड कापणे आणि छाटणी",
 		"pest_spraying": "कीटक फवारणी",
-		"irrigation_well_services": "सिंचन आणि विहीर सेवा"
+		"irrigation_well_services": "सिंचन आणि विहीर सेवा",
+		"coconut_tree_climbing": "नारळ झाड चढणे आणि तोडणी",
+		"tractor_farm_equipment": "ट्रॅक्टर आणि शेती उपकरणे",
+		"ploughing_land_prep": "नांगरणी आणि जमीन तयारी",
+		"crop_harvesting": "पीक कापणी आणि मळणी",
+		"seed_sapling_supply": "बियाणे आणि रोपे पुरवठा",
+		"fertilizer_manure": "खत आणि सेंद्रिय खत",
+		"soil_testing": "माती परीक्षण आणि विश्लेषण",
+		"borewell_drilling": "बोअरवेल ड्रिलिंग",
+		"farm_fencing": "शेत कुंपण",
+		"organic_farming": "सेंद्रिय शेती सल्ला",
+		"dairy_animal_husbandry": "दुग्धव्यवसाय आणि पशुपालन",
+		"aquaculture_fisheries": "मत्स्यपालन आणि जलशेती",
+		"farm_labor": "शेत मजूर",
+		"crop_transport": "पीक वाहतूक आणि साठवण",
+		"agri_consulting": "कृषी सल्ला"
 	},
 	"location": {
 		"detecting": "तुमचे स्थान शोधत आहे...",

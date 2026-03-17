@@ -163,7 +163,22 @@
 		"gardening_landscaping": "बागबानी ते लैंडस्केपिंग",
 		"tree_cutting_pruning": "रुक्ख कट्टना ते छांटना",
 		"pest_spraying": "कीट-नाशक छिड़काव",
-		"irrigation_well_services": "सिंचाई ते खूह सेवा"
+		"irrigation_well_services": "सिंचाई ते खूह सेवा",
+		"coconut_tree_climbing": "नारियल दा रुक्ख चढ़ना ते तोड़ना",
+		"tractor_farm_equipment": "ट्रैक्टर ते खेती दे औजार",
+		"ploughing_land_prep": "हल चलाना ते ज़मीन तैयार करना",
+		"crop_harvesting": "फसल कट्टना ते दाउना",
+		"seed_sapling_supply": "बी ते बूटे सप्लाई",
+		"fertilizer_manure": "खाद ते गोह",
+		"soil_testing": "मिट्टी परखणा ते विश्लेषण",
+		"borewell_drilling": "बोरवैल ड्रिलिंग",
+		"farm_fencing": "खेत बाड़",
+		"organic_farming": "जैविक खेती सलाह",
+		"dairy_animal_husbandry": "दुद्ध ते पशुपालन",
+		"aquaculture_fisheries": "मच्छी पालन ते जल कृषि",
+		"farm_labor": "खेत मजदूर",
+		"crop_transport": "फसल ढुलाई ते भंडारण",
+		"agri_consulting": "कृषि सलाह"
 	},
 	"location": {
 		"detecting": "तुसां दी जगह पता लगाई जाई रई ऐ...",

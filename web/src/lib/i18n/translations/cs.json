@@ -163,7 +163,22 @@
 		"gardening_landscaping": "Zahradnictví a Krajinná architektura",
 		"tree_cutting_pruning": "Kácení a Prořezávání stromů",
 		"pest_spraying": "Postřik proti škůdcům",
-		"irrigation_well_services": "Zavlažování a Studnařské služby"
+		"irrigation_well_services": "Zavlažování a Studnařské služby",
+		"coconut_tree_climbing": "Lezení na kokosovou palmu a Sklizeň",
+		"tractor_farm_equipment": "Traktor a Zemědělská technika",
+		"ploughing_land_prep": "Orba a Příprava půdy",
+		"crop_harvesting": "Sklizeň a Mlácení",
+		"seed_sapling_supply": "Osivo a Sazenice",
+		"fertilizer_manure": "Hnojivo a Chlévský hnůj",
+		"soil_testing": "Rozbor půdy",
+		"borewell_drilling": "Vrtání studny",
+		"farm_fencing": "Oplocení farmy",
+		"organic_farming": "Poradenství ekologického zemědělství",
+		"dairy_animal_husbandry": "Mlékárenství a Živočišná výroba",
+		"aquaculture_fisheries": "Akvakultura a Rybolov",
+		"farm_labor": "Zemědělští dělníci",
+		"crop_transport": "Přeprava a Skladování plodin",
+		"agri_consulting": "Zemědělské poradenství"
 	},
 	"location": {
 		"detecting": "Zjišťování vaší polohy...",

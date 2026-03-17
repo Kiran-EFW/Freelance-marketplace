@@ -163,7 +163,22 @@
 		"gardening_landscaping": "ᱵᱟᱜᱤᱪᱟ ᱟᱨ ᱞᱮᱱᱰᱥᱠᱮᱯᱤᱝ",
 		"tree_cutting_pruning": "ᱫᱟᱨᱮ ᱠᱟᱴᱟᱣ ᱟᱨ ᱪᱷᱟᱸᱴᱟᱣ",
 		"pest_spraying": "ᱠᱤᱴ ᱱᱟᱥᱚᱠ ᱪᱷᱤᱲᱠᱟᱣ",
-		"irrigation_well_services": "ᱡᱚᱞ ᱥᱮᱪᱚᱱ ᱟᱨ ᱤᱱᱟᱨ ᱥᱮᱣᱟ"
+		"irrigation_well_services": "ᱡᱚᱞ ᱥᱮᱪᱚᱱ ᱟᱨ ᱤᱱᱟᱨ ᱥᱮᱣᱟ",
+		"coconut_tree_climbing": "ᱱᱟᱨᱤᱠᱮᱞ ᱫᱟᱨᱮ ᱪᱟᱲᱷᱟᱣ ᱟᱨ ᱠᱟᱴᱟᱣ",
+		"tractor_farm_equipment": "ᱴᱨᱮᱠᱴᱟᱨ ᱟᱨ ᱠᱷᱮᱛᱤ ᱡᱤᱱᱤᱥ",
+		"ploughing_land_prep": "ᱱᱟᱝᱜᱚᱞ ᱟᱨ ᱦᱟᱥᱟ ᱛᱮᱭᱟᱨ",
+		"crop_harvesting": "ᱵᱟᱨ ᱠᱟᱴᱟᱣ ᱟᱨ ᱫᱟᱹᱣᱱᱟᱹ",
+		"seed_sapling_supply": "ᱵᱤᱡᱤ ᱟᱨ ᱵᱤᱨᱣᱟ ᱥᱟᱯᱞᱟᱭ",
+		"fertilizer_manure": "ᱥᱟᱨ ᱟᱨ ᱜᱚᱵᱚᱨ",
+		"soil_testing": "ᱦᱟᱥᱟ ᱡᱟᱸᱪ ᱟᱨ ᱵᱤᱡᱤᱨᱱᱟᱹᱭ",
+		"borewell_drilling": "ᱵᱚᱨᱣᱮᱞ ᱠᱷᱚᱱᱟᱹᱭ",
+		"farm_fencing": "ᱠᱷᱮᱛ ᱵᱮᱨᱟ",
+		"organic_farming": "ᱡᱩᱵᱤᱠ ᱠᱷᱮᱛᱤ ᱥᱩᱯᱷᱩᱸᱱᱟᱹᱭ",
+		"dairy_animal_husbandry": "ᱫᱩᱫᱷ ᱟᱨ ᱫᱟᱹᱣᱡᱟᱹᱣ ᱨᱟᱭᱡᱟᱹᱭ",
+		"aquaculture_fisheries": "ᱦᱟᱠᱩ ᱨᱟᱭᱡᱟᱹᱭ ᱟᱨ ᱫᱟᱹᱭ ᱠᱷᱮᱛᱤ",
+		"farm_labor": "ᱠᱷᱮᱛ ᱜᱟᱢᱤ",
+		"crop_transport": "ᱵᱟᱨ ᱞᱟᱫᱟᱹᱭ ᱟᱨ ᱛᱷᱟᱢᱱᱟᱹᱭ",
+		"agri_consulting": "ᱠᱷᱮᱛᱤ ᱥᱩᱯᱷᱩᱸᱱᱟᱹᱭ"
 	},
 	"location": {
 		"detecting": "आमाक् जायगा सेंदरा रेयाक् आ...",

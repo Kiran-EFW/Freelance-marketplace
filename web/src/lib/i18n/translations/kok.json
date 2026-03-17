@@ -163,7 +163,22 @@
 		"gardening_landscaping": "बागायती आनी लँडस्केपिंग",
 		"tree_cutting_pruning": "झाड कापप आनी छाटप",
 		"pest_spraying": "कीटकनाशक फवारणी",
-		"irrigation_well_services": "शिंपणावळ आनी बांय सेवा"
+		"irrigation_well_services": "शिंपणावळ आनी बांय सेवा",
+		"coconut_tree_climbing": "माडार चडप आनी नाल्ल काडप",
+		"tractor_farm_equipment": "ट्रॅक्टर आनी शेतकी साधनां",
+		"ploughing_land_prep": "नांगरप आनी भुंय तयार करप",
+		"crop_harvesting": "पीक कापप आनी मळणी",
+		"seed_sapling_supply": "बियो आनी रोपां पुरवण",
+		"fertilizer_manure": "खत आनी शेणखत",
+		"soil_testing": "माती तपासणी आनी विश्लेषण",
+		"borewell_drilling": "बोरवेल खणप",
+		"farm_fencing": "शेत कुंपण",
+		"organic_farming": "सेंद्रिय शेतकी सल्लो",
+		"dairy_animal_husbandry": "दुदा आनी जनावरां पोसप",
+		"aquaculture_fisheries": "नुस्तें पोसप आनी उदका शेती",
+		"farm_labor": "शेत कामगार",
+		"crop_transport": "पीक व्हरप आनी सांठवण",
+		"agri_consulting": "शेतकी सल्लो"
 	},
 	"location": {
 		"detecting": "तुमचें थळ सोदतात...",

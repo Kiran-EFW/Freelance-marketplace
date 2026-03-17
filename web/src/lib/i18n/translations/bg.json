@@ -163,7 +163,22 @@
 		"gardening_landscaping": "Градинарство и Озеленяване",
 		"tree_cutting_pruning": "Отсичане и Окастряне на дървета",
 		"pest_spraying": "Пръскане срещу вредители",
-		"irrigation_well_services": "Напояване и Кладенчарски услуги"
+		"irrigation_well_services": "Напояване и Кладенчарски услуги",
+		"coconut_tree_climbing": "Катерене на кокосова палма и Бране",
+		"tractor_farm_equipment": "Трактор и Земеделска техника",
+		"ploughing_land_prep": "Оран и Подготовка на почвата",
+		"crop_harvesting": "Жътва и Вършитба",
+		"seed_sapling_supply": "Семена и Разсад",
+		"fertilizer_manure": "Торове и Оборска тор",
+		"soil_testing": "Почвен анализ",
+		"borewell_drilling": "Сондиране на кладенци",
+		"farm_fencing": "Ограда на ферма",
+		"organic_farming": "Консултации по биоземеделие",
+		"dairy_animal_husbandry": "Млечно животновъдство",
+		"aquaculture_fisheries": "Аквакултура и Рибовъдство",
+		"farm_labor": "Земеделски работници",
+		"crop_transport": "Транспорт и Съхранение на реколта",
+		"agri_consulting": "Земеделско консултиране"
 	},
 	"location": {
 		"detecting": "Определяне на местоположението ви...",

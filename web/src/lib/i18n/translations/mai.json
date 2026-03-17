@@ -163,7 +163,22 @@
 		"gardening_landscaping": "बागवानी आ लैंडस्केपिंग",
 		"tree_cutting_pruning": "गाछ काटब आ छँटाई",
 		"pest_spraying": "कीट छिड़काव",
-		"irrigation_well_services": "सिंचाई आ कुआँ सेवा"
+		"irrigation_well_services": "सिंचाई आ कुआँ सेवा",
+		"coconut_tree_climbing": "नारिकेल गाछ चढ़ब आ तोड़ब",
+		"tractor_farm_equipment": "ट्रैक्टर आ खेती उपकरण",
+		"ploughing_land_prep": "जोतब आ माटि तैयारी",
+		"crop_harvesting": "फसल काटब आ दाउनब",
+		"seed_sapling_supply": "बीया आ बिरवा आपूर्ति",
+		"fertilizer_manure": "खाद आ गोबर",
+		"soil_testing": "माटि परीक्षण आ विश्लेषण",
+		"borewell_drilling": "बोरवेल ड्रिलिंग",
+		"farm_fencing": "खेत बाड़",
+		"organic_farming": "जैविक खेती परामर्श",
+		"dairy_animal_husbandry": "दूध आ पशुपालन",
+		"aquaculture_fisheries": "माछ पालन आ जलीय कृषि",
+		"farm_labor": "खेत मजदूर",
+		"crop_transport": "फसल ढुलाई आ भंडारण",
+		"agri_consulting": "कृषि परामर्श"
 	},
 	"location": {
 		"detecting": "अहाँ केर जगह पता लगाउ रहल अछि...",

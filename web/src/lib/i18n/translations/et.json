@@ -163,7 +163,22 @@
 		"gardening_landscaping": "Aiandus ja Maastikuarhitektuur",
 		"tree_cutting_pruning": "Puude langetamine ja Lõikamine",
 		"pest_spraying": "Kahjuritõrje",
-		"irrigation_well_services": "Niisutus ja Kaevuteenused"
+		"irrigation_well_services": "Niisutus ja Kaevuteenused",
+		"coconut_tree_climbing": "Kookospalmi ronimine ja Koristus",
+		"tractor_farm_equipment": "Traktor ja Põllumajandustehnika",
+		"ploughing_land_prep": "Kündmine ja Maa ettevalmistus",
+		"crop_harvesting": "Koristus ja Rehepeks",
+		"seed_sapling_supply": "Seemned ja Istikud",
+		"fertilizer_manure": "Väetis ja Sõnnik",
+		"soil_testing": "Mullaanalüüs",
+		"borewell_drilling": "Kaevupuurimine",
+		"farm_fencing": "Talu piirdeaed",
+		"organic_farming": "Mahepõllumajanduse nõustamine",
+		"dairy_animal_husbandry": "Piimatootmine ja Loomapidamine",
+		"aquaculture_fisheries": "Vesiviljelus ja Kalandus",
+		"farm_labor": "Põllutöölised",
+		"crop_transport": "Saagivedu ja Ladustamine",
+		"agri_consulting": "Põllumajandusnõustamine"
 	},
 	"location": {
 		"detecting": "Tuvastame teie asukohta...",

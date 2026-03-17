@@ -821,6 +821,156 @@ export const categories: ServiceCategory[] = [
 		color: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
 		order: 4
 	},
+	{
+		id: 'coconut_tree_climbing',
+		slug: 'coconut-tree-climbing',
+		icon: 'TreePine',
+		parentId: 'crop_land',
+		translationKey: 'categories.coconut_tree_climbing',
+		isActive: true,
+		color: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
+		order: 5
+	},
+	{
+		id: 'tractor_farm_equipment',
+		slug: 'tractor-farm-equipment',
+		icon: 'Truck',
+		parentId: 'crop_land',
+		translationKey: 'categories.tractor_farm_equipment',
+		isActive: true,
+		color: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
+		order: 6
+	},
+	{
+		id: 'ploughing_land_prep',
+		slug: 'ploughing-land-prep',
+		icon: 'Layers',
+		parentId: 'crop_land',
+		translationKey: 'categories.ploughing_land_prep',
+		isActive: true,
+		color: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
+		order: 7
+	},
+	{
+		id: 'crop_harvesting',
+		slug: 'crop-harvesting',
+		icon: 'Wheat',
+		parentId: 'crop_land',
+		translationKey: 'categories.crop_harvesting',
+		isActive: true,
+		color: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
+		order: 8
+	},
+	{
+		id: 'seed_sapling_supply',
+		slug: 'seed-sapling-supply',
+		icon: 'Sprout',
+		parentId: 'crop_land',
+		translationKey: 'categories.seed_sapling_supply',
+		isActive: true,
+		color: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
+		order: 9
+	},
+	{
+		id: 'fertilizer_manure',
+		slug: 'fertilizer-manure',
+		icon: 'FlaskConical',
+		parentId: 'crop_land',
+		translationKey: 'categories.fertilizer_manure',
+		isActive: true,
+		color: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
+		order: 10
+	},
+	{
+		id: 'soil_testing',
+		slug: 'soil-testing',
+		icon: 'TestTube',
+		parentId: 'crop_land',
+		translationKey: 'categories.soil_testing',
+		isActive: true,
+		color: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
+		order: 11
+	},
+	{
+		id: 'borewell_drilling',
+		slug: 'borewell-drilling',
+		icon: 'Drill',
+		parentId: 'crop_land',
+		translationKey: 'categories.borewell_drilling',
+		isActive: true,
+		color: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
+		order: 12
+	},
+	{
+		id: 'farm_fencing',
+		slug: 'farm-fencing',
+		icon: 'Fence',
+		parentId: 'crop_land',
+		translationKey: 'categories.farm_fencing',
+		isActive: true,
+		color: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
+		order: 13
+	},
+	{
+		id: 'organic_farming',
+		slug: 'organic-farming',
+		icon: 'Leaf',
+		parentId: 'crop_land',
+		translationKey: 'categories.organic_farming',
+		isActive: true,
+		color: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
+		order: 14
+	},
+	{
+		id: 'dairy_animal_husbandry',
+		slug: 'dairy-animal-husbandry',
+		icon: 'Beef',
+		parentId: 'crop_land',
+		translationKey: 'categories.dairy_animal_husbandry',
+		isActive: true,
+		color: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
+		order: 15
+	},
+	{
+		id: 'aquaculture_fisheries',
+		slug: 'aquaculture-fisheries',
+		icon: 'Fish',
+		parentId: 'crop_land',
+		translationKey: 'categories.aquaculture_fisheries',
+		isActive: true,
+		color: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
+		order: 16
+	},
+	{
+		id: 'farm_labor',
+		slug: 'farm-labor',
+		icon: 'Users',
+		parentId: 'crop_land',
+		translationKey: 'categories.farm_labor',
+		isActive: true,
+		color: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
+		order: 17
+	},
+	{
+		id: 'crop_transport',
+		slug: 'crop-transport',
+		icon: 'Truck',
+		parentId: 'crop_land',
+		translationKey: 'categories.crop_transport',
+		isActive: true,
+		color: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
+		order: 18
+	},
+	{
+		id: 'agri_consulting',
+		slug: 'agri-consulting',
+		icon: 'BookOpen',
+		parentId: 'crop_land',
+		translationKey: 'categories.agri_consulting',
+		isActive: true,
+		color: 'bg-green-100 text-green-600 dark:bg-green-900/30 dark:text-green-400',
+		order: 19
+	},
 
 	// -----------------------------------------------------------------------
 	// 12. Construction & Civil

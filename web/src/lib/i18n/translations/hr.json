@@ -163,7 +163,22 @@
 		"gardening_landscaping": "Vrtlarstvo i Uređenje okoliša",
 		"tree_cutting_pruning": "Sječa i Obrezivanje stabala",
 		"pest_spraying": "Prskanje protiv štetočina",
-		"irrigation_well_services": "Navodnjavanje i Usluge bunara"
+		"irrigation_well_services": "Navodnjavanje i Usluge bunara",
+		"coconut_tree_climbing": "Penjanje na kokosovu palmu i Berba",
+		"tractor_farm_equipment": "Traktor i Poljoprivredna oprema",
+		"ploughing_land_prep": "Oranje i Priprema tla",
+		"crop_harvesting": "Žetva i Vršidba",
+		"seed_sapling_supply": "Sjeme i Sadnice",
+		"fertilizer_manure": "Gnojivo i Stajski gnoj",
+		"soil_testing": "Analiza tla",
+		"borewell_drilling": "Bušenje bunara",
+		"farm_fencing": "Ograda farme",
+		"organic_farming": "Savjetovanje ekološke poljoprivrede",
+		"dairy_animal_husbandry": "Mliječno gospodarstvo i Stočarstvo",
+		"aquaculture_fisheries": "Akvakultura i Ribarstvo",
+		"farm_labor": "Poljoprivredni radnici",
+		"crop_transport": "Prijevoz i Skladištenje usjeva",
+		"agri_consulting": "Poljoprivredno savjetovanje"
 	},
 	"location": {
 		"detecting": "Otkrivanje vaše lokacije...",

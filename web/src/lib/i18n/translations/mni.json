@@ -163,7 +163,22 @@
 		"gardening_landscaping": "লম-লাইশিং অমসুং লেন্দস্কেপিং",
 		"tree_cutting_pruning": "উ-পাম কাবা অমসুং চেকশিনবা",
 		"pest_spraying": "পোত-থিৎ হাপ-থোকপা",
-		"irrigation_well_services": "ইশিং থাদোকপা অমসুং তুরেল সেবা"
+		"irrigation_well_services": "ইশিং থাদোকপা অমসুং তুরেল সেবা",
+		"coconut_tree_climbing": "নাৰিকেল উপাল চংবা অমসুং থোকপা",
+		"tractor_farm_equipment": "ট্ৰেক্টৰ অমসুং লৌ-শিং পাঙ্থৌ",
+		"ploughing_land_prep": "লৌ লোনবা অমসুং লম থৌরাং",
+		"crop_harvesting": "লৌউ-শিং ফাবা অমসুং চেকশিনবা",
+		"seed_sapling_supply": "মহৈ অমসুং পানবী সপ্লাই",
+		"fertilizer_manure": "সাৰ অমসুং গোবৰ",
+		"soil_testing": "লৈবাক মাহৈ চেকশিনবা",
+		"borewell_drilling": "বোৰৱেল থুমবা",
+		"farm_fencing": "লৌবুক হিংনবা",
+		"organic_farming": "অৰগানিক লৌউ-শিংজেল সলাহ",
+		"dairy_animal_husbandry": "দুধ অমসুং শা-ষন পালবা",
+		"aquaculture_fisheries": "ঙা চিংবা অমসুং ঈশিং লৌউ-শিং",
+		"farm_labor": "লৌবুক খুৎলাই",
+		"crop_transport": "লৌউ-শিং পুথোকপা অমসুং থম্বা",
+		"agri_consulting": "লৌউ-শিং সলাহ"
 	},
 	"location": {
 		"detecting": "নখোয়গী লমদম থিরি...",

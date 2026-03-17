@@ -163,7 +163,22 @@
 		"gardening_landscaping": "Záhradníctvo a Krajinná architektúra",
 		"tree_cutting_pruning": "Výrub a Orezávanie stromov",
 		"pest_spraying": "Postreky proti škodcom",
-		"irrigation_well_services": "Zavlažovanie a Studniarske služby"
+		"irrigation_well_services": "Zavlažovanie a Studniarske služby",
+		"coconut_tree_climbing": "Lezenie na kokosovú palmu a Zber",
+		"tractor_farm_equipment": "Traktor a Poľnohospodárska technika",
+		"ploughing_land_prep": "Orba a Príprava pôdy",
+		"crop_harvesting": "Zber a Mlátenie",
+		"seed_sapling_supply": "Osivo a Sadenice",
+		"fertilizer_manure": "Hnojivo a Maštaľný hnoj",
+		"soil_testing": "Rozbor pôdy",
+		"borewell_drilling": "Vŕtanie studne",
+		"farm_fencing": "Oplotenie farmy",
+		"organic_farming": "Poradenstvo ekologického poľnohospodárstva",
+		"dairy_animal_husbandry": "Mliekárenstvo a Živočíšna výroba",
+		"aquaculture_fisheries": "Akvakultúra a Rybárstvo",
+		"farm_labor": "Poľnohospodárski robotníci",
+		"crop_transport": "Preprava a Skladovanie plodín",
+		"agri_consulting": "Poľnohospodárske poradenstvo"
 	},
 	"location": {
 		"detecting": "Zisťovanie vašej polohy...",

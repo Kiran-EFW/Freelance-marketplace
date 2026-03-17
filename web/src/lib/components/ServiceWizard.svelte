@@ -9,6 +9,7 @@
 		Music, Music2, Languages, Medal, Baby, Stethoscope, PawPrint,
 		UtensilsCrossed, Flower2, Camera, Video, Speaker, Package, Armchair, Send,
 		Trash2, Laptop, Smartphone, Eye, Wifi, Sun, Map as MapIcon,
+		Wheat, Sprout, FlaskConical, TestTube, Drill, Fence, Leaf, Beef, Fish, Users,
 		Search, MapPin, Loader2, ChevronLeft, ChevronRight, Check
 	} from 'lucide-svelte';
 	import VoiceInput from '$lib/components/ui/VoiceInput.svelte';
@@ -37,7 +38,8 @@
 		Scale, Calculator, Ruler, FileText, TrendingUp, Bike, Circle, BookOpen,
 		Music, Music2, Languages, Medal, Baby, Stethoscope, PawPrint,
 		UtensilsCrossed, Flower2, Camera, Video, Speaker, Package, Armchair, Send,
-		Trash2, Laptop, Smartphone, Eye, Wifi, Sun, Map: MapIcon
+		Trash2, Laptop, Smartphone, Eye, Wifi, Sun, Map: MapIcon,
+		Wheat, Sprout, FlaskConical, TestTube, Drill, Fence, Leaf, Beef, Fish, Users
 	};
 
 	// -------------------------------------------------------------------------

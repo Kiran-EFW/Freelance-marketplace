@@ -163,7 +163,22 @@
 		"gardening_landscaping": "తోటపని మరియు ల్యాండ్‌స్కేపింగ్",
 		"tree_cutting_pruning": "చెట్ల కత్తిరింపు మరియు కొమ్మల కత్తిరింపు",
 		"pest_spraying": "పురుగు మందు పిచికారీ",
-		"irrigation_well_services": "నీటిపారుదల మరియు బావి సేవలు"
+		"irrigation_well_services": "నీటిపారుదల మరియు బావి సేవలు",
+		"coconut_tree_climbing": "కొబ్బరి చెట్టు ఎక్కడం మరియు పంట కోత",
+		"tractor_farm_equipment": "ట్రాక్టర్ మరియు వ్యవసాయ పరికరాలు",
+		"ploughing_land_prep": "దున్నడం మరియు భూమి సిద్ధం",
+		"crop_harvesting": "పంట కోత మరియు నూర్పిడి",
+		"seed_sapling_supply": "విత్తనం మరియు మొక్కల సరఫరా",
+		"fertilizer_manure": "ఎరువులు మరియు పేడ",
+		"soil_testing": "నేల పరీక్ష మరియు విశ్లేషణ",
+		"borewell_drilling": "బోర్‌వెల్ డ్రిల్లింగ్",
+		"farm_fencing": "పొలం కంచె",
+		"organic_farming": "సేంద్రీయ వ్యవసాయ సలహా",
+		"dairy_animal_husbandry": "పాడి పరిశ్రమ మరియు పశుపోషణ",
+		"aquaculture_fisheries": "చేపల పెంపకం మరియు ఆక్వాకల్చర్",
+		"farm_labor": "వ్యవసాయ కూలీలు",
+		"crop_transport": "పంట రవాణా మరియు నిల్వ",
+		"agri_consulting": "వ్యవసాయ సలహా"
 	},
 	"location": {
 		"detecting": "మీ స్థానాన్ని గుర్తిస్తోంది...",

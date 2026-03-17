@@ -163,7 +163,22 @@
 		"gardening_landscaping": "Ogrodnictwo i Architektura krajobrazu",
 		"tree_cutting_pruning": "Wycinka i Przycinanie drzew",
 		"pest_spraying": "Opryski przeciw szkodnikom",
-		"irrigation_well_services": "Nawadnianie i Usługi studniarskie"
+		"irrigation_well_services": "Nawadnianie i Usługi studniarskie",
+		"coconut_tree_climbing": "Wspinaczka na palmę kokosową i Zbiory",
+		"tractor_farm_equipment": "Ciągnik i Maszyny rolnicze",
+		"ploughing_land_prep": "Orka i Przygotowanie gleby",
+		"crop_harvesting": "Żniwa i Młócenie",
+		"seed_sapling_supply": "Nasiona i Sadzonki",
+		"fertilizer_manure": "Nawóz i Obornik",
+		"soil_testing": "Badanie gleby i Analiza",
+		"borewell_drilling": "Wiercenie studni",
+		"farm_fencing": "Ogrodzenie gospodarstwa",
+		"organic_farming": "Doradztwo rolnictwa ekologicznego",
+		"dairy_animal_husbandry": "Mleczarstwo i Hodowla zwierząt",
+		"aquaculture_fisheries": "Akwakultura i Rybołówstwo",
+		"farm_labor": "Robotnicy rolni",
+		"crop_transport": "Transport i Magazynowanie plonów",
+		"agri_consulting": "Doradztwo rolnicze"
 	},
 	"location": {
 		"detecting": "Wykrywanie Twojej lokalizacji...",

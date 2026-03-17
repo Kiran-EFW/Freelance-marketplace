@@ -163,7 +163,22 @@
 		"gardening_landscaping": "Vrtnarstvo in Krajinska arhitektura",
 		"tree_cutting_pruning": "Sekanje in Obrezovanje dreves",
 		"pest_spraying": "Škropljenje proti škodljivcem",
-		"irrigation_well_services": "Namakanje in Vodnjačarske storitve"
+		"irrigation_well_services": "Namakanje in Vodnjačarske storitve",
+		"coconut_tree_climbing": "Plezanje na kokosovo palmo in Obiranje",
+		"tractor_farm_equipment": "Traktor in Kmetijska oprema",
+		"ploughing_land_prep": "Oranje in Priprava tal",
+		"crop_harvesting": "Žetev in Mlatitev",
+		"seed_sapling_supply": "Semena in Sadike",
+		"fertilizer_manure": "Gnojilo in Hlevski gnoj",
+		"soil_testing": "Analiza tal",
+		"borewell_drilling": "Vrtanje vodnjaka",
+		"farm_fencing": "Ograja kmetije",
+		"organic_farming": "Svetovanje ekološkega kmetijstva",
+		"dairy_animal_husbandry": "Mlečna živinoreja",
+		"aquaculture_fisheries": "Akvakultura in Ribištvo",
+		"farm_labor": "Kmetijski delavci",
+		"crop_transport": "Prevoz in Skladiščenje pridelka",
+		"agri_consulting": "Kmetijsko svetovanje"
 	},
 	"location": {
 		"detecting": "Zaznavamo vašo lokacijo...",

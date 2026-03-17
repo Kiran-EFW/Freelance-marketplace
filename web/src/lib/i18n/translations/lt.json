@@ -163,7 +163,22 @@
 		"gardening_landscaping": "Sodininkystė ir Kraštovaizdžio tvarkymas",
 		"tree_cutting_pruning": "Medžių kirtimas ir Genėjimas",
 		"pest_spraying": "Kenkėjų naikinimas",
-		"irrigation_well_services": "Drėkinimas ir Šulinių paslaugos"
+		"irrigation_well_services": "Drėkinimas ir Šulinių paslaugos",
+		"coconut_tree_climbing": "Kopimas į kokoso palmę ir Derliaus nuėmimas",
+		"tractor_farm_equipment": "Traktorius ir Žemės ūkio technika",
+		"ploughing_land_prep": "Arimas ir Dirvos paruošimas",
+		"crop_harvesting": "Derliaus nuėmimas ir Kūlimas",
+		"seed_sapling_supply": "Sėklos ir Sodinukai",
+		"fertilizer_manure": "Trąšos ir Mėšlas",
+		"soil_testing": "Dirvožemio analizė",
+		"borewell_drilling": "Šulinio gręžimas",
+		"farm_fencing": "Ūkio tvora",
+		"organic_farming": "Ekologinio ūkininkavimo konsultacijos",
+		"dairy_animal_husbandry": "Pieno ūkis ir Gyvulininkystė",
+		"aquaculture_fisheries": "Akvakultūra ir Žuvininkystė",
+		"farm_labor": "Žemės ūkio darbininkai",
+		"crop_transport": "Derliaus gabenimas ir Saugojimas",
+		"agri_consulting": "Žemės ūkio konsultacijos"
 	},
 	"location": {
 		"detecting": "Nustatoma jūsų vieta...",

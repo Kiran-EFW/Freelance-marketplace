@@ -163,7 +163,22 @@
 		"gardening_landscaping": "باغبانی اور لینڈ اسکیپنگ",
 		"tree_cutting_pruning": "درخت کاٹنا اور چھانٹنا",
 		"pest_spraying": "کیڑے مار سپرے",
-		"irrigation_well_services": "آبپاشی اور کنواں خدمات"
+		"irrigation_well_services": "آبپاشی اور کنواں خدمات",
+		"coconut_tree_climbing": "ناریل کا درخت چڑھنا اور فصل کاٹنا",
+		"tractor_farm_equipment": "ٹریکٹر اور زرعی آلات",
+		"ploughing_land_prep": "ہل چلانا اور زمین تیاری",
+		"crop_harvesting": "فصل کی کٹائی اور گہائی",
+		"seed_sapling_supply": "بیج اور پودے سپلائی",
+		"fertilizer_manure": "کھاد اور گوبر",
+		"soil_testing": "مٹی کی جانچ اور تجزیہ",
+		"borewell_drilling": "بورویل ڈرلنگ",
+		"farm_fencing": "کھیت باڑ",
+		"organic_farming": "نامیاتی کھیتی مشاورت",
+		"dairy_animal_husbandry": "ڈیری اور مویشی پالن",
+		"aquaculture_fisheries": "مچھلی پالن اور آبی زراعت",
+		"farm_labor": "کھیت مزدور",
+		"crop_transport": "فصل نقل و حمل اور ذخیرہ",
+		"agri_consulting": "زرعی مشاورت"
 	},
 	"location": {
 		"detecting": "آپ کا مقام معلوم کر رہے ہیں...",

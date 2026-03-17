@@ -163,7 +163,22 @@
 		"gardening_landscaping": "Puutarhanhoito & Maisemointi",
 		"tree_cutting_pruning": "Puunkaato & Oksiminen",
 		"pest_spraying": "Tuholaistorjunta",
-		"irrigation_well_services": "Kastelu & Kaivopalvelut"
+		"irrigation_well_services": "Kastelu & Kaivopalvelut",
+		"coconut_tree_climbing": "Kookospalmun kiipeäminen & Sadonkorjuu",
+		"tractor_farm_equipment": "Traktori & Maatalouskoneet",
+		"ploughing_land_prep": "Kyntö & Maanmuokkaus",
+		"crop_harvesting": "Sadonkorjuu & Puinti",
+		"seed_sapling_supply": "Siemenet & Taimet",
+		"fertilizer_manure": "Lannoite & Lanta",
+		"soil_testing": "Maa-analyysi",
+		"borewell_drilling": "Kaivonporaus",
+		"farm_fencing": "Maatilaaita",
+		"organic_farming": "Luomuviljely neuvonta",
+		"dairy_animal_husbandry": "Maidontuotanto & Kotieläintalous",
+		"aquaculture_fisheries": "Vesiviljely & Kalastus",
+		"farm_labor": "Maataloustyöntekijät",
+		"crop_transport": "Sadonkuljetus & Varastointi",
+		"agri_consulting": "Maatalousneuvonta"
 	},
 	"location": {
 		"detecting": "Etsitään sijaintiasi...",

@@ -163,7 +163,22 @@
 		"gardening_landscaping": "बागवानी और भूदृश्य",
 		"tree_cutting_pruning": "पेड़ कटाई और छंटाई",
 		"pest_spraying": "कीट छिड़काव",
-		"irrigation_well_services": "सिंचाई और कुआं सेवाएं"
+		"irrigation_well_services": "सिंचाई और कुआं सेवाएं",
+		"coconut_tree_climbing": "नारियल पेड़ चढ़ाई और तुड़ाई",
+		"tractor_farm_equipment": "ट्रैक्टर और कृषि उपकरण",
+		"ploughing_land_prep": "जुताई और भूमि तैयारी",
+		"crop_harvesting": "फसल कटाई और थ्रेशिंग",
+		"seed_sapling_supply": "बीज और पौध आपूर्ति",
+		"fertilizer_manure": "उर्वरक और खाद",
+		"soil_testing": "मिट्टी परीक्षण और विश्लेषण",
+		"borewell_drilling": "बोरवेल ड्रिलिंग",
+		"farm_fencing": "खेत बाड़ और चहारदीवारी",
+		"organic_farming": "जैविक खेती परामर्श",
+		"dairy_animal_husbandry": "डेयरी और पशुपालन",
+		"aquaculture_fisheries": "मत्स्यपालन और जलीय कृषि",
+		"farm_labor": "खेत मजदूर",
+		"crop_transport": "फसल परिवहन और भंडारण",
+		"agri_consulting": "कृषि परामर्श"
 	},
 	"location": {
 		"detecting": "आपका स्थान पता लगाया जा रहा है...",

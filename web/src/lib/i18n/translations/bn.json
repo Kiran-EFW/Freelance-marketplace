@@ -163,7 +163,22 @@
 		"gardening_landscaping": "বাগান ও ল্যান্ডস্কেপিং",
 		"tree_cutting_pruning": "গাছ কাটা ও ছাঁটাই",
 		"pest_spraying": "কীটনাশক স্প্রে",
-		"irrigation_well_services": "সেচ ও কূপ সেবা"
+		"irrigation_well_services": "সেচ ও কূপ সেবা",
+		"coconut_tree_climbing": "নারকেল গাছে ওঠা ও ফসল তোলা",
+		"tractor_farm_equipment": "ট্র্যাক্টর ও কৃষি যন্ত্রপাতি",
+		"ploughing_land_prep": "চাষ ও জমি তৈরি",
+		"crop_harvesting": "ফসল কাটা ও মাড়াই",
+		"seed_sapling_supply": "বীজ ও চারা সরবরাহ",
+		"fertilizer_manure": "সার ও জৈব সার",
+		"soil_testing": "মাটি পরীক্ষা ও বিশ্লেষণ",
+		"borewell_drilling": "বোরওয়েল ড্রিলিং",
+		"farm_fencing": "খামার বেড়া",
+		"organic_farming": "জৈব চাষ পরামর্শ",
+		"dairy_animal_husbandry": "দুগ্ধ ও পশুপালন",
+		"aquaculture_fisheries": "মাছ চাষ ও জলজ কৃষি",
+		"farm_labor": "কৃষি শ্রমিক",
+		"crop_transport": "ফসল পরিবহন ও সংরক্ষণ",
+		"agri_consulting": "কৃষি পরামর্শ"
 	},
 	"location": {
 		"detecting": "আপনার অবস্থান শনাক্ত করা হচ্ছে...",

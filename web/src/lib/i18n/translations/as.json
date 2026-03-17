@@ -163,7 +163,22 @@
 		"gardening_landscaping": "বাগিচা আৰু লেণ্ডস্কেপিং",
 		"tree_cutting_pruning": "গছ কটা আৰু ছাঁটনি",
 		"pest_spraying": "কীটনাশক স্প্ৰে",
-		"irrigation_well_services": "জলসিঞ্চন আৰু কুঁৱা সেৱা"
+		"irrigation_well_services": "জলসিঞ্চন আৰু কুঁৱা সেৱা",
+		"coconut_tree_climbing": "নাৰিকল গছ বগোৱা আৰু চপোৱা",
+		"tractor_farm_equipment": "ট্ৰেক্টৰ আৰু কৃষি সঁজুলি",
+		"ploughing_land_prep": "হাল বোৱা আৰু মাটি প্ৰস্তুতি",
+		"crop_harvesting": "শস্য চপোৱা আৰু মৰণা মৰা",
+		"seed_sapling_supply": "বীজ আৰু পুলি যোগান",
+		"fertilizer_manure": "সাৰ আৰু জৈৱিক সাৰ",
+		"soil_testing": "মাটি পৰীক্ষা আৰু বিশ্লেষণ",
+		"borewell_drilling": "বোৰৱেল খনন",
+		"farm_fencing": "খেতি বেৰা",
+		"organic_farming": "জৈৱিক কৃষি পৰামৰ্শ",
+		"dairy_animal_husbandry": "দুগ্ধ আৰু পশুপালন",
+		"aquaculture_fisheries": "মাছ পালন আৰু জলজ কৃষি",
+		"farm_labor": "কৃষি শ্ৰমিক",
+		"crop_transport": "শস্য পৰিবহন আৰু সংৰক্ষণ",
+		"agri_consulting": "কৃষি পৰামৰ্শ"
 	},
 	"location": {
 		"detecting": "আপোনাৰ অৱস্থান চিনাক্ত কৰি আছে...",

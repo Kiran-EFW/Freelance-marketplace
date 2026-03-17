@@ -163,7 +163,22 @@
 		"gardening_landscaping": "باغباني ۽ لينڊ اسڪيپنگ",
 		"tree_cutting_pruning": "وڻ ڪٽڻ ۽ ڇانگڻ",
 		"pest_spraying": "ڪيڙا مار دوا ڇرڪائي",
-		"irrigation_well_services": "آبپاشي ۽ کوهه سروس"
+		"irrigation_well_services": "آبپاشي ۽ کوهه سروس",
+		"coconut_tree_climbing": "ناريل جو وڻ چاڙهڻ ۽ ٽوڙڻ",
+		"tractor_farm_equipment": "ٽريڪٽر ۽ زرعي اوزار",
+		"ploughing_land_prep": "هاري ڪرڻ ۽ زمين تيار ڪرڻ",
+		"crop_harvesting": "فصل ڪٽڻ ۽ ڏائڻ",
+		"seed_sapling_supply": "ٻج ۽ ٻوٽا سپلائي",
+		"fertilizer_manure": "کاد ۽ گوهه",
+		"soil_testing": "مٽيءَ جي جانچ ۽ تجزيو",
+		"borewell_drilling": "بورويل ڊرلنگ",
+		"farm_fencing": "فارم باڙ",
+		"organic_farming": "نامياتي زراعت صلاح",
+		"dairy_animal_husbandry": "کير ۽ مال مويشي",
+		"aquaculture_fisheries": "مڇي پالڻ ۽ آبي زراعت",
+		"farm_labor": "فارم مزدور",
+		"crop_transport": "فصل جي آمد رفت ۽ ذخيرو",
+		"agri_consulting": "زرعي صلاح"
 	},
 	"location": {
 		"detecting": "توهان جي جڳهه معلوم ڪري رهيا آهيون...",

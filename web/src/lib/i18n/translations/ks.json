@@ -163,7 +163,22 @@
 		"gardening_landscaping": "باغوانی تہٕ لینڈ سکیپنگ",
 		"tree_cutting_pruning": "بٔنُ کَٹنٕ تہٕ چھانٹنٕ",
 		"pest_spraying": "کیٖٹ ناشَک چھِرکاو",
-		"irrigation_well_services": "آبپاشی تہٕ کوٗل سروِس"
+		"irrigation_well_services": "آبپاشی تہٕ کوٗل سروِس",
+		"coconut_tree_climbing": "ناریٖل بٔنُ چَڑنٕ تہٕ فصَل کَٹنٕ",
+		"tractor_farm_equipment": "ٹریکٹر تہٕ زراعتی اوزار",
+		"ploughing_land_prep": "ہَل وَہنٕ تہٕ زمیٖن تیار کَرنٕ",
+		"crop_harvesting": "فصَل کَٹنٕ تہٕ ڈانٕوُنٕ",
+		"seed_sapling_supply": "بیٖج تہٕ بوٗٹ سَپلائی",
+		"fertilizer_manure": "کھاد تہٕ گوٗبَر",
+		"soil_testing": "مَٹی ٹیسٹ تہٕ تَجزِیہ",
+		"borewell_drilling": "بورویل ڈرِلِنگ",
+		"farm_fencing": "فارم باڑ",
+		"organic_farming": "نامیاتی زراعت مَشوَرہ",
+		"dairy_animal_husbandry": "ڈیٖری تہٕ مَویٖشی پالَن",
+		"aquaculture_fisheries": "گاڑ پالَن تہٕ آبی زراعت",
+		"farm_labor": "فارم مَزدوٗر",
+		"crop_transport": "فصَل ڈُلائی تہٕ ذَخیٖرہ",
+		"agri_consulting": "زراعت مَشوَرہ"
 	},
 	"location": {
 		"detecting": "तुहंदि जगह पता लगान...",

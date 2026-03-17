@@ -163,7 +163,22 @@
 		"gardening_landscaping": "Κηπουρική & Αρχιτεκτονική τοπίου",
 		"tree_cutting_pruning": "Κοπή & Κλάδεμα δέντρων",
 		"pest_spraying": "Ψεκασμός εντόμων",
-		"irrigation_well_services": "Άρδευση & Υπηρεσίες πηγαδιών"
+		"irrigation_well_services": "Άρδευση & Υπηρεσίες πηγαδιών",
+		"coconut_tree_climbing": "Αναρρίχηση σε κοκοφοίνικα & Συγκομιδή",
+		"tractor_farm_equipment": "Τρακτέρ & Γεωργικά μηχανήματα",
+		"ploughing_land_prep": "Όργωμα & Προετοιμασία εδάφους",
+		"crop_harvesting": "Θερισμός & Αλωνισμός",
+		"seed_sapling_supply": "Σπόροι & Δενδρύλλια",
+		"fertilizer_manure": "Λίπασμα & Κοπριά",
+		"soil_testing": "Εδαφολογική ανάλυση",
+		"borewell_drilling": "Γεώτρηση πηγαδιών",
+		"farm_fencing": "Περίφραξη αγροκτήματος",
+		"organic_farming": "Συμβουλευτική βιολογικής γεωργίας",
+		"dairy_animal_husbandry": "Γαλακτοκομία & Κτηνοτροφία",
+		"aquaculture_fisheries": "Υδατοκαλλιέργεια & Αλιεία",
+		"farm_labor": "Αγρεργάτες",
+		"crop_transport": "Μεταφορά & Αποθήκευση σοδειάς",
+		"agri_consulting": "Γεωργική συμβουλευτική"
 	},
 	"location": {
 		"detecting": "Εντοπισμός τοποθεσίας...",

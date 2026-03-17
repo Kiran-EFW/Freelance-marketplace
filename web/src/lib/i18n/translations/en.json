@@ -163,7 +163,22 @@
 		"gardening_landscaping": "Gardening & Landscaping",
 		"tree_cutting_pruning": "Tree Cutting & Pruning",
 		"pest_spraying": "Pest Spraying",
-		"irrigation_well_services": "Irrigation & Well Services"
+		"irrigation_well_services": "Irrigation & Well Services",
+		"coconut_tree_climbing": "Coconut Tree Climbing & Harvesting",
+		"tractor_farm_equipment": "Tractor & Farm Equipment",
+		"ploughing_land_prep": "Ploughing & Land Preparation",
+		"crop_harvesting": "Crop Harvesting & Threshing",
+		"seed_sapling_supply": "Seed & Sapling Supply",
+		"fertilizer_manure": "Fertilizer & Manure",
+		"soil_testing": "Soil Testing & Analysis",
+		"borewell_drilling": "Borewell Drilling",
+		"farm_fencing": "Farm Fencing & Compound",
+		"organic_farming": "Organic Farming Consultation",
+		"dairy_animal_husbandry": "Dairy & Animal Husbandry",
+		"aquaculture_fisheries": "Aquaculture & Fisheries",
+		"farm_labor": "Farm Labor",
+		"crop_transport": "Crop Transport & Storage",
+		"agri_consulting": "Agriculture Consulting"
 	},
 	"location": {
 		"detecting": "Detecting your location...",

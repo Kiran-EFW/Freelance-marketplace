@@ -163,7 +163,22 @@
 		"gardening_landscaping": "Giardinaggio e Paesaggistica",
 		"tree_cutting_pruning": "Taglio e Potatura alberi",
 		"pest_spraying": "Disinfestazione",
-		"irrigation_well_services": "Irrigazione e Servizi pozzi"
+		"irrigation_well_services": "Irrigazione e Servizi pozzi",
+		"coconut_tree_climbing": "Arrampicata su palma da cocco e Raccolta",
+		"tractor_farm_equipment": "Trattore e Attrezzature agricole",
+		"ploughing_land_prep": "Aratura e Preparazione del terreno",
+		"crop_harvesting": "Raccolta e Trebbiatura",
+		"seed_sapling_supply": "Sementi e Piantine",
+		"fertilizer_manure": "Fertilizzante e Letame",
+		"soil_testing": "Analisi del suolo",
+		"borewell_drilling": "Trivellazione pozzi",
+		"farm_fencing": "Recinzione agricola",
+		"organic_farming": "Consulenza agricoltura biologica",
+		"dairy_animal_husbandry": "Allevamento lattiero e zootecnia",
+		"aquaculture_fisheries": "Acquacoltura e Pesca",
+		"farm_labor": "Manodopera agricola",
+		"crop_transport": "Trasporto e Stoccaggio raccolto",
+		"agri_consulting": "Consulenza agricola"
 	},
 	"location": {
 		"detecting": "Rilevamento della tua posizione...",

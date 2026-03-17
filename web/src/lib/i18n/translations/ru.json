@@ -163,7 +163,22 @@
 		"gardening_landscaping": "Садоводство и Ландшафтный дизайн",
 		"tree_cutting_pruning": "Вырубка и Обрезка деревьев",
 		"pest_spraying": "Опрыскивание от вредителей",
-		"irrigation_well_services": "Орошение и Услуги колодцев"
+		"irrigation_well_services": "Орошение и Услуги колодцев",
+		"coconut_tree_climbing": "Лазание по кокосовой пальме и Сбор",
+		"tractor_farm_equipment": "Трактор и Сельхозтехника",
+		"ploughing_land_prep": "Вспашка и Подготовка почвы",
+		"crop_harvesting": "Уборка урожая и Обмолот",
+		"seed_sapling_supply": "Семена и Саженцы",
+		"fertilizer_manure": "Удобрения и Навоз",
+		"soil_testing": "Анализ почвы",
+		"borewell_drilling": "Бурение скважин",
+		"farm_fencing": "Ограждение фермы",
+		"organic_farming": "Консультации по органическому земледелию",
+		"dairy_animal_husbandry": "Молочное животноводство",
+		"aquaculture_fisheries": "Аквакультура и Рыболовство",
+		"farm_labor": "Сельскохозяйственные рабочие",
+		"crop_transport": "Транспортировка и Хранение урожая",
+		"agri_consulting": "Сельскохозяйственное консультирование"
 	},
 	"location": {
 		"detecting": "Определение вашего местоположения...",

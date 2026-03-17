@@ -163,7 +163,22 @@
 		"gardening_landscaping": "उद्यानकर्म तथा भूदृश्यनिर्माणम्",
 		"tree_cutting_pruning": "वृक्षच्छेदनम् तथा शाखाच्छेदनम्",
 		"pest_spraying": "कीटनाशकसिञ्चनम्",
-		"irrigation_well_services": "सिञ्चनम् तथा कूपसेवाः"
+		"irrigation_well_services": "सिञ्चनम् तथा कूपसेवाः",
+		"coconut_tree_climbing": "नारिकेलवृक्षारोहणम् तथा फलोत्पादनम्",
+		"tractor_farm_equipment": "यन्त्रवाहनम् तथा कृषियन्त्राणि",
+		"ploughing_land_prep": "कर्षणम् तथा क्षेत्रसज्जीकरणम्",
+		"crop_harvesting": "सस्यकर्तनम् तथा मर्दनम्",
+		"seed_sapling_supply": "बीजाङ्कुरप्रदानम्",
+		"fertilizer_manure": "रासायनिकसारम् तथा गोमयम्",
+		"soil_testing": "मृत्तिकापरीक्षणम् तथा विश्लेषणम्",
+		"borewell_drilling": "गर्तकूपखननम्",
+		"farm_fencing": "क्षेत्रवेष्टनम्",
+		"organic_farming": "जैविककृषिपरामर्शः",
+		"dairy_animal_husbandry": "दुग्धोद्योगः तथा पशुपालनम्",
+		"aquaculture_fisheries": "मत्स्यपालनम् तथा जलकृषिः",
+		"farm_labor": "कृषिश्रमिकाः",
+		"crop_transport": "सस्यपरिवहनम् तथा भण्डारणम्",
+		"agri_consulting": "कृषिपरामर्शः"
 	},
 	"location": {
 		"detecting": "भवतः स्थानं ज्ञायते...",

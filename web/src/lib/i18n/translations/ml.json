@@ -163,7 +163,22 @@
 		"gardening_landscaping": "പൂന്തോട്ടപരിപാലനം & ലാന്‍ഡ്‌സ്‌കേപ്പിംഗ്",
 		"tree_cutting_pruning": "മരം മുറിക്കല്‍ & കൊമ്പ് വെട്ടല്‍",
 		"pest_spraying": "കീടനാശിനി തളിക്കല്‍",
-		"irrigation_well_services": "ജലസേചനം & കിണര്‍ സേവനങ്ങള്‍"
+		"irrigation_well_services": "ജലസേചനം & കിണര്‍ സേവനങ്ങള്‍",
+		"coconut_tree_climbing": "തെങ്ങ് കയറ്റം & വിളവെടുപ്പ്",
+		"tractor_farm_equipment": "ട്രാക്ടർ & കൃഷി ഉപകരണങ്ങൾ",
+		"ploughing_land_prep": "ഉഴവ് & ഭൂമി തയ്യാറാക്കൽ",
+		"crop_harvesting": "വിളവെടുപ്പ് & മെതി",
+		"seed_sapling_supply": "വിത്ത് & തൈ വിതരണം",
+		"fertilizer_manure": "വളം & ജൈവ വളം",
+		"soil_testing": "മണ്ണ് പരിശോധന & വിശകലനം",
+		"borewell_drilling": "ബോർവെൽ കുഴിക്കൽ",
+		"farm_fencing": "കൃഷിയിട വേലി",
+		"organic_farming": "ജൈവ കൃഷി ഉപദേശം",
+		"dairy_animal_husbandry": "ക്ഷീരോൽപ്പാദനം & മൃഗസംരക്ഷണം",
+		"aquaculture_fisheries": "മത്സ്യകൃഷി & ജലകൃഷി",
+		"farm_labor": "കൃഷി തൊഴിലാളികൾ",
+		"crop_transport": "വിള ഗതാഗതം & സംഭരണം",
+		"agri_consulting": "കൃഷി ഉപദേശം"
 	},
 	"location": {
 		"detecting": "നിങ്ങളുടെ സ്ഥാനം കണ്ടെത്തുന്നു...",

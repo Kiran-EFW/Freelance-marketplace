@@ -163,7 +163,22 @@
 		"gardening_landscaping": "બાગકામ અને લેન્ડસ્કેપિંગ",
 		"tree_cutting_pruning": "વૃક્ષ કાપણી અને છાંટણી",
 		"pest_spraying": "જંતુનાશક છંટકાવ",
-		"irrigation_well_services": "સિંચાઈ અને કૂવા સેવાઓ"
+		"irrigation_well_services": "સિંચાઈ અને કૂવા સેવાઓ",
+		"coconut_tree_climbing": "નાળિયેરનું ઝાડ ચઢવું અને લણણી",
+		"tractor_farm_equipment": "ટ્રેક્ટર અને ખેતીના સાધનો",
+		"ploughing_land_prep": "ખેડાણ અને જમીન તૈયારી",
+		"crop_harvesting": "પાક લણણી અને થ્રેશિંગ",
+		"seed_sapling_supply": "બીજ અને રોપા પુરવઠો",
+		"fertilizer_manure": "ખાતર અને છાણ",
+		"soil_testing": "માટી પરીક્ષણ અને વિશ્લેષણ",
+		"borewell_drilling": "બોરવેલ ડ્રિલિંગ",
+		"farm_fencing": "ખેતર વાડ",
+		"organic_farming": "ઓર્ગેનિક ખેતી પરામર્શ",
+		"dairy_animal_husbandry": "ડેરી અને પશુપાલન",
+		"aquaculture_fisheries": "માછલી ઉછેર અને જળકૃષિ",
+		"farm_labor": "ખેત મજૂર",
+		"crop_transport": "પાક પરિવહન અને સંગ્રહ",
+		"agri_consulting": "કૃષિ પરામર્શ"
 	},
 	"location": {
 		"detecting": "તમારું સ્થાન શોધી રહ્યા છીએ...",

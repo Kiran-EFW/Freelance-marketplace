@@ -163,7 +163,22 @@
 		"gardening_landscaping": "Havearbejde & Landskabspleje",
 		"tree_cutting_pruning": "Træfældning & Beskæring",
 		"pest_spraying": "Skadedyrsbekæmpelse",
-		"irrigation_well_services": "Vanding & Brøndservice"
+		"irrigation_well_services": "Vanding & Brøndservice",
+		"coconut_tree_climbing": "Kokospalmeklatring & Høst",
+		"tractor_farm_equipment": "Traktor & Landbrugsmaskiner",
+		"ploughing_land_prep": "Pløjning & Jordbearbejdning",
+		"crop_harvesting": "Høst & Tærskning",
+		"seed_sapling_supply": "Frø & Planter",
+		"fertilizer_manure": "Gødning & Naturgødning",
+		"soil_testing": "Jordanalyse",
+		"borewell_drilling": "Brøndboring",
+		"farm_fencing": "Gårdhegn",
+		"organic_farming": "Økologisk landbrug rådgivning",
+		"dairy_animal_husbandry": "Mejeridrift & Husdyravl",
+		"aquaculture_fisheries": "Akvakultur & Fiskeri",
+		"farm_labor": "Landarbejdere",
+		"crop_transport": "Høsttransport & Opbevaring",
+		"agri_consulting": "Landbrugsrådgivning"
 	},
 	"location": {
 		"detecting": "Finder din placering...",

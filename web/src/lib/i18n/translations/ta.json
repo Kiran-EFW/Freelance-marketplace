@@ -163,7 +163,22 @@
 		"gardening_landscaping": "தோட்டக்கலை மற்றும் நிலப்பரப்பு",
 		"tree_cutting_pruning": "மரம் வெட்டுதல் மற்றும் கிளை நறுக்குதல்",
 		"pest_spraying": "பூச்சி தெளிப்பு",
-		"irrigation_well_services": "நீர்ப்பாசனம் மற்றும் கிணறு சேவைகள்"
+		"irrigation_well_services": "நீர்ப்பாசனம் மற்றும் கிணறு சேவைகள்",
+		"coconut_tree_climbing": "தென்னை மரம் ஏறுதல் மற்றும் அறுவடை",
+		"tractor_farm_equipment": "டிராக்டர் மற்றும் விவசாய உபகரணங்கள்",
+		"ploughing_land_prep": "உழவு மற்றும் நிலம் தயாரிப்பு",
+		"crop_harvesting": "பயிர் அறுவடை மற்றும் கதிரடிப்பு",
+		"seed_sapling_supply": "விதை மற்றும் நாற்று வழங்கல்",
+		"fertilizer_manure": "உரம் மற்றும் எரு",
+		"soil_testing": "மண் பரிசோதனை மற்றும் பகுப்பாய்வு",
+		"borewell_drilling": "ஆழ்துளை கிணறு தோண்டுதல்",
+		"farm_fencing": "பண்ணை வேலி",
+		"organic_farming": "இயற்கை வேளாண்மை ஆலோசனை",
+		"dairy_animal_husbandry": "பால்பண்ணை மற்றும் கால்நடை பராமரிப்பு",
+		"aquaculture_fisheries": "மீன் வளர்ப்பு மற்றும் நீர்வாழ் பண்ணை",
+		"farm_labor": "விவசாய தொழிலாளர்",
+		"crop_transport": "பயிர் போக்குவரத்து மற்றும் சேமிப்பு",
+		"agri_consulting": "வேளாண் ஆலோசனை"
 	},
 	"location": {
 		"detecting": "உங்கள் இருப்பிடத்தைக் கண்டறிகிறது...",

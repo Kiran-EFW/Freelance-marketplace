@@ -163,7 +163,22 @@
 		"gardening_landscaping": "ਬਾਗਬਾਨੀ ਅਤੇ ਲੈਂਡਸਕੇਪਿੰਗ",
 		"tree_cutting_pruning": "ਰੁੱਖ ਕੱਟਣਾ ਅਤੇ ਛਾਂਟਣਾ",
 		"pest_spraying": "ਕੀਟਨਾਸ਼ਕ ਛਿੜਕਾਅ",
-		"irrigation_well_services": "ਸਿੰਚਾਈ ਅਤੇ ਖੂਹ ਸੇਵਾਵਾਂ"
+		"irrigation_well_services": "ਸਿੰਚਾਈ ਅਤੇ ਖੂਹ ਸੇਵਾਵਾਂ",
+		"coconut_tree_climbing": "ਨਾਰੀਅਲ ਦਾ ਰੁੱਖ ਚੜ੍ਹਨਾ ਅਤੇ ਵਾਢੀ",
+		"tractor_farm_equipment": "ਟਰੈਕਟਰ ਅਤੇ ਖੇਤੀ ਸਾਜ਼ੋ-ਸਮਾਨ",
+		"ploughing_land_prep": "ਹਲ ਵਾਹੁਣਾ ਅਤੇ ਜ਼ਮੀਨ ਤਿਆਰੀ",
+		"crop_harvesting": "ਫ਼ਸਲ ਦੀ ਕਟਾਈ ਅਤੇ ਗਹਾਈ",
+		"seed_sapling_supply": "ਬੀਜ ਅਤੇ ਬੂਟੇ ਸਪਲਾਈ",
+		"fertilizer_manure": "ਖਾਦ ਅਤੇ ਰੂੜੀ",
+		"soil_testing": "ਮਿੱਟੀ ਪਰੀਖਣ ਅਤੇ ਵਿਸ਼ਲੇਸ਼ਣ",
+		"borewell_drilling": "ਬੋਰਵੈੱਲ ਡ੍ਰਿਲਿੰਗ",
+		"farm_fencing": "ਖੇਤ ਵਾੜ",
+		"organic_farming": "ਜੈਵਿਕ ਖੇਤੀ ਸਲਾਹ",
+		"dairy_animal_husbandry": "ਡੇਅਰੀ ਅਤੇ ਪਸ਼ੂ ਪਾਲਣ",
+		"aquaculture_fisheries": "ਮੱਛੀ ਪਾਲਣ ਅਤੇ ਜਲ ਕ੍ਰਿਸ਼ੀ",
+		"farm_labor": "ਖੇਤ ਮਜ਼ਦੂਰ",
+		"crop_transport": "ਫ਼ਸਲ ਢੋਆ-ਢੁਆਈ ਅਤੇ ਸਟੋਰੇਜ",
+		"agri_consulting": "ਖੇਤੀ ਸਲਾਹ"
 	},
 	"location": {
 		"detecting": "ਤੁਹਾਡਾ ਟਿਕਾਣਾ ਲੱਭ ਰਿਹਾ ਹੈ...",

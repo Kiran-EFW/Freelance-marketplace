@@ -163,7 +163,22 @@
 		"gardening_landscaping": "Bahçecilik ve Peyzaj",
 		"tree_cutting_pruning": "Ağaç Kesimi ve Budama",
 		"pest_spraying": "Zararlı İlaçlama",
-		"irrigation_well_services": "Sulama ve Kuyu Hizmetleri"
+		"irrigation_well_services": "Sulama ve Kuyu Hizmetleri",
+		"coconut_tree_climbing": "Hindistancevizi Ağacına Tırmanma ve Hasat",
+		"tractor_farm_equipment": "Traktör ve Tarım Makineleri",
+		"ploughing_land_prep": "Sürme ve Toprak Hazırlığı",
+		"crop_harvesting": "Hasat ve Harman",
+		"seed_sapling_supply": "Tohum ve Fide",
+		"fertilizer_manure": "Gübre ve Hayvan Gübresi",
+		"soil_testing": "Toprak Analizi",
+		"borewell_drilling": "Kuyu Sondajı",
+		"farm_fencing": "Çiftlik Çiti",
+		"organic_farming": "Organik Tarım Danışmanlığı",
+		"dairy_animal_husbandry": "Süt Hayvancılığı",
+		"aquaculture_fisheries": "Su Ürünleri Yetiştiriciliği ve Balıkçılık",
+		"farm_labor": "Tarım İşçileri",
+		"crop_transport": "Ürün Taşıma ve Depolama",
+		"agri_consulting": "Tarım Danışmanlığı"
 	},
 	"location": {
 		"detecting": "Konumunuz tespit ediliyor...",

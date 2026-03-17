@@ -163,7 +163,22 @@
 		"gardening_landscaping": "Grădinărit & Amenajare peisagistică",
 		"tree_cutting_pruning": "Tăiere & Curățare copaci",
 		"pest_spraying": "Stropire împotriva dăunătorilor",
-		"irrigation_well_services": "Irigații & Servicii de fântâni"
+		"irrigation_well_services": "Irigații & Servicii de fântâni",
+		"coconut_tree_climbing": "Cățărare pe cocotier și Recoltare",
+		"tractor_farm_equipment": "Tractor și Echipamente agricole",
+		"ploughing_land_prep": "Arat și Pregătirea terenului",
+		"crop_harvesting": "Recoltare și Treierat",
+		"seed_sapling_supply": "Semințe și Răsaduri",
+		"fertilizer_manure": "Îngrășământ și Gunoi",
+		"soil_testing": "Analiza solului",
+		"borewell_drilling": "Forarea puțurilor",
+		"farm_fencing": "Gard de fermă",
+		"organic_farming": "Consultanță agricultură ecologică",
+		"dairy_animal_husbandry": "Zootehnie și Creșterea animalelor",
+		"aquaculture_fisheries": "Acvacultură și Pescuit",
+		"farm_labor": "Muncitori agricoli",
+		"crop_transport": "Transport și Depozitare recoltă",
+		"agri_consulting": "Consultanță agricolă"
 	},
 	"location": {
 		"detecting": "Se detectează locația ta...",
