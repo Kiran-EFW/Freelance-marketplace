@@ -1,6 +1,7 @@
 <script lang="ts">
 	import '../app.css';
-	import { Bell, Menu, X, ChevronDown, User, LayoutDashboard, Settings, LogOut, Briefcase, Search, Award } from 'lucide-svelte';
+	import { Bell, Menu, X, ChevronDown, User, LayoutDashboard, Settings, LogOut, Briefcase, Search, Award, MapPin, MessageSquare, Leaf } from 'lucide-svelte';
+	import { messages as messagesApi } from '$lib/api/client';
 	import { subscribe as authSubscribe, logout, type AuthState } from '$lib/stores/auth';
 	import Avatar from '$lib/components/ui/Avatar.svelte';
 	import Toast from '$lib/components/ui/Toast.svelte';
@@ -19,6 +20,7 @@
 
 	let mobileMenuOpen = $state(false);
 	let userDropdownOpen = $state(false);
+	let unreadMessageCount = $state(0);
 
 	$effect(() => {
 		const unsub = authSubscribe((state) => {
@@ -32,6 +34,25 @@
 			initLocale();
 		}
 	});
+
+	$effect(() => {
+		if (authState.user) {
+			fetchUnreadMessageCount();
+			const interval = setInterval(fetchUnreadMessageCount, 30000);
+			return () => clearInterval(interval);
+		} else {
+			unreadMessageCount = 0;
+		}
+	});
+
+	async function fetchUnreadMessageCount() {
+		try {
+			const response = await messagesApi.getUnreadCount();
+			unreadMessageCount = response.data.count;
+		} catch {
+			// Silent fail for unread count
+		}
+	}
 
 	const isLoggedIn = $derived(authState.user !== null);
 	const isProviderUser = $derived(authState.user?.role === 'provider');
@@ -70,6 +91,14 @@
 				<a href="/jobs" class="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
 					{t('nav.jobs')}
 				</a>
+				<a href="/map" class="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
+					<MapPin class="h-4 w-4" />
+					{t('nav.map')}
+				</a>
+				<a href="/seasonal-calendar" class="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
+					<Leaf class="h-4 w-4" />
+					{t('nav.seasonal_calendar')}
+				</a>
 				{#if isLoggedIn && isProviderUser}
 					<a href="/provider/dashboard" class="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
 						{t('nav.provider_hub')}
@@ -86,6 +115,16 @@
 			<div class="hidden items-center gap-3 md:flex">
 				<LanguageSwitcher />
 				{#if isLoggedIn}
+					<!-- Messages -->
+					<a href="/messages" class="relative rounded-lg p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800">
+						<MessageSquare class="h-5 w-5" />
+						{#if unreadMessageCount > 0}
+							<span class="absolute right-1 top-1 flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-primary-600 px-1 text-[10px] font-bold text-white">
+								{unreadMessageCount > 99 ? '99+' : unreadMessageCount}
+							</span>
+						{/if}
+					</a>
+
 					<!-- Notification Bell -->
 					<a href="/notifications" class="relative rounded-lg p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800">
 						<Bell class="h-5 w-5" />
@@ -201,9 +240,21 @@
 					<a href="/jobs" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
 						{t('nav.jobs')}
 					</a>
+					<a href="/map" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
+						{t('nav.map')}
+					</a>
+					<a href="/seasonal-calendar" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
+						{t('nav.seasonal_calendar')}
+					</a>
 					{#if isLoggedIn}
 						<a href="/dashboard" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
 							{t('nav.dashboard')}
+						</a>
+						<a href="/messages" class="flex items-center justify-between rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
+							{t('nav.messages')}
+							{#if unreadMessageCount > 0}
+								<span class="rounded-full bg-primary-600 px-2 py-0.5 text-[10px] font-bold text-white">{unreadMessageCount}</span>
+							{/if}
 						</a>
 						<a href="/notifications" class="flex items-center justify-between rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
 							{t('nav.notifications')}

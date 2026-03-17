@@ -1,33 +1,91 @@
 <script lang="ts">
-	import { IndianRupee, Briefcase, CheckCircle, Shield, Star, Clock, ToggleLeft, ToggleRight, ArrowRight, Calendar } from 'lucide-svelte';
+	import { onMount } from 'svelte';
+	import { IndianRupee, Briefcase, CheckCircle, Shield, Star, Clock, ToggleLeft, ToggleRight, ArrowRight, Calendar, Loader2 } from 'lucide-svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import StarRating from '$lib/components/ui/StarRating.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import api from '$lib/api/client';
+	import { toastError } from '$lib/stores/toast';
 
+	let loading = $state(true);
+	let error = $state('');
 	let isOnline = $state(true);
 
-	const earnings = { today: 2400, thisWeek: 12500, thisMonth: 48000 };
-	const activeJobs = 3;
-	const completedThisMonth = 18;
-	const trustScore = 92;
-	const ratingAvg = 4.7;
-	const ratingCount = 156;
-	const ratingDist = { 5: 98, 4: 35, 3: 15, 2: 5, 1: 3 };
+	let earnings = $state({ today: 0, thisWeek: 0, thisMonth: 0 });
+	let activeJobs = $state(0);
+	let completedThisMonth = $state(0);
+	let trustScore = $state(0);
+	let ratingAvg = $state(0);
+	let ratingCount = $state(0);
+	let ratingDist = $state<Record<number, number>>({ 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 });
+	let upcomingSchedule = $state<any[]>([]);
 
-	const upcomingSchedule = [
-		{ id: '1', type: 'job', title: 'Fix kitchen plumbing', customer: 'Amit Verma', time: '10:00 AM', date: 'Today', location: '560001' },
-		{ id: '2', type: 'route', title: 'Route A - Stop 3', customer: 'Priya Menon', time: '2:00 PM', date: 'Today', location: '560002' },
-		{ id: '3', type: 'job', title: 'Install water heater', customer: 'Arjun Das', time: '9:00 AM', date: 'Tomorrow', location: '560003' },
-		{ id: '4', type: 'route', title: 'Route B - Stop 1', customer: 'Meera Reddy', time: '11:00 AM', date: 'Tomorrow', location: '560004' },
-		{ id: '5', type: 'job', title: 'Bathroom pipe repair', customer: 'Kiran Rao', time: '3:00 PM', date: 'Tomorrow', location: '560001' }
-	];
+	onMount(async () => {
+		try {
+			const [dashRes, scheduleRes] = await Promise.all([
+				api.providers.getDashboard(),
+				api.routes.getSchedule().catch(() => ({ data: [] }))
+			]);
+
+			const dash = dashRes.data;
+			earnings = {
+				today: dash.earnings_today || 0,
+				thisWeek: dash.earnings_this_week || 0,
+				thisMonth: dash.earnings_this_month || 0
+			};
+			activeJobs = dash.active_jobs || 0;
+			completedThisMonth = dash.completed_this_month || 0;
+			trustScore = dash.trust_score || 0;
+			ratingAvg = dash.rating_average || 0;
+			ratingCount = dash.rating_count || 0;
+			isOnline = dash.is_online ?? true;
+			if (dash.rating_distribution) {
+				ratingDist = dash.rating_distribution;
+			}
+
+			upcomingSchedule = (scheduleRes.data || []).slice(0, 5).map((entry: any) => ({
+				id: entry.id,
+				type: entry.type || 'job',
+				title: entry.title || '',
+				customer: entry.customer?.name || entry.customer_name || '',
+				time: entry.time || entry.start_time || '',
+				date: entry.date || '',
+				location: entry.postcode || entry.location || ''
+			}));
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'Failed to load dashboard data';
+		} finally {
+			loading = false;
+		}
+	});
+
+	async function toggleOnline() {
+		const newState = !isOnline;
+		try {
+			await api.providers.toggleOnline(newState);
+			isOnline = newState;
+		} catch (err) {
+			toastError(err instanceof Error ? err.message : 'Failed to update status');
+		}
+	}
 </script>
 
 <svelte:head>
 	<title>Provider Dashboard - Seva</title>
 </svelte:head>
 
+{#if loading}
+<div class="flex items-center justify-center py-20">
+	<Loader2 class="h-8 w-8 animate-spin text-primary-600" />
+</div>
+{:else if error}
+<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+	<div class="rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-800 dark:bg-red-900/20">
+		<p class="text-red-600 dark:text-red-400">{error}</p>
+	</div>
+</div>
+{:else}
 <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
 	<div class="flex flex-wrap items-center justify-between gap-4">
 		<div>
@@ -35,7 +93,7 @@
 			<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Welcome back! Here's your overview.</p>
 		</div>
 		<button
-			onclick={() => (isOnline = !isOnline)}
+			onclick={toggleOnline}
 			class="flex items-center gap-2 rounded-lg border px-4 py-2 text-sm font-medium transition
 				{isOnline
 					? 'border-secondary-300 bg-secondary-50 text-secondary-700 dark:border-secondary-600 dark:bg-secondary-900/20 dark:text-secondary-400'
@@ -188,3 +246,4 @@
 		</div>
 	</div>
 </div>
+{/if}

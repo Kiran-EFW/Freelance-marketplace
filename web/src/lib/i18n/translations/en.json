@@ -21,12 +21,15 @@
 	"nav": {
 		"find_providers": "Find Providers",
 		"jobs": "Jobs",
+		"map": "Map",
+		"seasonal_calendar": "Seasonal Calendar",
 		"provider_hub": "Provider Hub",
 		"admin": "Admin",
 		"dashboard": "Dashboard",
 		"profile": "Profile",
 		"points": "Points & Rewards",
 		"notifications": "Notifications",
+		"messages": "Messages",
 		"settings": "Settings",
 		"account": "Account"
 	},
@@ -205,6 +208,31 @@
 		"tagline": "Connecting trusted service providers with customers across India.",
 		"copyright": "Seva. All rights reserved."
 	},
+	"map": {
+		"title": "Map View",
+		"filter_category": "Filter by category",
+		"filter_radius": "Search radius",
+		"show_jobs": "Show Jobs",
+		"show_providers": "Show Providers",
+		"no_results": "No results in this area",
+		"km_away": "{distance} km away",
+		"view_details": "View Details"
+	},
+	"messages": {
+		"title": "Messages",
+		"no_conversations": "No conversations yet",
+		"new_message": "New Message",
+		"type_message": "Type a message...",
+		"send": "Send",
+		"unread": "unread",
+		"today": "Today",
+		"yesterday": "Yesterday",
+		"start_conversation": "Start a conversation with this provider",
+		"loading": "Loading messages...",
+		"sending": "Sending...",
+		"no_messages": "No messages yet. Send a message to start the conversation.",
+		"conversation_with": "Conversation with"
+	},
 	"auth": {
 		"sign_in_title": "Sign in to Seva",
 		"sign_in_subtitle": "Enter your phone number to receive a verification code.",
@@ -267,5 +295,48 @@
 		"otp_failed": "Failed to send OTP. Please try again.",
 		"signed_in_success": "Signed in successfully",
 		"invalid_otp_retry": "Invalid OTP. Please try again."
+	},
+	"routes": {
+		"optimize": "Optimize Route",
+		"total_distance": "Total Distance",
+		"estimated_time": "Estimated Time",
+		"add_stop": "Add Stop",
+		"remove_stop": "Remove Stop",
+		"gaps": "Service Gaps",
+		"no_coverage": "Areas with no provider coverage"
+	},
+	"crop_calendar": {
+		"title": "Seasonal Calendar",
+		"subtitle": "See what crop services are available this month",
+		"this_month": "This Month",
+		"in_season": "In Season",
+		"off_season": "Off Season",
+		"typical_price": "Typical Price",
+		"find_provider": "Find Provider",
+		"per_tree": "per tree",
+		"per_day": "per day",
+		"per_sqft": "per sq ft"
+	},
+	"subscription": {
+		"title": "Subscription",
+		"current_plan": "Current Plan",
+		"upgrade": "Upgrade",
+		"downgrade": "Downgrade",
+		"cancel": "Cancel Subscription",
+		"free_plan": "Free",
+		"free_desc": "Get started with basic features",
+		"pro_plan": "Pro",
+		"pro_desc": "Unlimited leads and priority search",
+		"business_plan": "Business",
+		"business_desc": "Team profiles and advanced tools",
+		"per_month": "/month",
+		"features": "Features",
+		"leads_per_month": "leads/month",
+		"unlimited_leads": "Unlimited leads",
+		"priority_search": "Priority in search",
+		"pro_badge": "Pro badge",
+		"analytics": "Analytics dashboard",
+		"commission_discount": "{percent}% commission discount",
+		"billing_history": "Billing History"
 	}
 }

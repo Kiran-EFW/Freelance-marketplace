@@ -15,6 +15,7 @@ export 'models/provider.dart';
 export 'models/category.dart';
 export 'models/review.dart';
 export 'models/notification.dart';
+export 'models/result.dart';
 
 // Repositories
 export 'repositories/auth_repository.dart';
@@ -26,3 +27,6 @@ export 'repositories/notification_repository.dart';
 export 'services/auth_service.dart';
 export 'services/location_service.dart';
 export 'services/storage_service.dart';
+export 'services/push_notification_service.dart';
+export 'services/local_storage_service.dart';
+export 'services/sync_service.dart';

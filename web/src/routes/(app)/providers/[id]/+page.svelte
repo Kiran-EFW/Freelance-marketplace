@@ -1,70 +1,120 @@
 <script lang="ts">
+	import { onMount } from 'svelte';
 	import { page } from '$app/stores';
-	import { ArrowLeft, Star, MapPin, Clock, Shield, Phone, MessageSquare, Briefcase, Calendar, CheckCircle, IndianRupee } from 'lucide-svelte';
+	import { goto } from '$app/navigation';
+	import { ArrowLeft, Star, MapPin, Clock, Shield, Phone, MessageSquare, Briefcase, Calendar, CheckCircle, IndianRupee, Loader2 } from 'lucide-svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Avatar from '$lib/components/ui/Avatar.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import StarRating from '$lib/components/ui/StarRating.svelte';
+	import api from '$lib/api/client';
+	import { t } from '$lib/i18n/index.svelte';
 
 	let providerId = $derived($page.params.id);
+	let loading = $state(true);
+	let error = $state('');
 
-	const provider = {
-		id: '1',
-		name: 'Suresh Nair',
-		bio: 'Experienced plumber with over 10 years of expertise. I specialize in residential plumbing, water heater installation, kitchen and bathroom renovations, and emergency leak repairs. Committed to quality work and customer satisfaction.',
-		rating: 4.8,
-		reviewCount: 156,
-		completedJobs: 156,
-		memberSince: '2025-07-20',
-		responseTime: '30 minutes',
-		hourlyRate: 500,
-		isVerified: true,
-		isOnline: true,
-		trustScore: 92,
-		skills: ['Plumbing', 'Pipe Fitting', 'Water Heater', 'Leak Repair', 'Bathroom Renovation', 'Kitchen Plumbing'],
-		serviceArea: 'Koramangala, HSR Layout, BTM Layout, Jayanagar',
-		languages: ['English', 'Hindi', 'Kannada'],
-		workingHours: 'Mon-Sat, 8:00 AM - 7:00 PM'
-	};
+	let provider = $state<any>(null);
+	let providerUserId = $state<string>('');
+	let sendingMessage = $state(false);
+	let reviews = $state<any[]>([]);
+	let completedPhotos = $state<any[]>([]);
+	let ratingDist = $state<Record<number, number>>({ 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 });
 
-	const reviews = [
-		{
-			id: '1', customerName: 'Amit Verma', rating: 5, comment: 'Excellent work! Suresh fixed our kitchen plumbing quickly and professionally. Very punctual and clean work.',
-			date: '2026-03-15', jobTitle: 'Kitchen plumbing repair'
-		},
-		{
-			id: '2', customerName: 'Priya Menon', rating: 5, comment: 'Second time using Suresh for plumbing work. Always reliable and does quality work. Highly recommended.',
-			date: '2026-03-10', jobTitle: 'Bathroom pipe repair'
-		},
-		{
-			id: '3', customerName: 'Arjun Das', rating: 4, comment: 'Good work on the water heater installation. Arrived on time and completed within the estimated timeframe.',
-			date: '2026-03-05', jobTitle: 'Water heater installation'
-		},
-		{
-			id: '4', customerName: 'Meera Reddy', rating: 5, comment: 'Very knowledgeable and professional. Diagnosed the issue quickly and fixed it for a fair price.',
-			date: '2026-02-28', jobTitle: 'Emergency leak repair'
-		},
-		{
-			id: '5', customerName: 'Kiran Rao', rating: 4, comment: 'Solid work. Would have preferred more communication about the timeline, but the end result was great.',
-			date: '2026-02-20', jobTitle: 'Pipe fitting'
+	onMount(async () => {
+		try {
+			const [providerRes, reviewsRes] = await Promise.all([
+				api.providers.get(providerId),
+				api.reviews.listForProvider(providerId, { per_page: 10 }).catch(() => ({ data: [] }))
+			]);
+
+			const p = providerRes.data;
+			providerUserId = p.user_id || p.id;
+			provider = {
+				id: p.id,
+				name: p.user?.name || p.business_name || 'Provider',
+				bio: p.bio || '',
+				rating: p.rating_average || 0,
+				reviewCount: p.rating_count || 0,
+				completedJobs: p.completed_jobs_count || p.rating_count || 0,
+				memberSince: p.created_at?.split('T')[0] || '',
+				responseTime: p.response_time_minutes ? `${p.response_time_minutes} minutes` : 'N/A',
+				hourlyRate: p.hourly_rate || 0,
+				isVerified: p.verification_status === 'approved',
+				isOnline: p.is_online ?? false,
+				trustScore: p.trust_score || 0,
+				skills: (p.categories || []).map((c: any) => c.name || c),
+				serviceArea: (p.service_areas || []).join(', ') || 'N/A',
+				languages: p.languages || [],
+				workingHours: p.working_hours || 'N/A'
+			};
+
+			completedPhotos = (p.portfolio_images || []).map((img: any, i: number) => ({
+				id: String(i),
+				title: img.title || `Work ${i + 1}`,
+				description: img.description || '',
+				url: img.url || img
+			}));
+
+			reviews = (reviewsRes.data || []).map((r: any) => ({
+				id: r.id,
+				customerName: r.reviewer?.name || r.customer?.name || 'Customer',
+				rating: r.rating,
+				comment: r.comment || '',
+				date: r.created_at?.split('T')[0] || '',
+				jobTitle: r.job?.title || r.job_title || ''
+			}));
+
+			// Build rating distribution from reviews
+			const dist: Record<number, number> = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+			reviews.forEach((r: any) => {
+				if (r.rating >= 1 && r.rating <= 5) dist[r.rating]++;
+			});
+			ratingDist = dist;
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'Failed to load provider profile';
+		} finally {
+			loading = false;
 		}
-	];
+	});
 
-	const completedPhotos = [
-		{ id: '1', title: 'Kitchen plumbing renovation', description: 'Complete sink and pipe replacement' },
-		{ id: '2', title: 'Water heater installation', description: 'New geyser installation with copper piping' },
-		{ id: '3', title: 'Bathroom renovation', description: 'Full bathroom plumbing overhaul' },
-		{ id: '4', title: 'Emergency pipe repair', description: 'Fixed burst pipe in basement' }
-	];
-
-	const ratingDist = { 5: 98, 4: 35, 3: 15, 2: 5, 1: 3 };
+	async function handleSendMessage() {
+		if (!providerUserId || sendingMessage) return;
+		sendingMessage = true;
+		try {
+			const response = await api.messages.createConversation(providerUserId);
+			const conversationId = response.data.id;
+			goto(`/messages/${conversationId}`);
+		} catch (err) {
+			console.error('Failed to create conversation:', err);
+			sendingMessage = false;
+		}
+	}
 </script>
 
 <svelte:head>
-	<title>{provider.name} - Seva</title>
-	<meta name="description" content="{provider.bio.substring(0, 160)}" />
+	<title>{provider ? `${provider.name} - Seva` : 'Provider - Seva'}</title>
+	{#if provider}
+		<meta name="description" content="{provider.bio.substring(0, 160)}" />
+	{/if}
 </svelte:head>
+
+{#if loading}
+<div class="flex items-center justify-center py-20">
+	<Loader2 class="h-8 w-8 animate-spin text-primary-600" />
+</div>
+{:else if error || !provider}
+<div class="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+	<a href="/providers" class="inline-flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700">
+		<ArrowLeft class="h-4 w-4" />
+		Back to Providers
+	</a>
+	<div class="mt-6 rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-800 dark:bg-red-900/20">
+		<p class="text-red-600 dark:text-red-400">{error || 'Provider not found'}</p>
+	</div>
+</div>
+{:else}
 
 <div class="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
 	<a href="/providers" class="inline-flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700">
@@ -267,9 +317,9 @@
 						<Briefcase class="h-4 w-4" />
 						Request Quote
 					</Button>
-					<Button variant="outline" class="w-full justify-center">
+					<Button variant="outline" class="w-full justify-center" onclick={handleSendMessage} loading={sendingMessage}>
 						<MessageSquare class="h-4 w-4" />
-						Send Message
+						{t('messages.start_conversation')}
 					</Button>
 					<Button variant="outline" class="w-full justify-center">
 						<Phone class="h-4 w-4" />
@@ -280,3 +330,4 @@
 		</div>
 	</div>
 </div>
+{/if}

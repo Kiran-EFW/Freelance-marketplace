@@ -1,35 +1,57 @@
 <script lang="ts">
-	import { Bell, Briefcase, MessageSquare, Star, IndianRupee, AlertTriangle, CheckCircle, Award } from 'lucide-svelte';
+	import { onMount } from 'svelte';
+	import { Bell, Briefcase, MessageSquare, Star, IndianRupee, AlertTriangle, CheckCircle, Award, Loader2 } from 'lucide-svelte';
 	import Button from '$lib/components/ui/Button.svelte';
-	import { toastSuccess } from '$lib/stores/toast';
+	import { toastSuccess, toastError } from '$lib/stores/toast';
+	import api from '$lib/api/client';
 
 	const iconMap: Record<string, any> = {
 		job: Briefcase, quote: MessageSquare, review: Star, payment: IndianRupee,
 		dispute: AlertTriangle, system: Bell, points: Award, kyc: CheckCircle
 	};
 
-	const mockNotifications = [
-		{ id: '1', type: 'quote', title: 'New quote received', message: 'Suresh Nair quoted Rs. 800 for "Fix leaking kitchen tap"', read: false, time: '5 min ago', url: '/jobs/1' },
-		{ id: '2', type: 'quote', title: 'New quote received', message: 'Ravi Kumar quoted Rs. 1,200 for "Fix leaking kitchen tap"', read: false, time: '1 hr ago', url: '/jobs/1' },
-		{ id: '3', type: 'payment', title: 'Payment received', message: 'Rs. 800 payment confirmed for "Electrical wiring job"', read: false, time: '3 hrs ago', url: '/payments' },
-		{ id: '4', type: 'review', title: 'New review', message: 'Priya Menon left a 5-star review on "Tap installation"', read: true, time: '1 day ago', url: '/reviews' },
-		{ id: '5', type: 'job', title: 'Job completed', message: 'Your job "Deep cleaning" has been marked as completed', read: true, time: '2 days ago', url: '/jobs/3' },
-		{ id: '6', type: 'points', title: 'Points earned', message: 'You earned 50 points for completing a job', read: true, time: '2 days ago', url: '/points' },
-		{ id: '7', type: 'system', title: 'Welcome to Seva', message: 'Your account has been verified. Start posting jobs or finding providers!', read: true, time: '1 week ago', url: '/dashboard' },
-		{ id: '8', type: 'dispute', title: 'Dispute resolved', message: 'Your dispute for "Painting job" has been resolved in your favor', read: true, time: '1 week ago', url: '/disputes/1' }
-	];
+	let notifications = $state<any[]>([]);
+	let loading = $state(true);
+	let error = $state('');
 
-	let notifications = $state(mockNotifications);
+	onMount(async () => {
+		try {
+			const res = await api.notifications.list({ per_page: 20 });
+			notifications = (res.data || []).map((n: any) => ({
+				id: n.id,
+				type: n.type || 'system',
+				title: n.title || '',
+				message: n.message || n.body || '',
+				read: n.read ?? n.is_read ?? true,
+				time: n.created_at || '',
+				url: n.url || n.action_url || '/dashboard'
+			}));
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'Failed to load notifications';
+		} finally {
+			loading = false;
+		}
+	});
 
 	const unreadCount = $derived(notifications.filter((n) => !n.read).length);
 
-	function markAllRead() {
-		notifications = notifications.map((n) => ({ ...n, read: true }));
-		toastSuccess('All notifications marked as read');
+	async function markAllRead() {
+		try {
+			await api.notifications.markAllRead();
+			notifications = notifications.map((n) => ({ ...n, read: true }));
+			toastSuccess('All notifications marked as read');
+		} catch (err) {
+			toastError(err instanceof Error ? err.message : 'Failed to mark all as read');
+		}
 	}
 
-	function markRead(id: string) {
-		notifications = notifications.map((n) => n.id === id ? { ...n, read: true } : n);
+	async function markRead(id: string) {
+		try {
+			await api.notifications.markRead(id);
+			notifications = notifications.map((n) => n.id === id ? { ...n, read: true } : n);
+		} catch {
+			// Silently fail for individual mark-read
+		}
 	}
 </script>
 
@@ -37,6 +59,17 @@
 	<title>Notifications - Seva</title>
 </svelte:head>
 
+{#if loading}
+<div class="flex items-center justify-center py-20">
+	<Loader2 class="h-8 w-8 animate-spin text-primary-600" />
+</div>
+{:else if error}
+<div class="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
+	<div class="rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-800 dark:bg-red-900/20">
+		<p class="text-red-600 dark:text-red-400">{error}</p>
+	</div>
+</div>
+{:else}
 <div class="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
 	<div class="flex items-center justify-between">
 		<div>
@@ -79,3 +112,4 @@
 		{/each}
 	</div>
 </div>
+{/if}

@@ -49,6 +49,21 @@ type WeeklyScheduleEntry struct {
 	StopCount  int       `json:"stop_count"`
 }
 
+// RouteGap represents a geographic area with demand but no provider coverage.
+type RouteGap struct {
+	Postcode    string  `json:"postcode"`
+	Lat         float64 `json:"lat"`
+	Lng         float64 `json:"lng"`
+	DemandCount int     `json:"demand_count"`
+}
+
+// OptimizeResult wraps the optimized stops with distance and time metadata.
+type OptimizeResult struct {
+	Stops          []RouteStop `json:"stops"`
+	TotalDistKM    float64     `json:"total_distance_km"`
+	EstimatedMins  int         `json:"estimated_time_min"`
+}
+
 // RouteService defines the business operations required by RouteHandler.
 type RouteService interface {
 	Create(ctx context.Context, route *Route) error
@@ -56,9 +71,10 @@ type RouteService interface {
 	GetByID(ctx context.Context, id uuid.UUID) (*Route, error)
 	AddStop(ctx context.Context, stop *RouteStop) error
 	RemoveStop(ctx context.Context, routeID, stopID uuid.UUID) error
-	OptimizeRoute(ctx context.Context, routeID uuid.UUID) (*Route, error)
+	OptimizeRoute(ctx context.Context, routeID uuid.UUID) (*OptimizeResult, error)
 	GetWeeklySchedule(ctx context.Context, providerID uuid.UUID) ([]WeeklyScheduleEntry, error)
 	RequestRouteService(ctx context.Context, customerID uuid.UUID, postcode string, categoryID uuid.UUID, notes string) error
+	FindGaps(ctx context.Context, category string, jurisdiction string) ([]RouteGap, error)
 }
 
 // RouteHandler handles route management endpoints.
@@ -76,6 +92,7 @@ func (h *RouteHandler) RegisterRoutes(rg fiber.Router) {
 	rg.Post("/", h.CreateRoute)
 	rg.Get("/", h.GetMyRoutes)
 	rg.Get("/schedule", h.GetWeeklySchedule)
+	rg.Get("/gaps", h.FindGaps)
 	rg.Post("/request", h.RequestRouteService)
 	rg.Get("/:id", h.GetRoute)
 	rg.Post("/:id/stops", h.AddStop)
@@ -521,6 +538,51 @@ func (h *RouteHandler) RequestRouteService(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusCreated).JSON(fiber.Map{
 		"data": fiber.Map{
 			"message": "route service request submitted successfully",
+		},
+	})
+}
+
+// FindGaps returns areas where demand exists but no provider coverage is available.
+// GET /api/v1/routes/gaps?category=plumbing&jurisdiction=in
+func (h *RouteHandler) FindGaps(c *fiber.Ctx) error {
+	userID := middleware.GetUserID(c)
+	if userID == uuid.Nil {
+		return c.Status(fiber.StatusUnauthorized).JSON(fiber.Map{
+			"error": fiber.Map{
+				"code":    "UNAUTHORIZED",
+				"message": "authentication required",
+			},
+		})
+	}
+
+	category := c.Query("category")
+	if category == "" {
+		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
+			"error": fiber.Map{
+				"code":    "VALIDATION_ERROR",
+				"message": "category query parameter is required",
+			},
+		})
+	}
+
+	jurisdiction := c.Query("jurisdiction", "in")
+
+	gaps, err := h.service.FindGaps(c.UserContext(), category, jurisdiction)
+	if err != nil {
+		log.Error().Err(err).Str("category", category).Msg("failed to find service gaps")
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": fiber.Map{
+				"code":    "INTERNAL_ERROR",
+				"message": "failed to find service gaps",
+			},
+		})
+	}
+
+	return c.JSON(fiber.Map{
+		"data": fiber.Map{
+			"gaps":         gaps,
+			"category":     category,
+			"jurisdiction": jurisdiction,
 		},
 	})
 }

@@ -1,3 +1,4 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -6,6 +7,9 @@ import 'app.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Initialize Firebase.
+  await Firebase.initializeApp();
 
   // Lock orientation to portrait on phones.
   await SystemChrome.setPreferredOrientations([
@@ -38,12 +42,37 @@ void main() async {
   final authService = AuthService(authRepository: authRepository);
   await authService.initialize();
 
+  // Initialize push notifications.
+  final pushNotificationService = PushNotificationService(
+    apiClient: apiClient,
+  );
+  pushNotificationService.onNavigate = (type, data) {
+    // Navigation is handled via GoRouter after app is built.
+    // Store the pending navigation for the router to pick up.
+    debugPrint('Customer notification tap: $type');
+  };
+  if (authService.isAuthenticated) {
+    await pushNotificationService.initialize();
+  }
+
+  // Initialize local storage and sync services.
+  final localStorageService = LocalStorageService();
+  await localStorageService.initialize();
+  final syncService = SyncService(
+    apiClient: apiClient,
+    localStorage: localStorageService,
+  );
+
   runApp(
     ProviderScope(
       overrides: [
         apiClientProvider.overrideWithValue(apiClient),
         authServiceProvider.overrideWithValue(authService),
         storageServiceProvider.overrideWithValue(storageService),
+        pushNotificationServiceProvider
+            .overrideWithValue(pushNotificationService),
+        localStorageServiceProvider.overrideWithValue(localStorageService),
+        syncServiceProvider.overrideWithValue(syncService),
       ],
       child: const SevaCustomerApp(),
     ),
@@ -63,6 +92,19 @@ final authServiceProvider = Provider<AuthService>((ref) {
 });
 
 final storageServiceProvider = Provider<StorageService>((ref) {
+  throw UnimplementedError('Must be overridden at app startup');
+});
+
+final pushNotificationServiceProvider =
+    Provider<PushNotificationService>((ref) {
+  throw UnimplementedError('Must be overridden at app startup');
+});
+
+final localStorageServiceProvider = Provider<LocalStorageService>((ref) {
+  throw UnimplementedError('Must be overridden at app startup');
+});
+
+final syncServiceProvider = Provider<SyncService>((ref) {
   throw UnimplementedError('Must be overridden at app startup');
 });
 

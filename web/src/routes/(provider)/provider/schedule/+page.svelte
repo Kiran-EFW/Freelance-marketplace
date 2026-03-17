@@ -1,17 +1,24 @@
 <script lang="ts">
-	import { ChevronLeft, ChevronRight, Briefcase, Calendar, MapPin, Clock, User } from 'lucide-svelte';
+	import { ChevronLeft, ChevronRight, Briefcase, Calendar, MapPin, Clock, User, Loader2 } from 'lucide-svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import api from '$lib/api/client';
+
+	let loading = $state(true);
+	let error = $state('');
 
 	const daysOfWeek = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 	let weekOffset = $state(0);
 
-	const baseDate = new Date('2026-03-16');
+	const now = new Date();
+	const dayOfWeek = now.getDay();
+	const baseDate = new Date(now);
+	baseDate.setDate(now.getDate() - ((dayOfWeek + 6) % 7)); // Monday of current week
 
 	function getWeekDates(offset: number) {
 		const dates: { day: string; date: number; month: string; full: string; isToday: boolean }[] = [];
-		const today = new Date('2026-03-17');
+		const today = new Date();
 		for (let i = 0; i < 7; i++) {
 			const d = new Date(baseDate);
 			d.setDate(d.getDate() + i + offset * 7);
@@ -30,7 +37,7 @@
 	let weekLabel = $derived(() => {
 		const first = weekDates[0];
 		const last = weekDates[6];
-		return `${first.month} ${first.date} - ${last.month} ${last.date}, 2026`;
+		return `${first.month} ${first.date} - ${last.month} ${last.date}`;
 	});
 
 	type ScheduleEntry = {
@@ -46,27 +53,45 @@
 		date: string;
 	};
 
-	const scheduleData: ScheduleEntry[] = [
-		{ id: '1', type: 'job', title: 'Fix kitchen plumbing', customer: 'Amit Verma', time: '09:00', duration: 60, location: '123 MG Road', postcode: '560001', status: 'completed', date: '2026-03-16' },
-		{ id: '2', type: 'route', title: 'Koramangala Route - Stop 1', customer: 'Priya Menon', time: '11:00', duration: 45, location: '45 Church Street', postcode: '560001', status: 'completed', date: '2026-03-16' },
-		{ id: '3', type: 'route', title: 'Koramangala Route - Stop 2', customer: 'Arjun Das', time: '12:00', duration: 30, location: '78 Brigade Road', postcode: '560002', status: 'completed', date: '2026-03-16' },
-		{ id: '4', type: 'job', title: 'Install water heater', customer: 'Meera Reddy', time: '10:00', duration: 90, location: '12 Hosur Road', postcode: '560002', status: 'scheduled', date: '2026-03-17' },
-		{ id: '5', type: 'route', title: 'Koramangala Route - Stop 3', customer: 'Kiran Rao', time: '14:00', duration: 50, location: '56 Sarjapur Road', postcode: '560003', status: 'scheduled', date: '2026-03-17' },
-		{ id: '6', type: 'job', title: 'Bathroom pipe repair', customer: 'Deepak Sharma', time: '16:00', duration: 45, location: '89 Whitefield Main', postcode: '560066', status: 'scheduled', date: '2026-03-17' },
-		{ id: '7', type: 'job', title: 'AC servicing', customer: 'Anita Gupta', time: '09:30', duration: 60, location: '34 Outer Ring Road', postcode: '560037', status: 'scheduled', date: '2026-03-18' },
-		{ id: '8', type: 'route', title: 'Indiranagar Route - Stop 1', customer: 'Suresh Nair', time: '11:30', duration: 40, location: '12 100 Feet Road', postcode: '560038', status: 'scheduled', date: '2026-03-18' },
-		{ id: '9', type: 'route', title: 'Indiranagar Route - Stop 2', customer: 'Lakshmi Bai', time: '13:00', duration: 35, location: '67 CMH Road', postcode: '560038', status: 'scheduled', date: '2026-03-18' },
-		{ id: '10', type: 'job', title: 'Garden maintenance', customer: 'Rajesh Kumar', time: '08:00', duration: 120, location: '5 JP Nagar', postcode: '560078', status: 'scheduled', date: '2026-03-19' },
-		{ id: '11', type: 'route', title: 'Koramangala Route - Stop 1', customer: 'Priya Menon', time: '14:00', duration: 45, location: '45 Church Street', postcode: '560001', status: 'scheduled', date: '2026-03-19' },
-		{ id: '12', type: 'job', title: 'Electrical wiring check', customer: 'Vivek Iyer', time: '10:00', duration: 60, location: '23 Bannerghatta Road', postcode: '560076', status: 'scheduled', date: '2026-03-20' },
-		{ id: '13', type: 'job', title: 'Deep cleaning service', customer: 'Neha Patil', time: '09:00', duration: 180, location: '8 Koramangala 4th Block', postcode: '560034', status: 'scheduled', date: '2026-03-21' },
-	];
+	let scheduleData = $state<ScheduleEntry[]>([]);
+
+	async function fetchSchedule() {
+		loading = true;
+		error = '';
+		try {
+			const dates = getWeekDates(weekOffset);
+			const from = dates[0].full;
+			const to = dates[6].full;
+			const res = await api.routes.getSchedule({ from, to });
+			scheduleData = (res.data || []).map((entry: any) => ({
+				id: entry.id,
+				type: entry.type || 'job',
+				title: entry.title || '',
+				customer: entry.customer?.name || entry.customer_name || '',
+				time: entry.time || entry.start_time || '',
+				duration: entry.duration || entry.duration_minutes || 60,
+				location: entry.location || entry.address || '',
+				postcode: entry.postcode || '',
+				status: entry.status || 'scheduled',
+				date: entry.date || entry.scheduled_date || ''
+			}));
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'Failed to load schedule';
+		} finally {
+			loading = false;
+		}
+	}
+
+	$effect(() => {
+		const _offset = weekOffset;
+		fetchSchedule();
+	});
 
 	function getEntriesForDate(dateStr: string): ScheduleEntry[] {
 		return scheduleData.filter((e) => e.date === dateStr).sort((a, b) => a.time.localeCompare(b.time));
 	}
 
-	let selectedDate = $state('2026-03-17');
+	let selectedDate = $state(new Date().toISOString().split('T')[0]);
 	let selectedEntries = $derived(getEntriesForDate(selectedDate));
 
 	const totalJobsThisWeek = $derived(
@@ -91,6 +116,17 @@
 	<title>Schedule - Seva Provider</title>
 </svelte:head>
 
+{#if loading}
+<div class="flex items-center justify-center py-20">
+	<Loader2 class="h-8 w-8 animate-spin text-primary-600" />
+</div>
+{:else if error}
+<div class="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+	<div class="rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-800 dark:bg-red-900/20">
+		<p class="text-red-600 dark:text-red-400">{error}</p>
+	</div>
+</div>
+{:else}
 <div class="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
 	<div class="flex flex-wrap items-center justify-between gap-4">
 		<div>
@@ -251,3 +287,4 @@
 		</div>
 	</div>
 </div>
+{/if}

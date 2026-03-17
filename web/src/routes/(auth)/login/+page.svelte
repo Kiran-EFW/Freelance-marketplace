@@ -5,6 +5,7 @@
 	import { toastError, toastSuccess } from '$lib/stores/toast';
 	import { jurisdictions, jurisdictionMap, type Jurisdiction } from '$lib/data/jurisdictions';
 	import { t } from '$lib/i18n/index.svelte';
+	import { requestOtp as authRequestOtp, login as authLogin } from '$lib/stores/auth';
 
 	let phone = $state('');
 	let selectedJurisdiction = $state<Jurisdiction>(jurisdictionMap['IN']);
@@ -36,15 +37,15 @@
 		if (!phone.trim()) return;
 		loading = true;
 		try {
-			// Mock: in real app, call requestOtp from auth store
-			await new Promise((r) => setTimeout(r, 1000));
+			const fullPhone = selectedJurisdiction.phoneCode + phone;
+			await authRequestOtp(fullPhone);
 			otpSent = true;
 			startResendTimer();
-			toastSuccess(t('auth.otp_sent_to', { phone: selectedJurisdiction.phoneCode + phone }));
+			toastSuccess(t('auth.otp_sent_to', { phone: fullPhone }));
 			// Focus first OTP input
 			setTimeout(() => otpInputs[0]?.focus(), 100);
 		} catch (err) {
-			toastError(t('auth.otp_failed'));
+			toastError(err instanceof Error ? err.message : t('auth.otp_failed'));
 		} finally {
 			loading = false;
 		}
@@ -56,12 +57,12 @@
 		if (otp.length !== 6) return;
 		loading = true;
 		try {
-			// Mock: in real app, call login from auth store
-			await new Promise((r) => setTimeout(r, 1000));
+			const fullPhone = selectedJurisdiction.phoneCode + phone;
+			await authLogin(fullPhone, otp);
 			toastSuccess(t('auth.signed_in_success'));
 			goto('/dashboard');
 		} catch (err) {
-			toastError(t('auth.invalid_otp_retry'));
+			toastError(err instanceof Error ? err.message : t('auth.invalid_otp_retry'));
 		} finally {
 			loading = false;
 		}

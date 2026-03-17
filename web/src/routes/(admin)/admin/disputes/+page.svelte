@@ -1,95 +1,84 @@
 <script lang="ts">
-	import { AlertTriangle, Search, Eye, UserCheck, Clock, CheckCircle, XCircle, MessageSquare } from 'lucide-svelte';
+	import { AlertTriangle, Search, Eye, UserCheck, Clock, CheckCircle, XCircle, MessageSquare, Loader2 } from 'lucide-svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Avatar from '$lib/components/ui/Avatar.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Modal from '$lib/components/ui/Modal.svelte';
 	import Pagination from '$lib/components/ui/Pagination.svelte';
-	import { toastSuccess } from '$lib/stores/toast';
+	import { toastSuccess, toastError } from '$lib/stores/toast';
+	import api from '$lib/api/client';
 
 	let searchQuery = $state('');
 	let statusFilter = $state('all');
 	let severityFilter = $state('all');
 	let currentPage = $state(1);
-	let selectedDispute = $state<typeof disputes[0] | null>(null);
+	let loading = $state(true);
+	let error = $state('');
+	let disputesList = $state<any[]>([]);
+	let totalPages = $state(1);
+	let selectedDispute = $state<any | null>(null);
 	let showDetailModal = $state(false);
 	let showAssignModal = $state(false);
 	let selectedMediator = $state('');
 
-	const disputes = [
-		{
-			id: 'D-1045', status: 'open', severity: 'high', type: 'quality',
-			title: 'Incomplete work - kitchen plumbing',
-			description: 'The provider left without finishing the sink installation. Water is still leaking from under the basin.',
-			customer: { name: 'Amit Verma', id: 'c1' },
-			provider: { name: 'Suresh Nair', id: 'p1' },
-			jobId: 'J-2045', jobTitle: 'Kitchen plumbing repair',
-			amount: 3500, createdAt: '2026-03-16', updatedAt: '2026-03-16',
-			mediator: null, messages: 3
-		},
-		{
-			id: 'D-1044', status: 'open', severity: 'high', type: 'payment',
-			title: 'Payment not received for completed job',
-			description: 'I completed the electrical work 5 days ago but have not received payment despite the customer confirming completion.',
-			customer: { name: 'Priya Menon', id: 'c2' },
-			provider: { name: 'Deepak Kumar', id: 'p2' },
-			jobId: 'J-2038', jobTitle: 'Electrical panel upgrade',
-			amount: 8500, createdAt: '2026-03-15', updatedAt: '2026-03-16',
-			mediator: null, messages: 5
-		},
-		{
-			id: 'D-1043', status: 'in_review', severity: 'medium', type: 'behavior',
-			title: 'Late arrival and unprofessional conduct',
-			description: 'The provider arrived 2 hours late without notice and was dismissive when asked about the delay.',
-			customer: { name: 'Arjun Das', id: 'c3' },
-			provider: { name: 'Lakshmi Bai', id: 'p3' },
-			jobId: 'J-2030', jobTitle: 'Home deep cleaning',
-			amount: 2000, createdAt: '2026-03-14', updatedAt: '2026-03-15',
-			mediator: 'Admin Priya', messages: 8
-		},
-		{
-			id: 'D-1042', status: 'resolved', severity: 'medium', type: 'quality',
-			title: 'Paint quality below expectations',
-			description: 'The paint used was of lower quality than agreed upon. Visible streaks and uneven coverage.',
-			customer: { name: 'Meera Reddy', id: 'c4' },
-			provider: { name: 'Kiran Rao', id: 'p4' },
-			jobId: 'J-2025', jobTitle: 'Living room painting',
-			amount: 5000, createdAt: '2026-03-10', updatedAt: '2026-03-14',
-			mediator: 'Admin Raj', messages: 12, resolution: 'Partial refund of Rs. 2,000 issued to customer. Provider agreed to redo the work.'
-		},
-		{
-			id: 'D-1041', status: 'resolved', severity: 'low', type: 'scheduling',
-			title: 'Rescheduling conflict',
-			description: 'Provider rescheduled three times without valid reason.',
-			customer: { name: 'Anita Gupta', id: 'c5' },
-			provider: { name: 'Ravi Shankar', id: 'p5' },
-			jobId: 'J-2020', jobTitle: 'AC installation',
-			amount: 4500, createdAt: '2026-03-08', updatedAt: '2026-03-12',
-			mediator: 'Admin Priya', messages: 6, resolution: 'Provider warned. Job reassigned to different provider.'
-		},
-		{
-			id: 'D-1040', status: 'closed', severity: 'low', type: 'other',
-			title: 'Miscommunication about service scope',
-			description: 'Customer expected additional services not mentioned in the original job description.',
-			customer: { name: 'Rajesh Kumar', id: 'c6' },
-			provider: { name: 'Mohan Rao', id: 'p6' },
-			jobId: 'J-2015', jobTitle: 'Electrical wiring',
-			amount: 3000, createdAt: '2026-03-05', updatedAt: '2026-03-09',
-			mediator: 'Admin Raj', messages: 4, resolution: 'Misunderstanding clarified. No action taken.'
-		}
-	];
-
 	const mediators = ['Admin Priya', 'Admin Raj', 'Admin Sunil', 'Admin Meera'];
 
+	async function fetchDisputes() {
+		loading = true;
+		error = '';
+		try {
+			const params: any = {
+				page: currentPage,
+				per_page: 10
+			};
+			if (statusFilter !== 'all') params.status = statusFilter;
+			if (severityFilter !== 'all') params.severity = severityFilter;
+
+			const res = await api.disputes.list(params);
+			disputesList = (res.data || []).map((d: any) => ({
+				id: d.id,
+				status: d.status || 'open',
+				severity: d.severity || 'medium',
+				type: d.type || 'other',
+				title: d.title || '',
+				description: d.description || '',
+				customer: { name: d.customer?.name || d.customer_name || '', id: d.customer?.id || d.customer_id || '' },
+				provider: { name: d.provider?.name || d.provider_name || '', id: d.provider?.id || d.provider_id || '' },
+				jobId: d.job_id || '',
+				jobTitle: d.job?.title || d.job_title || '',
+				amount: d.amount || 0,
+				createdAt: d.created_at?.split('T')[0] || '',
+				updatedAt: d.updated_at?.split('T')[0] || '',
+				mediator: d.mediator?.name || d.mediator_name || null,
+				mediatorId: d.mediator?.id || d.mediator_id || null,
+				messages: d.message_count || d.messages || 0,
+				resolution: d.resolution || null
+			}));
+			totalPages = res.meta?.total_pages || Math.ceil((res.meta?.total || 1) / 10);
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'Failed to load disputes';
+		} finally {
+			loading = false;
+		}
+	}
+
+	$effect(() => {
+		const _s = statusFilter;
+		const _sv = severityFilter;
+		const _p = currentPage;
+		fetchDisputes();
+	});
+
 	let filteredDisputes = $derived(
-		disputes.filter((d) => {
+		disputesList.filter((d) => {
 			const matchesSearch = !searchQuery || d.title.toLowerCase().includes(searchQuery.toLowerCase()) || d.id.toLowerCase().includes(searchQuery.toLowerCase());
-			const matchesStatus = statusFilter === 'all' || d.status === statusFilter;
-			const matchesSeverity = severityFilter === 'all' || d.severity === severityFilter;
-			return matchesSearch && matchesStatus && matchesSeverity;
+			return matchesSearch;
 		})
 	);
+
+	let openCount = $derived(disputesList.filter((d) => d.status === 'open').length);
+	let inReviewCount = $derived(disputesList.filter((d) => d.status === 'in_review').length);
 
 	const severityBadge: Record<string, 'danger' | 'warning' | 'info'> = {
 		high: 'danger', medium: 'warning', low: 'info'
@@ -99,21 +88,27 @@
 		open: 'danger', in_review: 'warning', resolved: 'success', closed: 'neutral'
 	};
 
-	function viewDispute(dispute: typeof disputes[0]) {
+	function viewDispute(dispute: any) {
 		selectedDispute = dispute;
 		showDetailModal = true;
 	}
 
-	function openAssignModal(dispute: typeof disputes[0]) {
+	function openAssignModal(dispute: any) {
 		selectedDispute = dispute;
 		selectedMediator = '';
 		showAssignModal = true;
 	}
 
-	function assignMediator() {
-		if (!selectedMediator) return;
-		toastSuccess(`Mediator ${selectedMediator} assigned to ${selectedDispute?.id}`);
-		showAssignModal = false;
+	async function assignMediator() {
+		if (!selectedMediator || !selectedDispute) return;
+		try {
+			await api.disputes.assignMediator(selectedDispute.id, selectedMediator);
+			toastSuccess(`Mediator ${selectedMediator} assigned to ${selectedDispute.id}`);
+			showAssignModal = false;
+			fetchDisputes();
+		} catch (err) {
+			toastError(err instanceof Error ? err.message : 'Failed to assign mediator');
+		}
 	}
 </script>
 
@@ -128,8 +123,8 @@
 			<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Manage and resolve platform disputes.</p>
 		</div>
 		<div class="flex gap-2">
-			<Badge variant="danger">{disputes.filter((d) => d.status === 'open').length} open</Badge>
-			<Badge variant="warning">{disputes.filter((d) => d.status === 'in_review').length} in review</Badge>
+			<Badge variant="danger">{openCount} open</Badge>
+			<Badge variant="warning">{inReviewCount} in review</Badge>
 		</div>
 	</div>
 
@@ -166,6 +161,15 @@
 	</div>
 
 	<!-- Disputes List -->
+	{#if loading}
+		<div class="mt-8 flex items-center justify-center py-12">
+			<Loader2 class="h-8 w-8 animate-spin text-primary-600" />
+		</div>
+	{:else if error}
+		<div class="mt-4 rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-800 dark:bg-red-900/20">
+			<p class="text-red-600 dark:text-red-400">{error}</p>
+		</div>
+	{:else}
 	<div class="mt-6 space-y-4">
 		{#each filteredDisputes as dispute}
 			<Card>
@@ -225,8 +229,9 @@
 	</div>
 
 	<div class="mt-6">
-		<Pagination {currentPage} totalPages={2} onPageChange={(p) => (currentPage = p)} />
+		<Pagination {currentPage} {totalPages} onPageChange={(p) => (currentPage = p)} />
 	</div>
+	{/if}
 </div>
 
 <!-- Dispute Detail Modal -->

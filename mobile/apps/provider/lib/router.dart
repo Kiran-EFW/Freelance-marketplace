@@ -11,6 +11,8 @@ import 'screens/routes/route_list_screen.dart';
 import 'screens/routes/route_detail_screen.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/profile/provider_profile_screen.dart';
+import 'screens/kyc/kyc_screen.dart';
+import 'screens/bank/bank_setup_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authService = ref.watch(authServiceProvider);
@@ -78,6 +80,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           return RouteDetailScreen(routeId: state.pathParameters['id']!);
         },
+      ),
+      GoRoute(
+        path: '/kyc',
+        name: 'kyc',
+        builder: (context, state) => const KycScreen(),
+      ),
+      GoRoute(
+        path: '/bank-setup',
+        name: 'bank-setup',
+        builder: (context, state) => const BankSetupScreen(),
       ),
 
       // Auth

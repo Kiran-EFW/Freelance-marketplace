@@ -1,20 +1,38 @@
 <script lang="ts">
-	import { AlertTriangle, Clock, CheckCircle, ArrowRight } from 'lucide-svelte';
+	import { onMount } from 'svelte';
+	import { AlertTriangle, CheckCircle, ArrowRight, Loader2 } from 'lucide-svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
+	import api from '$lib/api/client';
 	import type { DisputeStatus } from '$lib/types';
 
-	const mockDisputes = [
-		{ id: '1', jobTitle: 'Painting bedroom', type: 'quality', status: 'open' as DisputeStatus, date: '2026-03-12', description: 'The paint job was uneven and patches were left uncovered.' },
-		{ id: '2', jobTitle: 'AC repair', type: 'no_show', status: 'resolved' as DisputeStatus, date: '2026-02-20', description: 'Provider did not show up for the scheduled appointment.' },
-		{ id: '3', jobTitle: 'Garden maintenance', type: 'payment', status: 'under_review' as DisputeStatus, date: '2026-01-15', description: 'Was charged more than the agreed quote amount.' }
-	];
+	let loading = $state(true);
+	let error = $state('');
+	let disputesList = $state<any[]>([]);
 
-	const statusVariant: Record<DisputeStatus, 'success' | 'warning' | 'danger' | 'info' | 'neutral'> = {
+	onMount(async () => {
+		try {
+			const res = await api.disputes.list({ per_page: 20 });
+			disputesList = (res.data || []).map((d: any) => ({
+				id: d.id,
+				jobTitle: d.job?.title || d.title || 'Dispute',
+				type: d.type || d.dispute_type || 'other',
+				status: d.status as DisputeStatus,
+				date: d.created_at?.split('T')[0] || '',
+				description: d.description || ''
+			}));
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'Failed to load disputes';
+		} finally {
+			loading = false;
+		}
+	});
+
+	const statusVariant: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'neutral'> = {
 		open: 'danger', under_review: 'warning', resolved: 'success', escalated: 'danger', closed: 'neutral'
 	};
 
-	const statusLabel: Record<DisputeStatus, string> = {
+	const statusLabel: Record<string, string> = {
 		open: 'Open', under_review: 'Under Review', resolved: 'Resolved', escalated: 'Escalated', closed: 'Closed'
 	};
 </script>
@@ -23,12 +41,23 @@
 	<title>Disputes - Seva</title>
 </svelte:head>
 
+{#if loading}
+<div class="flex items-center justify-center py-20">
+	<Loader2 class="h-8 w-8 animate-spin text-primary-600" />
+</div>
+{:else if error}
+<div class="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
+	<div class="rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-800 dark:bg-red-900/20">
+		<p class="text-red-600 dark:text-red-400">{error}</p>
+	</div>
+</div>
+{:else}
 <div class="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
 	<h1 class="text-2xl font-bold text-gray-900 dark:text-white">Disputes</h1>
 	<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Track and manage your service disputes.</p>
 
 	<div class="mt-6 space-y-4">
-		{#each mockDisputes as dispute}
+		{#each disputesList as dispute}
 			<a href="/disputes/{dispute.id}" class="block">
 				<Card hover>
 					<div class="flex items-start justify-between gap-3">
@@ -39,7 +68,7 @@
 							<div>
 								<div class="flex items-center gap-2">
 									<h3 class="font-medium text-gray-900 dark:text-white">{dispute.jobTitle}</h3>
-									<Badge variant={statusVariant[dispute.status]} size="sm">{statusLabel[dispute.status]}</Badge>
+									<Badge variant={statusVariant[dispute.status] || 'neutral'} size="sm">{statusLabel[dispute.status] || dispute.status}</Badge>
 								</div>
 								<p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{dispute.description}</p>
 								<div class="mt-2 flex items-center gap-3 text-xs text-gray-400">
@@ -54,7 +83,7 @@
 			</a>
 		{/each}
 
-		{#if mockDisputes.length === 0}
+		{#if disputesList.length === 0}
 			<Card>
 				<div class="py-8 text-center">
 					<CheckCircle class="mx-auto h-12 w-12 text-gray-300 dark:text-gray-600" />
@@ -65,3 +94,4 @@
 		{/if}
 	</div>
 </div>
+{/if}

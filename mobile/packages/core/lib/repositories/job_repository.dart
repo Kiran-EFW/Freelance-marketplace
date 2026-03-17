@@ -1,5 +1,8 @@
+import 'package:dio/dio.dart';
+
 import '../api/api_client.dart';
 import '../models/job.dart';
+import '../models/result.dart';
 import '../models/review.dart';
 
 /// Paginated response container.
@@ -17,6 +20,17 @@ class PaginatedResult<T> {
   });
 
   bool get hasMore => page < totalPages;
+
+  Map<String, dynamic> toJson(
+    Map<String, dynamic> Function(T) itemToJson,
+  ) {
+    return {
+      'items': items.map(itemToJson).toList(),
+      'total': total,
+      'page': page,
+      'total_pages': totalPages,
+    };
+  }
 }
 
 /// Handles all job-related API interactions.
@@ -26,7 +40,7 @@ class JobRepository {
   JobRepository({required ApiClient api}) : _api = api;
 
   /// Create a new job posting.
-  Future<Job?> createJob({
+  Future<Result<Job>> createJob({
     required String categoryId,
     required String title,
     required String description,
@@ -55,24 +69,34 @@ class JobRepository {
         if (urgency != null) 'urgency': urgency,
         if (photoUrls != null) 'photo_urls': photoUrls,
       });
-      return Job.fromJson(response.data as Map<String, dynamic>);
-    } catch (_) {
-      return null;
+      return Success(Job.fromJson(response.data as Map<String, dynamic>));
+    } on DioException catch (e) {
+      return Failure(
+        _extractErrorMessage(e, 'Failed to create job'),
+        statusCode: e.response?.statusCode,
+      );
+    } catch (e) {
+      return Failure('Failed to create job: $e');
     }
   }
 
   /// Fetch a single job by ID.
-  Future<Job?> getJob(String jobId) async {
+  Future<Result<Job>> getJob(String jobId) async {
     try {
       final response = await _api.getJob(jobId);
-      return Job.fromJson(response.data as Map<String, dynamic>);
-    } catch (_) {
-      return null;
+      return Success(Job.fromJson(response.data as Map<String, dynamic>));
+    } on DioException catch (e) {
+      return Failure(
+        _extractErrorMessage(e, 'Failed to load job'),
+        statusCode: e.response?.statusCode,
+      );
+    } catch (e) {
+      return Failure('Failed to load job: $e');
     }
   }
 
   /// List jobs for the current user, filtered by [status] and [role].
-  Future<PaginatedResult<Job>> getJobs({
+  Future<Result<PaginatedResult<Job>>> getJobs({
     String? status,
     String? role,
     int page = 1,
@@ -90,74 +114,101 @@ class JobRepository {
           .map((e) => Job.fromJson(e as Map<String, dynamic>))
           .toList();
 
-      return PaginatedResult(
+      return Success(PaginatedResult(
         items: items,
         total: data['total'] as int,
         page: data['page'] as int,
         totalPages: data['total_pages'] as int,
+      ));
+    } on DioException catch (e) {
+      return Failure(
+        _extractErrorMessage(e, 'Failed to load jobs'),
+        statusCode: e.response?.statusCode,
       );
-    } catch (_) {
-      return const PaginatedResult(
-        items: [],
-        total: 0,
-        page: 1,
-        totalPages: 1,
-      );
+    } catch (e) {
+      return Failure('Failed to load jobs: $e');
     }
   }
 
   /// Accept a job (provider action).
-  Future<Job?> acceptJob(String jobId) async {
+  Future<Result<Job>> acceptJob(String jobId) async {
     try {
       final response = await _api.acceptJob(jobId);
-      return Job.fromJson(response.data as Map<String, dynamic>);
-    } catch (_) {
-      return null;
+      return Success(Job.fromJson(response.data as Map<String, dynamic>));
+    } on DioException catch (e) {
+      return Failure(
+        _extractErrorMessage(e, 'Failed to accept job'),
+        statusCode: e.response?.statusCode,
+      );
+    } catch (e) {
+      return Failure('Failed to accept job: $e');
     }
   }
 
   /// Decline a job (provider action).
-  Future<bool> declineJob(String jobId, {String? reason}) async {
+  Future<Result<bool>> declineJob(String jobId, {String? reason}) async {
     try {
       await _api.declineJob(jobId, reason: reason);
-      return true;
-    } catch (_) {
-      return false;
+      return const Success(true);
+    } on DioException catch (e) {
+      return Failure(
+        _extractErrorMessage(e, 'Failed to decline job'),
+        statusCode: e.response?.statusCode,
+      );
+    } catch (e) {
+      return Failure('Failed to decline job: $e');
     }
   }
 
   /// Update job status (e.g., start work, complete).
-  Future<Job?> updateStatus(String jobId, String status) async {
+  Future<Result<Job>> updateStatus(String jobId, String status) async {
     try {
       final response = await _api.updateJobStatus(jobId, status);
-      return Job.fromJson(response.data as Map<String, dynamic>);
-    } catch (_) {
-      return null;
+      return Success(Job.fromJson(response.data as Map<String, dynamic>));
+    } on DioException catch (e) {
+      return Failure(
+        _extractErrorMessage(e, 'Failed to update job status'),
+        statusCode: e.response?.statusCode,
+      );
+    } catch (e) {
+      return Failure('Failed to update job status: $e');
     }
   }
 
   /// Mark job as completed, optionally with completion photos.
-  Future<Job?> completeJob(String jobId, {List<String>? photoUrls}) async {
+  Future<Result<Job>> completeJob(String jobId,
+      {List<String>? photoUrls}) async {
     try {
       final response = await _api.completeJob(jobId, photoUrls: photoUrls);
-      return Job.fromJson(response.data as Map<String, dynamic>);
-    } catch (_) {
-      return null;
+      return Success(Job.fromJson(response.data as Map<String, dynamic>));
+    } on DioException catch (e) {
+      return Failure(
+        _extractErrorMessage(e, 'Failed to complete job'),
+        statusCode: e.response?.statusCode,
+      );
+    } catch (e) {
+      return Failure('Failed to complete job: $e');
     }
   }
 
   /// Cancel a job.
-  Future<bool> cancelJob(String jobId, {required String reason}) async {
+  Future<Result<bool>> cancelJob(String jobId,
+      {required String reason}) async {
     try {
       await _api.cancelJob(jobId, reason: reason);
-      return true;
-    } catch (_) {
-      return false;
+      return const Success(true);
+    } on DioException catch (e) {
+      return Failure(
+        _extractErrorMessage(e, 'Failed to cancel job'),
+        statusCode: e.response?.statusCode,
+      );
+    } catch (e) {
+      return Failure('Failed to cancel job: $e');
     }
   }
 
   /// Submit a review for a completed job.
-  Future<Review?> submitReview(
+  Future<Result<Review>> submitReview(
     String jobId, {
     required int rating,
     String? comment,
@@ -168,24 +219,57 @@ class JobRepository {
         rating: rating,
         comment: comment,
       );
-      return Review.fromJson(response.data as Map<String, dynamic>);
-    } catch (_) {
-      return null;
+      return Success(Review.fromJson(response.data as Map<String, dynamic>));
+    } on DioException catch (e) {
+      return Failure(
+        _extractErrorMessage(e, 'Failed to submit review'),
+        statusCode: e.response?.statusCode,
+      );
+    } catch (e) {
+      return Failure('Failed to submit review: $e');
     }
   }
 
   /// Upload photos for a job.
-  Future<List<String>> uploadPhotos(
+  Future<Result<List<String>>> uploadPhotos(
     String jobId,
     List<String> filePaths,
   ) async {
     try {
       final response = await _api.uploadJobPhotos(jobId, filePaths);
-      return (response.data['urls'] as List<dynamic>)
+      final urls = (response.data['urls'] as List<dynamic>)
           .map((e) => e as String)
           .toList();
-    } catch (_) {
-      return [];
+      return Success(urls);
+    } on DioException catch (e) {
+      return Failure(
+        _extractErrorMessage(e, 'Failed to upload photos'),
+        statusCode: e.response?.statusCode,
+      );
+    } catch (e) {
+      return Failure('Failed to upload photos: $e');
+    }
+  }
+
+  /// Extract a human-readable error message from a [DioException].
+  String _extractErrorMessage(DioException e, String fallback) {
+    // Try to get the server-provided error message.
+    final data = e.response?.data;
+    if (data is Map<String, dynamic>) {
+      final message = data['message'] ?? data['error'];
+      if (message is String && message.isNotEmpty) return message;
+    }
+
+    // Fall back to Dio error type descriptions.
+    switch (e.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+        return 'Connection timed out. Please check your network.';
+      case DioExceptionType.connectionError:
+        return 'No internet connection. Please try again later.';
+      default:
+        return fallback;
     }
   }
 }

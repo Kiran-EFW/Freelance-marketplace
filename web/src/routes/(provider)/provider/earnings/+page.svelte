@@ -1,33 +1,60 @@
 <script lang="ts">
-	import { IndianRupee, TrendingUp, ArrowLeft, CreditCard, Clock, CheckCircle } from 'lucide-svelte';
+	import { IndianRupee, TrendingUp, ArrowLeft, CreditCard, Clock, CheckCircle, Loader2 } from 'lucide-svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Tabs from '$lib/components/ui/Tabs.svelte';
+	import api from '$lib/api/client';
 
-	let period = $state('weekly');
+	let loading = $state(true);
+	let error = $state('');
+
+	let period = $state<'daily' | 'weekly' | 'monthly'>('weekly');
 	const tabs = [
 		{ id: 'daily', label: 'Daily' },
 		{ id: 'weekly', label: 'Weekly' },
 		{ id: 'monthly', label: 'Monthly' }
 	];
 
-	const totalEarnings = 148500;
-	const pendingPayout = 12500;
+	let totalEarnings = $state(0);
+	let pendingPayout = $state(0);
+	let chartData = $state<{ label: string; amount: number }[]>([]);
+	let payouts = $state<any[]>([]);
 
-	const weeklyData = [
-		{ label: 'Mar 3', amount: 8500 },
-		{ label: 'Mar 10', amount: 12000 },
-		{ label: 'Mar 17', amount: 14500 }
-	];
+	let maxAmount = $derived(Math.max(...chartData.map((d) => d.amount), 1));
 
-	const maxAmount = Math.max(...weeklyData.map((d) => d.amount));
+	async function fetchEarnings() {
+		loading = true;
+		error = '';
+		try {
+			const res = await api.providers.getEarnings({ period });
+			const data = res.data;
+			totalEarnings = data.total_earnings || 0;
+			pendingPayout = data.pending_payout || 0;
 
-	const payouts = [
-		{ id: '1', amount: 35000, status: 'completed', bank: '4521', date: '2026-03-01', completedAt: '2026-03-02' },
-		{ id: '2', amount: 28000, status: 'completed', bank: '4521', date: '2026-02-15', completedAt: '2026-02-16' },
-		{ id: '3', amount: 42000, status: 'completed', bank: '4521', date: '2026-02-01', completedAt: '2026-02-02' },
-		{ id: '4', amount: 12500, status: 'pending', bank: '4521', date: '2026-03-17', completedAt: null }
-	];
+			chartData = (data.chart_data || data.breakdown || []).map((item: any) => ({
+				label: item.label || item.date || item.period || '',
+				amount: item.amount || item.earnings || 0
+			}));
+
+			payouts = (data.payouts || []).map((p: any) => ({
+				id: p.id,
+				amount: p.amount || 0,
+				status: p.status || 'pending',
+				bank: p.bank_last4 || p.bank || '****',
+				date: p.created_at?.split('T')[0] || p.date || '',
+				completedAt: p.completed_at?.split('T')[0] || null
+			}));
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'Failed to load earnings';
+		} finally {
+			loading = false;
+		}
+	}
+
+	$effect(() => {
+		const _p = period;
+		fetchEarnings();
+	});
 
 	const statusBadge: Record<string, 'success' | 'warning' | 'info'> = {
 		completed: 'success', processing: 'warning', pending: 'info'
@@ -38,6 +65,17 @@
 	<title>Earnings - Seva Provider</title>
 </svelte:head>
 
+{#if loading}
+<div class="flex items-center justify-center py-20">
+	<Loader2 class="h-8 w-8 animate-spin text-primary-600" />
+</div>
+{:else if error}
+<div class="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+	<div class="rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-800 dark:bg-red-900/20">
+		<p class="text-red-600 dark:text-red-400">{error}</p>
+	</div>
+</div>
+{:else}
 <div class="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
 	<a href="/provider/dashboard" class="inline-flex items-center gap-1 text-sm text-primary-600 hover:text-primary-700">
 		<ArrowLeft class="h-4 w-4" />
@@ -81,7 +119,7 @@
 		<div class="mt-6">
 			<!-- Simple bar chart -->
 			<div class="flex items-end gap-4 h-48">
-				{#each weeklyData as bar}
+				{#each chartData as bar}
 					{@const height = (bar.amount / maxAmount) * 100}
 					<div class="flex flex-1 flex-col items-center gap-2">
 						<span class="text-xs font-medium text-gray-700 dark:text-gray-300">Rs. {(bar.amount / 1000).toFixed(1)}k</span>
@@ -120,3 +158,4 @@
 		</div>
 	</Card>
 </div>
+{/if}

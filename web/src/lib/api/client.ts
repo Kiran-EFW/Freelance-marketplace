@@ -26,6 +26,8 @@ import type {
 	SEOLandingData,
 	AIChatMessage,
 	AIPriceEstimate,
+	Conversation,
+	ChatMessage,
 	LoginRequest,
 	RegisterRequest,
 	CreateJobRequest,
@@ -465,11 +467,34 @@ export const search = {
 		return request('/search/providers', { params, auth: false });
 	},
 
+	providersByLocation(params: {
+		lat: number;
+		lng: number;
+		radius_km?: number;
+		category?: string;
+		page?: number;
+		per_page?: number;
+	}): Promise<PaginatedResponse<ProviderProfile>> {
+		return request('/search/providers', { params, auth: false });
+	},
+
 	jobs(params: {
 		query?: string;
 		category?: string;
 		status?: string;
 		postcode?: string;
+		page?: number;
+		per_page?: number;
+	}): Promise<PaginatedResponse<Job>> {
+		return request('/search/jobs', { params });
+	},
+
+	jobsByLocation(params: {
+		lat: number;
+		lng: number;
+		radius_km?: number;
+		category?: string;
+		status?: string;
 		page?: number;
 		per_page?: number;
 	}): Promise<PaginatedResponse<Job>> {
@@ -769,6 +794,48 @@ export const ai = {
 };
 
 // ---------------------------------------------------------------------------
+// Messages API
+// ---------------------------------------------------------------------------
+
+export const messages = {
+	listConversations(params?: {
+		page?: number;
+		limit?: number;
+	}): Promise<ApiResponse<Conversation[]>> {
+		return request('/messages/conversations', { params });
+	},
+
+	getConversation(id: string, params?: {
+		page?: number;
+		limit?: number;
+	}): Promise<ApiResponse<{ conversation: Conversation; messages: ChatMessage[] }>> {
+		return request(`/messages/conversations/${id}`, { params });
+	},
+
+	createConversation(recipientId: string, jobId?: string): Promise<ApiResponse<Conversation>> {
+		return request('/messages/conversations', {
+			method: 'POST',
+			body: { recipient_id: recipientId, job_id: jobId }
+		});
+	},
+
+	sendMessage(conversationId: string, content: string, type?: string): Promise<ApiResponse<ChatMessage>> {
+		return request(`/messages/conversations/${conversationId}/messages`, {
+			method: 'POST',
+			body: { content, message_type: type || 'text' }
+		});
+	},
+
+	markRead(conversationId: string): Promise<ApiResponse<{ message: string }>> {
+		return request(`/messages/conversations/${conversationId}/read`, { method: 'PUT' });
+	},
+
+	getUnreadCount(): Promise<ApiResponse<{ count: number }>> {
+		return request('/messages/unread-count');
+	}
+};
+
+// ---------------------------------------------------------------------------
 // SEO API
 // ---------------------------------------------------------------------------
 
@@ -799,6 +866,7 @@ const api = {
 	admin,
 	ai,
 	seo,
+	messages,
 	setTokens,
 	clearTokens,
 	getAccessToken

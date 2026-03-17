@@ -1,41 +1,70 @@
 <script lang="ts">
-	import { Search, Filter, MoreVertical, Shield, ShieldOff, Eye, Ban, CheckCircle, Mail, Phone } from 'lucide-svelte';
+	import { Search, Filter, MoreVertical, Shield, ShieldOff, Eye, Ban, CheckCircle, Mail, Phone, Loader2 } from 'lucide-svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Avatar from '$lib/components/ui/Avatar.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Pagination from '$lib/components/ui/Pagination.svelte';
 	import Modal from '$lib/components/ui/Modal.svelte';
-	import { toastSuccess } from '$lib/stores/toast';
+	import { toastSuccess, toastError } from '$lib/stores/toast';
+	import api from '$lib/api/client';
 
 	let searchQuery = $state('');
 	let roleFilter = $state('all');
 	let statusFilter = $state('all');
 	let currentPage = $state(1);
-	let selectedUser = $state<typeof mockUsers[0] | null>(null);
+	let loading = $state(true);
+	let error = $state('');
+	let usersList = $state<any[]>([]);
+	let totalPages = $state(1);
+	let selectedUser = $state<any | null>(null);
 	let showUserModal = $state(false);
 
-	const mockUsers = [
-		{ id: '1', name: 'Amit Verma', email: 'amit@example.com', phone: '+91 98765 43210', role: 'customer', status: 'active', joinedAt: '2025-08-15', jobsPosted: 12, totalSpent: 45000, avatar: null },
-		{ id: '2', name: 'Suresh Nair', email: 'suresh@example.com', phone: '+91 98765 43211', role: 'provider', status: 'active', joinedAt: '2025-07-20', jobsPosted: 0, totalSpent: 0, avatar: null, verified: true, rating: 4.8, completedJobs: 156 },
-		{ id: '3', name: 'Priya Menon', email: 'priya@example.com', phone: '+91 98765 43212', role: 'customer', status: 'active', joinedAt: '2025-09-01', jobsPosted: 8, totalSpent: 32000, avatar: null },
-		{ id: '4', name: 'Deepak Kumar', email: 'deepak@example.com', phone: '+91 98765 43213', role: 'provider', status: 'suspended', joinedAt: '2025-06-10', jobsPosted: 0, totalSpent: 0, avatar: null, verified: true, rating: 3.2, completedJobs: 45 },
-		{ id: '5', name: 'Anita Gupta', email: 'anita@example.com', phone: '+91 98765 43214', role: 'customer', status: 'active', joinedAt: '2025-10-05', jobsPosted: 5, totalSpent: 18500, avatar: null },
-		{ id: '6', name: 'Ravi Shankar', email: 'ravi@example.com', phone: '+91 98765 43215', role: 'provider', status: 'active', joinedAt: '2025-11-12', jobsPosted: 0, totalSpent: 0, avatar: null, verified: false, rating: 0, completedJobs: 0 },
-		{ id: '7', name: 'Meera Reddy', email: 'meera@example.com', phone: '+91 98765 43216', role: 'customer', status: 'active', joinedAt: '2026-01-08', jobsPosted: 3, totalSpent: 12000, avatar: null },
-		{ id: '8', name: 'Kiran Rao', email: 'kiran@example.com', phone: '+91 98765 43217', role: 'provider', status: 'active', joinedAt: '2025-12-20', jobsPosted: 0, totalSpent: 0, avatar: null, verified: true, rating: 4.5, completedJobs: 78 },
-		{ id: '9', name: 'Lakshmi Bai', email: 'lakshmi@example.com', phone: '+91 98765 43218', role: 'provider', status: 'active', joinedAt: '2026-02-01', jobsPosted: 0, totalSpent: 0, avatar: null, verified: true, rating: 4.9, completedJobs: 210 },
-		{ id: '10', name: 'Arjun Das', email: 'arjun@example.com', phone: '+91 98765 43219', role: 'customer', status: 'inactive', joinedAt: '2025-05-22', jobsPosted: 1, totalSpent: 3500, avatar: null }
-	];
+	async function fetchUsers() {
+		loading = true;
+		error = '';
+		try {
+			const params: any = {
+				page: currentPage,
+				per_page: 10
+			};
+			if (roleFilter !== 'all') params.role = roleFilter;
+			if (statusFilter !== 'all') params.status = statusFilter;
+			if (searchQuery.trim()) params.search = searchQuery.trim();
 
-	let filteredUsers = $derived(
-		mockUsers.filter((u) => {
-			const matchesSearch = !searchQuery || u.name.toLowerCase().includes(searchQuery.toLowerCase()) || u.email.toLowerCase().includes(searchQuery.toLowerCase());
-			const matchesRole = roleFilter === 'all' || u.role === roleFilter;
-			const matchesStatus = statusFilter === 'all' || u.status === statusFilter;
-			return matchesSearch && matchesRole && matchesStatus;
-		})
-	);
+			const res = await api.admin.listUsers(params);
+			usersList = (res.data || []).map((u: any) => ({
+				id: u.id,
+				name: u.name || '',
+				email: u.email || '',
+				phone: u.phone || '',
+				role: u.role || 'customer',
+				status: u.status || 'active',
+				joinedAt: u.created_at?.split('T')[0] || u.joined_at || '',
+				jobsPosted: u.jobs_posted || u.jobsPosted || 0,
+				totalSpent: u.total_spent || u.totalSpent || 0,
+				avatar: u.avatar_url || u.avatar || null,
+				verified: u.verified || false,
+				rating: u.rating || 0,
+				completedJobs: u.completed_jobs || u.completedJobs || 0
+			}));
+			totalPages = res.meta?.total_pages || Math.ceil((res.meta?.total || 1) / 10);
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'Failed to load users';
+		} finally {
+			loading = false;
+		}
+	}
+
+	$effect(() => {
+		const _q = searchQuery;
+		const _r = roleFilter;
+		const _s = statusFilter;
+		const _p = currentPage;
+		fetchUsers();
+	});
+
+	let filteredUsers = $derived(usersList);
 
 	const roleBadge: Record<string, 'info' | 'success' | 'warning'> = {
 		customer: 'info', provider: 'success', admin: 'warning'
@@ -45,19 +74,31 @@
 		active: 'success', suspended: 'danger', inactive: 'neutral'
 	};
 
-	function viewUser(user: typeof mockUsers[0]) {
+	function viewUser(user: any) {
 		selectedUser = user;
 		showUserModal = true;
 	}
 
-	function suspendUser(id: string) {
-		toastSuccess('User suspended');
-		showUserModal = false;
+	async function suspendUser(id: string) {
+		try {
+			await api.users.suspend(id);
+			toastSuccess('User suspended');
+			showUserModal = false;
+			fetchUsers();
+		} catch (err) {
+			toastError(err instanceof Error ? err.message : 'Failed to suspend user');
+		}
 	}
 
-	function activateUser(id: string) {
-		toastSuccess('User activated');
-		showUserModal = false;
+	async function activateUser(id: string) {
+		try {
+			await api.users.activate(id);
+			toastSuccess('User activated');
+			showUserModal = false;
+			fetchUsers();
+		} catch (err) {
+			toastError(err instanceof Error ? err.message : 'Failed to activate user');
+		}
 	}
 </script>
 
@@ -105,6 +146,15 @@
 		</select>
 	</div>
 
+	{#if loading}
+		<div class="mt-8 flex items-center justify-center py-12">
+			<Loader2 class="h-8 w-8 animate-spin text-primary-600" />
+		</div>
+	{:else if error}
+		<div class="mt-4 rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-800 dark:bg-red-900/20">
+			<p class="text-red-600 dark:text-red-400">{error}</p>
+		</div>
+	{:else}
 	<!-- Users Table -->
 	<Card class="mt-6" padding="none">
 		<div class="overflow-x-auto">
@@ -153,8 +203,9 @@
 	</Card>
 
 	<div class="mt-6">
-		<Pagination {currentPage} totalPages={3} onPageChange={(p) => (currentPage = p)} />
+		<Pagination {currentPage} {totalPages} onPageChange={(p) => (currentPage = p)} />
 	</div>
+	{/if}
 </div>
 
 <!-- User Detail Modal -->

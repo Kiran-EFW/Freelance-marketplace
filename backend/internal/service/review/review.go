@@ -3,6 +3,7 @@ package review
 import (
 	"context"
 	"fmt"
+	"math"
 	"time"
 
 	"github.com/google/uuid"
@@ -11,13 +12,25 @@ import (
 	"github.com/seva-platform/backend/internal/domain"
 )
 
-// Trust score weights — must sum to 1.0.
+// Trust score component weights — must sum to 1.0.
 const (
-	trustWeightOnTime      = 0.25
-	trustWeightCompletion  = 0.25
-	trustWeightRating      = 0.30
-	trustWeightDispute     = 0.15
-	trustWeightResponse    = 0.05
+	trustWeightRating     = 0.40
+	trustWeightCompletion = 0.25
+	trustWeightResponse   = 0.15
+	trustWeightVolume     = 0.10
+	trustWeightRecency    = 0.10
+)
+
+// Provider level thresholds.
+const (
+	levelActiveMinScore  = 2.0
+	levelActiveMinJobs   = 3
+	levelTrustedMinScore = 3.5
+	levelTrustedMinJobs  = 20
+	levelExpertMinScore  = 4.0
+	levelExpertMinJobs   = 50
+	levelChampMinScore   = 4.5
+	levelChampMinJobs    = 100
 )
 
 // Service defines the review service interface.
@@ -154,83 +167,222 @@ func (s *ReviewService) GetProviderStats(ctx context.Context, providerID uuid.UU
 	return stats, nil
 }
 
-// CalculateTrustScore computes the weighted trust score for a provider and
-// persists the result.
+// CalculateTrustScore computes a comprehensive weighted trust score for a
+// provider, persists the result, and evaluates whether the provider should
+// level up.
 //
-// Formula:
+// Component weights (sum to 1.0):
 //
-//	On-time rate:       25%
-//	Completion rate:    25%
-//	Customer ratings:   30%
-//	Dispute rate:       15% (inverted — fewer disputes = higher score)
-//	Response time:       5%
+//	Average rating  (40%): avg of all ratings, normalised to 0-1
+//	Completion rate (25%): completed / (completed + cancelled + disputed)
+//	Response time   (15%): inverse of avg response time, normalised
+//	Volume bonus    (10%): log2(total_jobs+1) / log2(100), capped at 1.0
+//	Recency         (10%): recent reviews (last 90 days) weighted 2x
+//
+// After computing the base score, modifiers are applied:
+//
+//	verified provider:    +0.10
+//	has profile photo:    +0.05
+//	has bank account:     +0.05
+//
+// The final result is clamped to the 0.00 - 5.00 range.
 func (s *ReviewService) CalculateTrustScore(ctx context.Context, providerID uuid.UUID) (float64, error) {
+	// 1. Fetch provider profile.
 	provider, err := s.providers.GetByID(ctx, providerID)
 	if err != nil {
 		return 0, fmt.Errorf("%w: provider %s", domain.ErrNotFound, providerID)
 	}
 
-	// --- Avg rating (normalise 0-5 to 0-1) ---
+	// 2. Fetch all reviews for recency-weighted rating calculation.
+	allReviews, err := s.reviews.ListByReviewee(ctx, providerID, 1000, 0)
+	if err != nil {
+		// Fall back to aggregate if listing fails.
+		allReviews = nil
+	}
+
+	// Also fetch aggregate stats as a fallback / for total count.
 	avgRating, totalReviews, err := s.reviews.GetAverageRating(ctx, providerID)
 	if err != nil {
 		return 0, fmt.Errorf("get avg rating: %w", err)
 	}
+
+	// ---------------------------------------------------------------
+	// Component 1: Average Rating (40%) — normalised to 0-1
+	// ---------------------------------------------------------------
 	ratingFactor := avgRating / 5.0
 
-	// --- Completion rate ---
+	// ---------------------------------------------------------------
+	// Component 2: Completion Rate (25%)
+	// completed / (completed + cancelled + disputed)
+	// ---------------------------------------------------------------
 	completionRate := 1.0
-	if provider.JobsCompleted > 0 {
-		// Simplistic: assume 95% completion if they have a track record.
-		// A full implementation would track cancelled vs completed.
-		completionRate = 0.95
-	}
+	totalJobs := provider.JobsCompleted
+	disputeCount, _ := s.disputes.CountByProvider(ctx, providerID)
 
-	// --- On-time rate ---
-	// Placeholder: would be calculated from scheduled vs actual completion times.
-	onTimeRate := 0.90
-
-	// --- Dispute rate (inverted) ---
-	disputeCount, err := s.disputes.CountByProvider(ctx, providerID)
-	if err != nil {
-		disputeCount = 0
-	}
-	disputeRate := 1.0
-	if totalReviews > 0 {
-		disputeRate = 1.0 - (float64(disputeCount) / float64(totalReviews))
-		if disputeRate < 0 {
-			disputeRate = 0
+	if totalJobs > 0 {
+		// Denominator: completed jobs + disputes (approximation for
+		// cancelled/disputed jobs since the schema does not track
+		// cancelled separately on the provider profile).
+		denominator := float64(totalJobs) + float64(disputeCount)
+		if denominator > 0 {
+			completionRate = float64(totalJobs) / denominator
 		}
 	}
 
-	// --- Response time (normalise) ---
-	responseTimeFactor := 0.5
-	if provider.ResponseTimeAvg > 0 && provider.ResponseTimeAvg < 30 {
-		responseTimeFactor = 1.0
-	} else if provider.ResponseTimeAvg > 0 && provider.ResponseTimeAvg < 60 {
-		responseTimeFactor = 0.7
+	// ---------------------------------------------------------------
+	// Component 3: Response Time (15%) — inverse normalisation
+	// Under 15 min = 1.0, under 30 min = 0.8, under 60 = 0.5,
+	// over 60 min = 0.2, no data = 0.5 (neutral).
+	// ---------------------------------------------------------------
+	responseTimeFactor := 0.5 // default when no data
+	avgResponseMin := provider.ResponseTimeAvg
+	if avgResponseMin > 0 {
+		switch {
+		case avgResponseMin <= 15:
+			responseTimeFactor = 1.0
+		case avgResponseMin <= 30:
+			responseTimeFactor = 0.8
+		case avgResponseMin <= 60:
+			responseTimeFactor = 0.5
+		case avgResponseMin <= 120:
+			responseTimeFactor = 0.3
+		default:
+			responseTimeFactor = 0.2
+		}
 	}
 
+	// ---------------------------------------------------------------
+	// Component 4: Volume Bonus (10%)
+	// log2(total_jobs + 1) / log2(100), capped at 1.0
+	// ---------------------------------------------------------------
+	volumeFactor := 0.0
+	if totalJobs > 0 {
+		volumeFactor = math.Log2(float64(totalJobs)+1) / math.Log2(100)
+		if volumeFactor > 1.0 {
+			volumeFactor = 1.0
+		}
+	}
+
+	// ---------------------------------------------------------------
+	// Component 5: Recency (10%)
+	// Reviews from the last 90 days count 2x when computing an
+	// alternative average. Compare with the all-time average and
+	// blend toward the recency-weighted value.
+	// ---------------------------------------------------------------
+	recencyFactor := ratingFactor // fallback to overall rating
+	if len(allReviews) > 0 {
+		cutoff := time.Now().Add(-90 * 24 * time.Hour)
+		var weightedSum, weightTotal float64
+		for _, r := range allReviews {
+			weight := 1.0
+			if r.CreatedAt.After(cutoff) {
+				weight = 2.0
+			}
+			weightedSum += float64(r.Rating) * weight
+			weightTotal += weight
+		}
+		if weightTotal > 0 {
+			recencyFactor = (weightedSum / weightTotal) / 5.0
+		}
+	}
+
+	// ---------------------------------------------------------------
 	// Weighted sum (produces a 0-1 value).
-	score := onTimeRate*trustWeightOnTime +
+	// ---------------------------------------------------------------
+	baseScore := ratingFactor*trustWeightRating +
 		completionRate*trustWeightCompletion +
-		ratingFactor*trustWeightRating +
-		disputeRate*trustWeightDispute +
-		responseTimeFactor*trustWeightResponse
+		responseTimeFactor*trustWeightResponse +
+		volumeFactor*trustWeightVolume +
+		recencyFactor*trustWeightRecency
 
-	// Scale to 0-5 for storage (matches trust_score DECIMAL(3,2) column).
-	trustScore := score * 5.0
+	// Scale to 0-5.
+	trustScore := baseScore * 5.0
 
-	// Persist.
+	// ---------------------------------------------------------------
+	// 4. Provider-level modifiers
+	// ---------------------------------------------------------------
+	if provider.VerificationStatus == domain.VerificationApproved {
+		trustScore += 0.10
+	}
+	// Profile photo: check if avatar/photo exists (user-level field).
+	// Since ProviderProfile does not directly have an avatar, we approximate
+	// by checking whether the provider has a bio set (indicates profile effort).
+	if provider.Bio != "" {
+		trustScore += 0.05
+	}
+	if provider.BankAccountID != nil && *provider.BankAccountID != "" {
+		trustScore += 0.05
+	}
+
+	// ---------------------------------------------------------------
+	// 5. Clamp to 0.00 - 5.00
+	// ---------------------------------------------------------------
+	if trustScore < 0 {
+		trustScore = 0
+	}
+	if trustScore > 5.0 {
+		trustScore = 5.0
+	}
+
+	// Round to two decimal places.
+	trustScore = math.Round(trustScore*100) / 100
+
+	// ---------------------------------------------------------------
+	// 6. Persist trust score.
+	// ---------------------------------------------------------------
 	if err := s.providers.UpdateTrustScore(ctx, providerID, trustScore); err != nil {
 		log.Warn().Err(err).Str("provider_id", providerID.String()).Msg("failed to persist trust score")
+	}
+
+	// ---------------------------------------------------------------
+	// 7. Evaluate level progression.
+	// ---------------------------------------------------------------
+	newLevel := evaluateProviderLevel(trustScore, totalJobs, totalReviews)
+	if newLevel != "" {
+		log.Info().
+			Str("provider_id", providerID.String()).
+			Str("new_level", newLevel).
+			Float64("trust_score", trustScore).
+			Int("total_jobs", totalJobs).
+			Msg("provider level evaluated")
 	}
 
 	log.Info().
 		Str("provider_id", providerID.String()).
 		Float64("trust_score", trustScore).
+		Float64("rating_factor", ratingFactor).
+		Float64("completion_rate", completionRate).
+		Float64("response_factor", responseTimeFactor).
+		Float64("volume_factor", volumeFactor).
+		Float64("recency_factor", recencyFactor).
 		Msg("trust score recalculated")
 
 	return trustScore, nil
+}
+
+// evaluateProviderLevel determines which provider level a provider should hold
+// based on their trust score and total jobs completed. Returns the level name
+// as a string matching the provider_level enum.
+//
+// Level thresholds:
+//
+//	new -> active:         trust_score >= 2.0 AND total_jobs >= 3
+//	active -> trusted:     trust_score >= 3.5 AND total_jobs >= 20
+//	trusted -> expert:     trust_score >= 4.0 AND total_jobs >= 50
+//	expert -> local_champion: trust_score >= 4.5 AND total_jobs >= 100
+func evaluateProviderLevel(trustScore float64, totalJobs, totalReviews int) string {
+	switch {
+	case trustScore >= levelChampMinScore && totalJobs >= levelChampMinJobs:
+		return "local_champion"
+	case trustScore >= levelExpertMinScore && totalJobs >= levelExpertMinJobs:
+		return "expert"
+	case trustScore >= levelTrustedMinScore && totalJobs >= levelTrustedMinJobs:
+		return "trusted"
+	case trustScore >= levelActiveMinScore && totalJobs >= levelActiveMinJobs:
+		return "active"
+	default:
+		return "new"
+	}
 }
 
 // Moderate updates the moderation status of a review (admin action).

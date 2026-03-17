@@ -25,3 +25,11 @@ DELETE FROM otp_codes WHERE expires_at < NOW() - INTERVAL '1 hour';
 -- name: CountRecentOTPs :one
 SELECT COUNT(*) FROM otp_codes
 WHERE phone = $1 AND created_at > NOW() - INTERVAL '1 hour';
+
+-- name: GetLatestOTPByPhone :one
+SELECT * FROM otp_codes
+WHERE phone = $1
+  AND verified_at IS NULL
+  AND expires_at > NOW()
+ORDER BY created_at DESC
+LIMIT 1;

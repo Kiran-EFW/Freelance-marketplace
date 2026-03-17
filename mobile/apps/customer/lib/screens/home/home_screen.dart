@@ -36,9 +36,12 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     ]);
 
     if (mounted) {
+      final categoriesResult = results[0] as Result<List<Category>>;
+      final jobsResult = results[1] as Result<PaginatedResult<Job>>;
+
       setState(() {
-        _categories = results[0] as List<Category>;
-        _recentJobs = (results[1] as PaginatedResult<Job>).items;
+        _categories = categoriesResult.dataOrNull ?? [];
+        _recentJobs = jobsResult.dataOrNull?.items ?? [];
         _isLoading = false;
       });
     }

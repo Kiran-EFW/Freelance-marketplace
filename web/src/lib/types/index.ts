@@ -468,6 +468,40 @@ export interface SEOLandingData {
 	faqs: { question: string; answer: string }[];
 }
 
+// --- Messaging ---
+
+export type MessageType = 'text' | 'image' | 'quote' | 'system';
+
+export interface Conversation {
+	id: string;
+	job_id?: string;
+	participant_1: string;
+	participant_2: string;
+	last_message_at?: string;
+	last_message_preview?: string;
+	is_archived_1: boolean;
+	is_archived_2: boolean;
+	created_at: string;
+	updated_at: string;
+	// Enriched fields from API joins or client-side resolution
+	other_user?: User;
+	unread_count?: number;
+}
+
+export interface ChatMessage {
+	id: string;
+	conversation_id: string;
+	sender_id: string;
+	content: string;
+	message_type: MessageType;
+	attachment_url?: string;
+	attachment_type?: string;
+	metadata?: Record<string, unknown>;
+	is_read: boolean;
+	read_at?: string;
+	created_at: string;
+}
+
 // --- AI ---
 
 export interface AIChatMessage {

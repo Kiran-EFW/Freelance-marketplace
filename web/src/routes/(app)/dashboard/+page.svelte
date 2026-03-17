@@ -1,49 +1,69 @@
 <script lang="ts">
-	import { Briefcase, Clock, Star, IndianRupee, ArrowRight, Bell, Plus, Search, Calendar, CheckCircle, MessageSquare } from 'lucide-svelte';
+	import { onMount } from 'svelte';
+	import { Briefcase, Clock, Star, IndianRupee, ArrowRight, Bell, Plus, Search, Calendar, CheckCircle, MessageSquare, Loader2 } from 'lucide-svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Avatar from '$lib/components/ui/Avatar.svelte';
+	import api from '$lib/api/client';
+	import { getCurrentUser } from '$lib/stores/auth';
 
-	const stats = {
-		activeJobs: 3,
-		pendingQuotes: 5,
-		totalReviews: 12,
-		totalSpent: 45000
-	};
+	let loading = $state(true);
+	let error = $state('');
 
-	const recentJobs = [
-		{
-			id: '1', title: 'Fix kitchen plumbing', status: 'in_progress',
-			category: 'Plumbing', provider: 'Suresh Nair', budget: 3500,
-			createdAt: '2026-03-15', quotesCount: 4
-		},
-		{
-			id: '2', title: 'Living room painting', status: 'quoted',
-			category: 'Painting', provider: null, budget: 8000,
-			createdAt: '2026-03-14', quotesCount: 6
-		},
-		{
-			id: '3', title: 'AC servicing', status: 'completed',
-			category: 'HVAC', provider: 'Rajesh Iyer', budget: 2000,
-			createdAt: '2026-03-10', quotesCount: 3
-		},
-		{
-			id: '4', title: 'Garden maintenance', status: 'posted',
-			category: 'Gardening', provider: null, budget: 1500,
-			createdAt: '2026-03-13', quotesCount: 2
+	let stats = $state({
+		activeJobs: 0,
+		pendingQuotes: 0,
+		totalReviews: 0,
+		totalSpent: 0
+	});
+
+	let recentJobs = $state<any[]>([]);
+	let recentNotifications = $state<any[]>([]);
+
+	onMount(async () => {
+		try {
+			const [jobsRes, notifsRes] = await Promise.all([
+				api.jobs.list({ per_page: 4 }),
+				api.notifications.list({ per_page: 4 })
+			]);
+
+			recentJobs = (jobsRes.data || []).map((job: any) => ({
+				id: job.id,
+				title: job.title,
+				status: job.status,
+				category: job.category?.name || '',
+				provider: job.provider?.user?.name || null,
+				budget: job.budget_min || 0,
+				createdAt: job.created_at?.split('T')[0] || '',
+				quotesCount: job.quotes_count || 0
+			}));
+
+			recentNotifications = (notifsRes.data || []).map((n: any) => ({
+				id: n.id,
+				message: n.message || n.title || '',
+				time: n.created_at || '',
+				read: n.read ?? n.is_read ?? true
+			}));
+
+			// Compute stats from jobs data
+			const allJobs = jobsRes.data || [];
+			stats = {
+				activeJobs: allJobs.filter((j: any) => j.status === 'in_progress' || j.status === 'accepted').length,
+				pendingQuotes: allJobs.filter((j: any) => j.status === 'quoted' || j.status === 'open').length,
+				totalReviews: 0,
+				totalSpent: allJobs.reduce((sum: number, j: any) => sum + (j.budget_min || 0), 0)
+			};
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'Failed to load dashboard data';
+		} finally {
+			loading = false;
 		}
-	];
-
-	const recentNotifications = [
-		{ id: '1', message: 'Suresh Nair sent you a quote for "Fix kitchen plumbing"', time: '10 min ago', read: false },
-		{ id: '2', message: 'Your job "AC servicing" has been completed', time: '2 hours ago', read: false },
-		{ id: '3', message: 'New review from Arjun Das', time: '5 hours ago', read: true },
-		{ id: '4', message: 'Payment of Rs. 2,000 processed successfully', time: '1 day ago', read: true }
-	];
+	});
 
 	const statusBadge: Record<string, 'warning' | 'info' | 'success' | 'neutral' | 'danger'> = {
 		posted: 'info',
+		open: 'info',
 		quoted: 'warning',
 		accepted: 'info',
 		in_progress: 'warning',
@@ -56,6 +76,17 @@
 	<title>Dashboard - Seva</title>
 </svelte:head>
 
+{#if loading}
+<div class="flex items-center justify-center py-20">
+	<Loader2 class="h-8 w-8 animate-spin text-primary-600" />
+</div>
+{:else if error}
+<div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+	<div class="rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-800 dark:bg-red-900/20">
+		<p class="text-red-600 dark:text-red-400">{error}</p>
+	</div>
+</div>
+{:else}
 <div class="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
 	<div class="flex flex-wrap items-center justify-between gap-4">
 		<div>
@@ -219,3 +250,4 @@
 		</div>
 	</div>
 </div>
+{/if}

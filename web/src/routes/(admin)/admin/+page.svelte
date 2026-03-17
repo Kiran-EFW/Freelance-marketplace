@@ -1,56 +1,107 @@
 <script lang="ts">
-	import { Users, Briefcase, IndianRupee, AlertTriangle, TrendingUp, TrendingDown, Shield, Clock, CheckCircle, ArrowRight, UserPlus, Star } from 'lucide-svelte';
+	import { onMount } from 'svelte';
+	import { Users, Briefcase, IndianRupee, AlertTriangle, TrendingUp, TrendingDown, Shield, Clock, CheckCircle, ArrowRight, UserPlus, Star, Loader2 } from 'lucide-svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Avatar from '$lib/components/ui/Avatar.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
+	import api from '$lib/api/client';
 
-	const stats = {
-		totalUsers: 12485,
-		usersGrowth: 12.3,
-		totalProviders: 3240,
-		providersGrowth: 8.1,
-		totalJobs: 28450,
-		jobsGrowth: 15.6,
-		revenue: 4250000,
-		revenueGrowth: 18.2,
-		openDisputes: 14,
-		pendingKYC: 23,
-		activeJobs: 342,
-		completionRate: 94.7
-	};
+	let loading = $state(true);
+	let error = $state('');
 
-	const revenueChart = [
-		{ month: 'Oct', amount: 2800000 },
-		{ month: 'Nov', amount: 3100000 },
-		{ month: 'Dec', amount: 3450000 },
-		{ month: 'Jan', amount: 3200000 },
-		{ month: 'Feb', amount: 3800000 },
-		{ month: 'Mar', amount: 4250000 }
-	];
-	const maxRevenue = Math.max(...revenueChart.map((d) => d.amount));
+	let stats = $state({
+		totalUsers: 0,
+		usersGrowth: 0,
+		totalProviders: 0,
+		providersGrowth: 0,
+		totalJobs: 0,
+		jobsGrowth: 0,
+		revenue: 0,
+		revenueGrowth: 0,
+		openDisputes: 0,
+		pendingKYC: 0,
+		activeJobs: 0,
+		completionRate: 0
+	});
 
-	const pendingVerifications = [
-		{ id: '1', name: 'Vikram Singh', category: 'Plumbing', submittedAt: '2026-03-16', documents: 3 },
-		{ id: '2', name: 'Fatima Begum', category: 'Cleaning', submittedAt: '2026-03-15', documents: 4 },
-		{ id: '3', name: 'Ravi Shankar', category: 'Electrical', submittedAt: '2026-03-15', documents: 2 },
-		{ id: '4', name: 'Meena Devi', category: 'Gardening', submittedAt: '2026-03-14', documents: 3 }
-	];
+	let revenueChart = $state<{ month: string; amount: number }[]>([]);
+	let pendingVerifications = $state<any[]>([]);
+	let recentDisputes = $state<any[]>([]);
+	let recentActivity = $state<any[]>([]);
 
-	const recentDisputes = [
-		{ id: '1', title: 'Incomplete work complaint', customer: 'Amit Verma', provider: 'Suresh Nair', severity: 'high', createdAt: '2026-03-16' },
-		{ id: '2', title: 'Payment not received', customer: 'Priya Menon', provider: 'Deepak Kumar', severity: 'medium', createdAt: '2026-03-15' },
-		{ id: '3', title: 'Late arrival issue', customer: 'Arjun Das', provider: 'Lakshmi Bai', severity: 'low', createdAt: '2026-03-14' }
-	];
+	let maxRevenue = $derived(Math.max(...revenueChart.map((d) => d.amount), 1));
 
-	const recentActivity = [
-		{ id: '1', action: 'New user registered', detail: 'Anita Sharma joined as customer', time: '5 min ago', icon: UserPlus },
-		{ id: '2', action: 'KYC approved', detail: 'Mohan Rao verified as electrician', time: '12 min ago', icon: Shield },
-		{ id: '3', action: 'Dispute resolved', detail: 'Case #D-1042 closed with refund', time: '25 min ago', icon: CheckCircle },
-		{ id: '4', action: 'New provider', detail: 'Sanjay Patel registered for plumbing', time: '1 hour ago', icon: UserPlus },
-		{ id: '5', action: '5-star review', detail: 'Priya rated Suresh Nair 5 stars', time: '2 hours ago', icon: Star },
-		{ id: '6', action: 'Job completed', detail: 'Kitchen plumbing fix completed', time: '3 hours ago', icon: CheckCircle }
-	];
+	onMount(async () => {
+		try {
+			const [statsRes, kycRes, disputesRes] = await Promise.all([
+				api.admin.getStats(),
+				api.admin.pendingKYC({ per_page: 4 }),
+				api.disputes.list({ status: 'open', per_page: 3 })
+			]);
+
+			const s = statsRes.data;
+			stats = {
+				totalUsers: s.total_users || 0,
+				usersGrowth: s.users_growth || 0,
+				totalProviders: s.total_providers || 0,
+				providersGrowth: s.providers_growth || 0,
+				totalJobs: s.total_jobs || 0,
+				jobsGrowth: s.jobs_growth || 0,
+				revenue: s.revenue || 0,
+				revenueGrowth: s.revenue_growth || 0,
+				openDisputes: s.open_disputes || 0,
+				pendingKYC: s.pending_kyc || 0,
+				activeJobs: s.active_jobs || 0,
+				completionRate: s.completion_rate || 0
+			};
+
+			revenueChart = (s.revenue_chart || s.revenue_trend || []).map((item: any) => ({
+				month: item.month || item.label || '',
+				amount: item.amount || item.revenue || 0
+			}));
+
+			recentActivity = (s.recent_activity || []).map((a: any) => {
+				const iconMap: Record<string, any> = {
+					user_registered: UserPlus,
+					new_user: UserPlus,
+					kyc_approved: Shield,
+					dispute_resolved: CheckCircle,
+					new_provider: UserPlus,
+					review: Star,
+					job_completed: CheckCircle
+				};
+				return {
+					id: a.id,
+					action: a.action || a.title || '',
+					detail: a.detail || a.description || '',
+					time: a.time || a.created_at || '',
+					icon: iconMap[a.type] || CheckCircle
+				};
+			});
+
+			pendingVerifications = (kycRes.data || []).map((k: any) => ({
+				id: k.id,
+				name: k.user?.name || k.provider_name || '',
+				category: k.category?.name || k.category || '',
+				submittedAt: k.created_at?.split('T')[0] || k.submitted_at || '',
+				documents: k.documents_count || k.documents?.length || 0
+			}));
+
+			recentDisputes = (disputesRes.data || []).map((d: any) => ({
+				id: d.id,
+				title: d.title || d.job?.title || 'Dispute',
+				customer: d.customer?.name || '',
+				provider: d.provider?.user?.name || '',
+				severity: d.severity || 'medium',
+				createdAt: d.created_at?.split('T')[0] || ''
+			}));
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'Failed to load admin dashboard';
+		} finally {
+			loading = false;
+		}
+	});
 
 	const severityBadge: Record<string, 'danger' | 'warning' | 'info'> = {
 		high: 'danger', medium: 'warning', low: 'info'
@@ -61,6 +112,17 @@
 	<title>Admin Dashboard - Seva</title>
 </svelte:head>
 
+{#if loading}
+<div class="flex items-center justify-center py-20">
+	<Loader2 class="h-8 w-8 animate-spin text-primary-600" />
+</div>
+{:else if error}
+<div class="px-6 py-8 lg:px-8">
+	<div class="rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-800 dark:bg-red-900/20">
+		<p class="text-red-600 dark:text-red-400">{error}</p>
+	</div>
+</div>
+{:else}
 <div class="px-6 py-8 lg:px-8">
 	<div class="flex flex-wrap items-center justify-between gap-4">
 		<div>
@@ -236,3 +298,4 @@
 		</Card>
 	</div>
 </div>
+{/if}

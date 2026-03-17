@@ -7,6 +7,7 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import { toastSuccess, toastError } from '$lib/stores/toast';
 	import { goto } from '$app/navigation';
+	import api from '$lib/api/client';
 
 	let title = $state('');
 	let description = $state('');
@@ -71,11 +72,35 @@
 		}
 		loading = true;
 		try {
-			await new Promise((r) => setTimeout(r, 1500));
+			const jobData: any = {
+				title: title.trim(),
+				description: description.trim(),
+				category_id: subCategory || topCategory,
+				location: { postcode: postcode.trim() },
+				preferred_time_slot: timeSlot
+			};
+			if (preferredDate) jobData.preferred_date = preferredDate;
+			if (budgetType === 'range') {
+				jobData.budget_min = budgetMin;
+				jobData.budget_max = budgetMax;
+			}
+
+			const res = await api.jobs.create(jobData);
+
+			// Upload photos if any
+			if (photos.length > 0 && res.data?.id) {
+				try {
+					await api.jobs.uploadImages(res.data.id, photos);
+				} catch {
+					// Non-critical: job was created, photos failed
+					toastError('Job posted but photo upload failed');
+				}
+			}
+
 			toastSuccess('Job posted successfully! Providers will start sending quotes.');
 			goto('/jobs');
-		} catch {
-			toastError('Failed to post job');
+		} catch (err) {
+			toastError(err instanceof Error ? err.message : 'Failed to post job');
 		} finally {
 			loading = false;
 		}

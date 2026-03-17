@@ -3,12 +3,16 @@ package handler
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	stdmime "mime"
+	"path/filepath"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 
+	"github.com/seva-platform/backend/internal/adapter/storage"
 	"github.com/seva-platform/backend/internal/domain"
 	"github.com/seva-platform/backend/internal/middleware"
 )
@@ -58,11 +62,12 @@ type ProviderService interface {
 // ProviderHandler handles provider-specific endpoints.
 type ProviderHandler struct {
 	service ProviderService
+	storage storage.StorageProvider
 }
 
 // NewProviderHandler creates a new ProviderHandler.
-func NewProviderHandler(svc ProviderService) *ProviderHandler {
-	return &ProviderHandler{service: svc}
+func NewProviderHandler(svc ProviderService, store storage.StorageProvider) *ProviderHandler {
+	return &ProviderHandler{service: svc, storage: store}
 }
 
 // RegisterRoutes mounts provider routes on the given Fiber router group.
@@ -408,8 +413,41 @@ func (h *ProviderHandler) UploadKYCDocument(c *fiber.Ctx) error {
 		})
 	}
 
-	// TODO: upload file to object storage (S3/GCS) and get the URL.
-	fileURL := "https://storage.seva.io/kyc/" + userID.String() + "/" + file.Filename
+	// Open the uploaded file for reading.
+	src, err := file.Open()
+	if err != nil {
+		log.Error().Err(err).Msg("failed to open uploaded file")
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": fiber.Map{
+				"code":    "INTERNAL_ERROR",
+				"message": "failed to process uploaded file",
+			},
+		})
+	}
+	defer src.Close()
+
+	// Detect content type from the file extension, falling back to
+	// application/octet-stream if unknown.
+	ext := filepath.Ext(file.Filename)
+	contentType := stdmime.TypeByExtension(ext)
+	if contentType == "" {
+		contentType = "application/octet-stream"
+	}
+
+	// Generate a unique storage key to avoid filename collisions.
+	uniqueName := fmt.Sprintf("%s%s", uuid.New().String(), ext)
+	key := storage.KYCKey(userID.String(), uniqueName)
+
+	fileURL, err := h.storage.Upload(c.UserContext(), key, src, contentType)
+	if err != nil {
+		log.Error().Err(err).Str("user_id", userID.String()).Str("key", key).Msg("failed to upload KYC document to storage")
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"error": fiber.Map{
+				"code":    "STORAGE_ERROR",
+				"message": "failed to upload document to storage",
+			},
+		})
+	}
 
 	doc := &KYCDocument{
 		ID:         uuid.New(),

@@ -1,38 +1,71 @@
 <script lang="ts">
-	import { MapPin, Calendar, Plus, ChevronRight, Route } from 'lucide-svelte';
+	import { onMount } from 'svelte';
+	import { MapPin, Calendar, Plus, ChevronRight, Route, Loader2 } from 'lucide-svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Modal from '$lib/components/ui/Modal.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
-	import { toastSuccess } from '$lib/stores/toast';
+	import { toastSuccess, toastError } from '$lib/stores/toast';
+	import api from '$lib/api/client';
 
 	let showNewRouteModal = $state(false);
 	let newRouteName = $state('');
 	let newRouteDesc = $state('');
 	let newRouteRecurrence = $state('weekly');
+	let loading = $state(true);
+	let error = $state('');
+	let creatingRoute = $state(false);
 
-	const mockRoutes = [
-		{
-			id: '1', name: 'Koramangala Route', description: 'Weekly coconut tree maintenance', stops: 8,
-			nextVisit: '2026-03-19', recurrence: 'weekly', isActive: true
-		},
-		{
-			id: '2', name: 'Indiranagar Route', description: 'Bi-weekly garden maintenance', stops: 5,
-			nextVisit: '2026-03-25', recurrence: 'biweekly', isActive: true
-		},
-		{
-			id: '3', name: 'HSR Layout Route', description: 'Monthly tree trimming', stops: 12,
-			nextVisit: '2026-04-01', recurrence: 'monthly', isActive: false
+	let routesList = $state<any[]>([]);
+
+	onMount(async () => {
+		try {
+			const res = await api.routes.list();
+			routesList = (res.data || []).map((r: any) => ({
+				id: r.id,
+				name: r.name || '',
+				description: r.description || '',
+				stops: r.stops_count || r.stops?.length || 0,
+				nextVisit: r.next_visit?.split('T')[0] || r.next_visit_date || '',
+				recurrence: r.recurrence || 'weekly',
+				isActive: r.is_active ?? true
+			}));
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'Failed to load routes';
+		} finally {
+			loading = false;
 		}
-	];
+	});
 
-	function createRoute() {
+	async function createRoute() {
 		if (!newRouteName.trim()) return;
-		showNewRouteModal = false;
-		newRouteName = '';
-		newRouteDesc = '';
-		toastSuccess('Route created successfully');
+		creatingRoute = true;
+		try {
+			const res = await api.routes.create({
+				name: newRouteName.trim(),
+				description: newRouteDesc.trim(),
+				recurrence: newRouteRecurrence
+			} as any);
+			const r = res.data;
+			routesList = [...routesList, {
+				id: r.id,
+				name: r.name || newRouteName,
+				description: r.description || newRouteDesc,
+				stops: 0,
+				nextVisit: r.next_visit?.split('T')[0] || '',
+				recurrence: r.recurrence || newRouteRecurrence,
+				isActive: true
+			}];
+			showNewRouteModal = false;
+			newRouteName = '';
+			newRouteDesc = '';
+			toastSuccess('Route created successfully');
+		} catch (err) {
+			toastError(err instanceof Error ? err.message : 'Failed to create route');
+		} finally {
+			creatingRoute = false;
+		}
 	}
 </script>
 
@@ -40,6 +73,17 @@
 	<title>Routes - Seva Provider</title>
 </svelte:head>
 
+{#if loading}
+<div class="flex items-center justify-center py-20">
+	<Loader2 class="h-8 w-8 animate-spin text-primary-600" />
+</div>
+{:else if error}
+<div class="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+	<div class="rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-800 dark:bg-red-900/20">
+		<p class="text-red-600 dark:text-red-400">{error}</p>
+	</div>
+</div>
+{:else}
 <div class="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
 	<div class="flex items-center justify-between">
 		<div>
@@ -53,7 +97,7 @@
 	</div>
 
 	<div class="mt-6 space-y-4">
-		{#each mockRoutes as route}
+		{#each routesList as route}
 			<a href="/provider/routes/{route.id}" class="block">
 				<Card hover>
 					<div class="flex items-center gap-4">
@@ -91,6 +135,7 @@
 		{/each}
 	</div>
 </div>
+{/if}
 
 <!-- New Route Modal -->
 <Modal bind:open={showNewRouteModal} title="Create New Route" size="md">
@@ -120,6 +165,6 @@
 	</div>
 	{#snippet footer()}
 		<Button variant="outline" onclick={() => (showNewRouteModal = false)}>Cancel</Button>
-		<Button variant="primary" onclick={createRoute} disabled={!newRouteName.trim()}>Create Route</Button>
+		<Button variant="primary" onclick={createRoute} disabled={!newRouteName.trim()} loading={creatingRoute}>Create Route</Button>
 	{/snippet}
 </Modal>

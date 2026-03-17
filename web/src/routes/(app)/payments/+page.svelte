@@ -1,36 +1,66 @@
 <script lang="ts">
-	import { IndianRupee, Filter, ArrowUpRight, ArrowDownLeft, Search } from 'lucide-svelte';
+	import { IndianRupee, Filter, ArrowUpRight, ArrowDownLeft, Search, Loader2 } from 'lucide-svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Pagination from '$lib/components/ui/Pagination.svelte';
+	import api from '$lib/api/client';
 
 	let statusFilter = $state('all');
 	let searchQuery = $state('');
 	let currentPage = $state(1);
+	let loading = $state(true);
+	let error = $state('');
+	let transactions = $state<any[]>([]);
+	let totalPages = $state(1);
 
-	const mockTransactions = [
-		{ id: '1', jobTitle: 'Fix leaking tap', amount: 800, type: 'payment', status: 'released', method: 'UPI', date: '2026-03-15' },
-		{ id: '2', jobTitle: 'Electrical wiring', amount: 1500, type: 'payment', status: 'held', method: 'Card', date: '2026-03-10' },
-		{ id: '3', jobTitle: 'Deep cleaning', amount: 2000, type: 'payment', status: 'released', method: 'UPI', date: '2026-02-28' },
-		{ id: '4', jobTitle: 'Garden maintenance', amount: 600, type: 'refund', status: 'refunded', method: 'UPI', date: '2026-02-15' },
-		{ id: '5', jobTitle: 'Painting bedroom', amount: 3500, type: 'payment', status: 'released', method: 'Cash', date: '2026-01-20' },
-		{ id: '6', jobTitle: 'AC repair', amount: 1200, type: 'payment', status: 'pending', method: 'Card', date: '2026-01-15' }
-	];
+	async function fetchPayments() {
+		loading = true;
+		error = '';
+		try {
+			const params: any = {
+				page: currentPage,
+				per_page: 10
+			};
+			if (statusFilter !== 'all') params.status = statusFilter;
+
+			const res = await api.payments.getHistory(params);
+			transactions = (res.data || []).map((t: any) => ({
+				id: t.id,
+				jobTitle: t.job?.title || t.description || 'Transaction',
+				amount: t.amount || 0,
+				type: t.type || 'payment',
+				status: t.status || 'pending',
+				method: t.payment_method || t.method || 'N/A',
+				date: t.created_at?.split('T')[0] || ''
+			}));
+			totalPages = res.meta?.total_pages || 1;
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'Failed to load payment history';
+		} finally {
+			loading = false;
+		}
+	}
+
+	$effect(() => {
+		const _s = statusFilter;
+		const _p = currentPage;
+		fetchPayments();
+	});
 
 	const statusBadge: Record<string, 'success' | 'warning' | 'danger' | 'info' | 'neutral'> = {
-		released: 'success', held: 'warning', pending: 'info', refunded: 'danger', failed: 'danger'
+		released: 'success', completed: 'success', held: 'warning', pending: 'info', refunded: 'danger', failed: 'danger'
 	};
 
 	const totalSpent = $derived(
-		mockTransactions.filter((t) => t.type === 'payment' && t.status !== 'refunded').reduce((sum, t) => sum + t.amount, 0)
+		transactions.filter((t) => t.type === 'payment' && t.status !== 'refunded').reduce((sum, t) => sum + t.amount, 0)
 	);
 
 	const totalRefunded = $derived(
-		mockTransactions.filter((t) => t.status === 'refunded').reduce((sum, t) => sum + t.amount, 0)
+		transactions.filter((t) => t.status === 'refunded').reduce((sum, t) => sum + t.amount, 0)
 	);
 
 	const pendingAmount = $derived(
-		mockTransactions.filter((t) => t.status === 'pending' || t.status === 'held').reduce((sum, t) => sum + t.amount, 0)
+		transactions.filter((t) => t.status === 'pending' || t.status === 'held').reduce((sum, t) => sum + t.amount, 0)
 	);
 </script>
 
@@ -82,32 +112,42 @@
 	</div>
 
 	<!-- Transaction List -->
-	<div class="mt-4 space-y-2">
-		{#each mockTransactions as txn}
-			<div class="flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
-				<div class="flex h-10 w-10 items-center justify-center rounded-full
-					{txn.type === 'refund'
-						? 'bg-red-100 text-red-600 dark:bg-red-900/20 dark:text-red-400'
-						: 'bg-green-100 text-green-600 dark:bg-green-900/20 dark:text-green-400'}">
-					{#if txn.type === 'refund'}
-						<ArrowDownLeft class="h-5 w-5" />
-					{:else}
-						<ArrowUpRight class="h-5 w-5" />
-					{/if}
+	{#if loading}
+		<div class="mt-8 flex items-center justify-center py-12">
+			<Loader2 class="h-8 w-8 animate-spin text-primary-600" />
+		</div>
+	{:else if error}
+		<div class="mt-4 rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-800 dark:bg-red-900/20">
+			<p class="text-red-600 dark:text-red-400">{error}</p>
+		</div>
+	{:else}
+		<div class="mt-4 space-y-2">
+			{#each transactions as txn}
+				<div class="flex items-center gap-4 rounded-xl border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+					<div class="flex h-10 w-10 items-center justify-center rounded-full
+						{txn.type === 'refund'
+							? 'bg-red-100 text-red-600 dark:bg-red-900/20 dark:text-red-400'
+							: 'bg-green-100 text-green-600 dark:bg-green-900/20 dark:text-green-400'}">
+						{#if txn.type === 'refund'}
+							<ArrowDownLeft class="h-5 w-5" />
+						{:else}
+							<ArrowUpRight class="h-5 w-5" />
+						{/if}
+					</div>
+					<div class="flex-1 min-w-0">
+						<p class="text-sm font-medium text-gray-900 dark:text-white truncate">{txn.jobTitle}</p>
+						<p class="text-xs text-gray-500 dark:text-gray-400">{txn.date} -- {txn.method}</p>
+					</div>
+					<div class="text-right">
+						<p class="text-sm font-semibold {txn.type === 'refund' ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'}">
+							{txn.type === 'refund' ? '-' : ''}Rs. {txn.amount.toLocaleString()}
+						</p>
+						<Badge variant={statusBadge[txn.status]} size="sm">{txn.status}</Badge>
+					</div>
 				</div>
-				<div class="flex-1 min-w-0">
-					<p class="text-sm font-medium text-gray-900 dark:text-white truncate">{txn.jobTitle}</p>
-					<p class="text-xs text-gray-500 dark:text-gray-400">{txn.date} -- {txn.method}</p>
-				</div>
-				<div class="text-right">
-					<p class="text-sm font-semibold {txn.type === 'refund' ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'}">
-						{txn.type === 'refund' ? '-' : ''}Rs. {txn.amount.toLocaleString()}
-					</p>
-					<Badge variant={statusBadge[txn.status]} size="sm">{txn.status}</Badge>
-				</div>
-			</div>
-		{/each}
-	</div>
+			{/each}
+		</div>
 
-	<Pagination {currentPage} totalPages={3} onPageChange={(p) => (currentPage = p)} class="mt-6" />
+		<Pagination {currentPage} {totalPages} onPageChange={(p) => (currentPage = p)} class="mt-6" />
+	{/if}
 </div>

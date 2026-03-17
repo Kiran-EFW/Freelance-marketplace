@@ -26,52 +26,62 @@ const (
 	PrefixKYC      = "kyc"
 	PrefixJobs     = "jobs"
 	PrefixProfiles = "profiles"
+	PrefixDisputes = "disputes"
 )
 
-// StorageClient wraps an S3-compatible client for Cloudflare R2 or AWS S3.
-type StorageClient struct {
-	client         *s3.Client
-	presignClient  *s3.PresignClient
-	bucket         string
-	endpoint       string
+// R2Storage wraps an S3-compatible client configured for Cloudflare R2.
+type R2Storage struct {
+	client        *s3.Client
+	presignClient *s3.PresignClient
+	bucket        string
+	publicURL     string // base URL for public file access (e.g. https://cdn.seva.io)
 }
 
-// NewStorageClient creates a new S3-compatible storage client configured for
-// Cloudflare R2 or any S3-compatible endpoint.
-func NewStorageClient(bucket, region, accessKey, secretKey, endpoint string) *StorageClient {
+// NewR2Storage creates a new Cloudflare R2 storage client.
+// The S3-compatible endpoint is derived from the accountID.
+// publicURL is the base URL used to construct public file URLs (e.g. a custom
+// domain or an R2.dev subdomain).
+func NewR2Storage(accountID, accessKeyID, accessKeySecret, bucket, publicURL string) *R2Storage {
+	endpoint := fmt.Sprintf("https://%s.r2.cloudflarestorage.com", accountID)
+
 	cfg := aws.Config{
-		Region: region,
+		Region: "auto", // R2 ignores region but the SDK requires one
 		Credentials: credentials.NewStaticCredentialsProvider(
-			accessKey,
-			secretKey,
+			accessKeyID,
+			accessKeySecret,
 			"",
 		),
 	}
 
 	client := s3.NewFromConfig(cfg, func(o *s3.Options) {
-		if endpoint != "" {
-			o.BaseEndpoint = aws.String(endpoint)
-		}
+		o.BaseEndpoint = aws.String(endpoint)
 		o.UsePathStyle = true
 	})
 
 	presignClient := s3.NewPresignClient(client)
 
-	return &StorageClient{
+	log.Info().
+		Str("bucket", bucket).
+		Str("endpoint", endpoint).
+		Msg("R2 storage client initialized")
+
+	return &R2Storage{
 		client:        client,
 		presignClient: presignClient,
 		bucket:        bucket,
-		endpoint:      endpoint,
+		publicURL:     publicURL,
 	}
 }
 
-// Upload stores a file in the bucket at the given key and returns the public URL.
+// Upload stores a file in the R2 bucket at the given key and returns the
+// public URL of the uploaded object.
 //
 // Key organization:
-//   - kyc/{userID}/{filename}       — KYC documents
-//   - jobs/{jobID}/{filename}       — job-related media
-//   - profiles/{userID}/avatar      — profile avatars
-func (s *StorageClient) Upload(ctx context.Context, key string, data io.Reader, contentType string) (string, error) {
+//   - kyc/{userID}/{filename}       -- KYC documents
+//   - jobs/{jobID}/{filename}       -- job-related media
+//   - profiles/{userID}/avatar      -- profile avatars
+//   - disputes/{disputeID}/{filename} -- dispute evidence
+func (s *R2Storage) Upload(ctx context.Context, key string, data io.Reader, contentType string) (string, error) {
 	input := &s3.PutObjectInput{
 		Bucket:      aws.String(s.bucket),
 		Key:         aws.String(key),
@@ -82,7 +92,7 @@ func (s *StorageClient) Upload(ctx context.Context, key string, data io.Reader, 
 
 	_, err := s.client.PutObject(ctx, input)
 	if err != nil {
-		return "", fmt.Errorf("storage upload %s: %w", key, err)
+		return "", fmt.Errorf("r2 upload %s: %w", key, err)
 	}
 
 	url := s.objectURL(key)
@@ -91,14 +101,14 @@ func (s *StorageClient) Upload(ctx context.Context, key string, data io.Reader, 
 		Str("key", key).
 		Str("content_type", contentType).
 		Str("bucket", s.bucket).
-		Msg("file uploaded to storage")
+		Msg("file uploaded to R2")
 
 	return url, nil
 }
 
-// Download retrieves a file from the bucket. The caller is responsible for
+// Download retrieves a file from the R2 bucket. The caller is responsible for
 // closing the returned ReadCloser.
-func (s *StorageClient) Download(ctx context.Context, key string) (io.ReadCloser, error) {
+func (s *R2Storage) Download(ctx context.Context, key string) (io.ReadCloser, error) {
 	input := &s3.GetObjectInput{
 		Bucket: aws.String(s.bucket),
 		Key:    aws.String(key),
@@ -106,19 +116,19 @@ func (s *StorageClient) Download(ctx context.Context, key string) (io.ReadCloser
 
 	output, err := s.client.GetObject(ctx, input)
 	if err != nil {
-		return nil, fmt.Errorf("storage download %s: %w", key, err)
+		return nil, fmt.Errorf("r2 download %s: %w", key, err)
 	}
 
 	log.Debug().
 		Str("key", key).
 		Str("bucket", s.bucket).
-		Msg("file downloaded from storage")
+		Msg("file downloaded from R2")
 
 	return output.Body, nil
 }
 
-// Delete removes a file from the bucket.
-func (s *StorageClient) Delete(ctx context.Context, key string) error {
+// Delete removes a file from the R2 bucket.
+func (s *R2Storage) Delete(ctx context.Context, key string) error {
 	input := &s3.DeleteObjectInput{
 		Bucket: aws.String(s.bucket),
 		Key:    aws.String(key),
@@ -126,20 +136,20 @@ func (s *StorageClient) Delete(ctx context.Context, key string) error {
 
 	_, err := s.client.DeleteObject(ctx, input)
 	if err != nil {
-		return fmt.Errorf("storage delete %s: %w", key, err)
+		return fmt.Errorf("r2 delete %s: %w", key, err)
 	}
 
 	log.Debug().
 		Str("key", key).
 		Str("bucket", s.bucket).
-		Msg("file deleted from storage")
+		Msg("file deleted from R2")
 
 	return nil
 }
 
-// GeneratePresignedURL creates a pre-signed URL that allows temporary access
-// to a private object.
-func (s *StorageClient) GeneratePresignedURL(ctx context.Context, key string, expiry time.Duration) (string, error) {
+// GeneratePresignedURL creates a pre-signed URL that allows temporary direct
+// upload or download access to a private object.
+func (s *R2Storage) GeneratePresignedURL(ctx context.Context, key string, expiry time.Duration) (string, error) {
 	input := &s3.GetObjectInput{
 		Bucket: aws.String(s.bucket),
 		Key:    aws.String(key),
@@ -149,7 +159,7 @@ func (s *StorageClient) GeneratePresignedURL(ctx context.Context, key string, ex
 		opts.Expires = expiry
 	})
 	if err != nil {
-		return "", fmt.Errorf("storage presign %s: %w", key, err)
+		return "", fmt.Errorf("r2 presign %s: %w", key, err)
 	}
 
 	log.Debug().
@@ -160,13 +170,10 @@ func (s *StorageClient) GeneratePresignedURL(ctx context.Context, key string, ex
 	return presignResult.URL, nil
 }
 
-// objectURL returns the public URL for an object. For R2, this uses the
-// configured endpoint; for standard S3, it constructs the virtual-hosted URL.
-func (s *StorageClient) objectURL(key string) string {
-	if s.endpoint != "" {
-		return fmt.Sprintf("%s/%s/%s", s.endpoint, s.bucket, key)
-	}
-	return fmt.Sprintf("https://%s.s3.amazonaws.com/%s", s.bucket, key)
+// objectURL returns the public URL for an object using the configured publicURL
+// base. For example: https://cdn.seva.io/kyc/user123/doc.pdf
+func (s *R2Storage) objectURL(key string) string {
+	return fmt.Sprintf("%s/%s", s.publicURL, key)
 }
 
 // KYCKey constructs the storage key for a KYC document.
@@ -182,4 +189,9 @@ func JobKey(jobID, filename string) string {
 // ProfileAvatarKey constructs the storage key for a user's profile avatar.
 func ProfileAvatarKey(userID string) string {
 	return fmt.Sprintf("%s/%s/avatar", PrefixProfiles, userID)
+}
+
+// DisputeEvidenceKey constructs the storage key for dispute evidence.
+func DisputeEvidenceKey(disputeID, filename string) string {
+	return fmt.Sprintf("%s/%s/%s", PrefixDisputes, disputeID, filename)
 }

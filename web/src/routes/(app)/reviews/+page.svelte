@@ -1,37 +1,74 @@
 <script lang="ts">
-	import { Star, MessageSquare } from 'lucide-svelte';
+	import { onMount } from 'svelte';
+	import { Star, MessageSquare, Loader2 } from 'lucide-svelte';
 	import Tabs from '$lib/components/ui/Tabs.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Avatar from '$lib/components/ui/Avatar.svelte';
 	import StarRating from '$lib/components/ui/StarRating.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
+	import api from '$lib/api/client';
 
 	let activeTab = $state('given');
+	let loading = $state(true);
+	let error = $state('');
 
-	const tabs = [
-		{ id: 'given', label: 'Reviews I Wrote', count: 5 },
-		{ id: 'received', label: 'Reviews About Me', count: 3 }
-	];
+	let reviewsGiven = $state<any[]>([]);
+	let reviewsReceived = $state<any[]>([]);
 
-	const mockReviewsGiven = [
-		{ id: '1', providerName: 'Suresh Nair', jobTitle: 'Fix leaking tap', rating: 5, comment: 'Excellent work! Fixed the leak quickly and cleanly. Very professional.', date: '2026-03-10', response: null },
-		{ id: '2', providerName: 'Ravi Kumar', jobTitle: 'Electrical wiring', rating: 4, comment: 'Good job overall. Slightly delayed but quality work.', date: '2026-02-28', response: 'Thank you for the feedback! Sorry about the delay, will ensure on-time service next time.' },
-		{ id: '3', providerName: 'Deepak Sharma', jobTitle: 'Deep cleaning', rating: 5, comment: 'Thorough cleaning, very satisfied with the results.', date: '2026-02-15', response: null },
-		{ id: '4', providerName: 'Anita Gupta', jobTitle: 'Garden maintenance', rating: 3, comment: 'Decent work but missed some areas. Had to follow up.', date: '2026-01-20', response: 'Apologies for the oversight. Will make sure to cover everything next visit.' },
-		{ id: '5', providerName: 'Kumar Singh', jobTitle: 'Painting bedroom', rating: 5, comment: 'Beautiful finish, clean work, and completed on time.', date: '2026-01-05', response: null }
-	];
+	const tabs = $derived([
+		{ id: 'given', label: 'Reviews I Wrote', count: reviewsGiven.length },
+		{ id: 'received', label: 'Reviews About Me', count: reviewsReceived.length }
+	]);
 
-	const mockReviewsReceived = [
-		{ id: '6', reviewerName: 'Priya Menon', jobTitle: 'Tap installation', rating: 5, comment: 'Very knowledgeable and efficient. Highly recommend!', date: '2026-03-12', response: null },
-		{ id: '7', reviewerName: 'Arjun Das', jobTitle: 'Pipe repair', rating: 4, comment: 'Fixed the pipe issue. Good communication throughout.', date: '2026-03-01', response: 'Thank you Arjun! Glad I could help.' },
-		{ id: '8', reviewerName: 'Meera Reddy', jobTitle: 'Water heater install', rating: 5, comment: 'Professional installation, everything works perfectly.', date: '2026-02-20', response: null }
-	];
+	onMount(async () => {
+		try {
+			const [givenRes, receivedRes] = await Promise.all([
+				api.reviews.listMyReviews({ type: 'given', per_page: 20 }),
+				api.reviews.listMyReviews({ type: 'received', per_page: 20 })
+			]);
+
+			reviewsGiven = (givenRes.data || []).map((r: any) => ({
+				id: r.id,
+				providerName: r.provider?.user?.name || r.reviewee?.name || 'Provider',
+				jobTitle: r.job?.title || r.job_title || '',
+				rating: r.rating,
+				comment: r.comment || '',
+				date: r.created_at?.split('T')[0] || '',
+				response: r.response || null
+			}));
+
+			reviewsReceived = (receivedRes.data || []).map((r: any) => ({
+				id: r.id,
+				reviewerName: r.reviewer?.name || r.customer?.name || 'Customer',
+				jobTitle: r.job?.title || r.job_title || '',
+				rating: r.rating,
+				comment: r.comment || '',
+				date: r.created_at?.split('T')[0] || '',
+				response: r.response || null
+			}));
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'Failed to load reviews';
+		} finally {
+			loading = false;
+		}
+	});
 </script>
 
 <svelte:head>
 	<title>Reviews - Seva</title>
 </svelte:head>
 
+{#if loading}
+<div class="flex items-center justify-center py-20">
+	<Loader2 class="h-8 w-8 animate-spin text-primary-600" />
+</div>
+{:else if error}
+<div class="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
+	<div class="rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-800 dark:bg-red-900/20">
+		<p class="text-red-600 dark:text-red-400">{error}</p>
+	</div>
+</div>
+{:else}
 <div class="mx-auto max-w-3xl px-4 py-8 sm:px-6 lg:px-8">
 	<h1 class="text-2xl font-bold text-gray-900 dark:text-white">Reviews</h1>
 	<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">See reviews you've written and reviews about you.</p>
@@ -42,7 +79,7 @@
 
 	<div class="mt-6 space-y-4">
 		{#if activeTab === 'given'}
-			{#each mockReviewsGiven as review}
+			{#each reviewsGiven as review}
 				<Card>
 					<div class="flex items-start gap-4">
 						<Avatar name={review.providerName} size="md" />
@@ -67,7 +104,7 @@
 				</Card>
 			{/each}
 		{:else}
-			{#each mockReviewsReceived as review}
+			{#each reviewsReceived as review}
 				<Card>
 					<div class="flex items-start gap-4">
 						<Avatar name={review.reviewerName} size="md" />
@@ -99,3 +136,4 @@
 		{/if}
 	</div>
 </div>
+{/if}

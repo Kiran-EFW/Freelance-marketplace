@@ -8,6 +8,7 @@
 	import { jurisdictions, jurisdictionMap, type Jurisdiction } from '$lib/data/jurisdictions';
 	import { topLevelCategories, getSubcategories } from '$lib/data/categories';
 	import { t } from '$lib/i18n/index.svelte';
+	import { requestOtp as authRequestOtp, login as authLogin, register as authRegister } from '$lib/stores/auth';
 
 	type Role = 'customer' | 'provider' | null;
 
@@ -73,13 +74,14 @@
 		if (!phone.trim()) return;
 		loading = true;
 		try {
-			await new Promise((r) => setTimeout(r, 1000));
+			const fullPhone = selectedJurisdiction.phoneCode + phone;
+			await authRequestOtp(fullPhone);
 			otpSent = true;
 			startResendTimer();
-			toastSuccess(t('auth.otp_sent_to', { phone: selectedJurisdiction.phoneCode + phone }));
+			toastSuccess(t('auth.otp_sent_to', { phone: fullPhone }));
 			setTimeout(() => otpInputs[0]?.focus(), 100);
-		} catch {
-			toastError(t('auth.otp_sent_failed'));
+		} catch (err) {
+			toastError(err instanceof Error ? err.message : t('auth.otp_sent_failed'));
 		} finally {
 			loading = false;
 		}
@@ -91,12 +93,13 @@
 		if (otp.length !== 6) return;
 		loading = true;
 		try {
-			await new Promise((r) => setTimeout(r, 1000));
+			const fullPhone = selectedJurisdiction.phoneCode + phone;
+			await authLogin(fullPhone, otp);
 			otpVerified = true;
 			step = 3;
 			toastSuccess(t('auth.phone_verified'));
-		} catch {
-			toastError(t('auth.invalid_otp'));
+		} catch (err) {
+			toastError(err instanceof Error ? err.message : t('auth.invalid_otp'));
 		} finally {
 			loading = false;
 		}
@@ -136,11 +139,23 @@
 		}
 		loading = true;
 		try {
-			await new Promise((r) => setTimeout(r, 1500));
+			const fullPhone = selectedJurisdiction.phoneCode + phone;
+			await authRegister(
+				name,
+				fullPhone,
+				selectedRole as 'customer' | 'provider',
+				email || undefined,
+				{
+					postcode: postcode || undefined,
+					bio: bio || undefined,
+					categories: selectedSkills.length > 0 ? selectedSkills : undefined,
+					service_radius_km: selectedRole === 'provider' ? serviceRadius : undefined
+				}
+			);
 			step = 4;
 			toastSuccess(t('auth.account_created'));
-		} catch {
-			toastError(t('auth.registration_failed'));
+		} catch (err) {
+			toastError(err instanceof Error ? err.message : t('auth.registration_failed'));
 		} finally {
 			loading = false;
 		}

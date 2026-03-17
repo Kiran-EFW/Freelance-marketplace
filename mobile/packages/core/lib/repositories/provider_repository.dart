@@ -1,5 +1,8 @@
+import 'package:dio/dio.dart';
+
 import '../api/api_client.dart';
 import '../models/provider.dart';
+import '../models/result.dart';
 import '../models/review.dart';
 import '../models/category.dart';
 import 'job_repository.dart';
@@ -11,7 +14,7 @@ class ProviderRepository {
   ProviderRepository({required ApiClient api}) : _api = api;
 
   /// Search for providers with optional filters.
-  Future<PaginatedResult<ServiceProvider>> searchProviders({
+  Future<Result<PaginatedResult<ServiceProvider>>> searchProviders({
     String? query,
     String? categoryId,
     double? latitude,
@@ -39,34 +42,41 @@ class ProviderRepository {
           .map((e) => ServiceProvider.fromJson(e as Map<String, dynamic>))
           .toList();
 
-      return PaginatedResult(
+      return Success(PaginatedResult(
         items: items,
         total: data['total'] as int,
         page: data['page'] as int,
         totalPages: data['total_pages'] as int,
+      ));
+    } on DioException catch (e) {
+      return Failure(
+        _extractErrorMessage(e, 'Failed to search providers'),
+        statusCode: e.response?.statusCode,
       );
-    } catch (_) {
-      return const PaginatedResult(
-        items: [],
-        total: 0,
-        page: 1,
-        totalPages: 1,
-      );
+    } catch (e) {
+      return Failure('Failed to search providers: $e');
     }
   }
 
   /// Fetch a single provider's full profile.
-  Future<ServiceProvider?> getProvider(String providerId) async {
+  Future<Result<ServiceProvider>> getProvider(String providerId) async {
     try {
       final response = await _api.getProvider(providerId);
-      return ServiceProvider.fromJson(response.data as Map<String, dynamic>);
-    } catch (_) {
-      return null;
+      return Success(
+        ServiceProvider.fromJson(response.data as Map<String, dynamic>),
+      );
+    } on DioException catch (e) {
+      return Failure(
+        _extractErrorMessage(e, 'Failed to load provider'),
+        statusCode: e.response?.statusCode,
+      );
+    } catch (e) {
+      return Failure('Failed to load provider: $e');
     }
   }
 
   /// Fetch reviews for a provider.
-  Future<PaginatedResult<Review>> getProviderReviews(
+  Future<Result<PaginatedResult<Review>>> getProviderReviews(
     String providerId, {
     int page = 1,
   }) async {
@@ -77,37 +87,44 @@ class ProviderRepository {
           .map((e) => Review.fromJson(e as Map<String, dynamic>))
           .toList();
 
-      return PaginatedResult(
+      return Success(PaginatedResult(
         items: items,
         total: data['total'] as int,
         page: data['page'] as int,
         totalPages: data['total_pages'] as int,
+      ));
+    } on DioException catch (e) {
+      return Failure(
+        _extractErrorMessage(e, 'Failed to load reviews'),
+        statusCode: e.response?.statusCode,
       );
-    } catch (_) {
-      return const PaginatedResult(
-        items: [],
-        total: 0,
-        page: 1,
-        totalPages: 1,
-      );
+    } catch (e) {
+      return Failure('Failed to load reviews: $e');
     }
   }
 
   /// Update the current provider's profile.
-  Future<ServiceProvider?> updateProfile(
+  Future<Result<ServiceProvider>> updateProfile(
     String providerId,
     Map<String, dynamic> updates,
   ) async {
     try {
       final response = await _api.updateProviderProfile(providerId, updates);
-      return ServiceProvider.fromJson(response.data as Map<String, dynamic>);
-    } catch (_) {
-      return null;
+      return Success(
+        ServiceProvider.fromJson(response.data as Map<String, dynamic>),
+      );
+    } on DioException catch (e) {
+      return Failure(
+        _extractErrorMessage(e, 'Failed to update profile'),
+        statusCode: e.response?.statusCode,
+      );
+    } catch (e) {
+      return Failure('Failed to update profile: $e');
     }
   }
 
   /// Update availability schedule.
-  Future<bool> updateAvailability(
+  Future<Result<bool>> updateAvailability(
     String providerId,
     List<AvailabilitySlot> slots,
   ) async {
@@ -115,26 +132,37 @@ class ProviderRepository {
       await _api.updateAvailability(providerId, {
         'slots': slots.map((s) => s.toJson()).toList(),
       });
-      return true;
-    } catch (_) {
-      return false;
+      return const Success(true);
+    } on DioException catch (e) {
+      return Failure(
+        _extractErrorMessage(e, 'Failed to update availability'),
+        statusCode: e.response?.statusCode,
+      );
+    } catch (e) {
+      return Failure('Failed to update availability: $e');
     }
   }
 
   /// Fetch all service categories.
-  Future<List<Category>> getCategories({String? parentId}) async {
+  Future<Result<List<Category>>> getCategories({String? parentId}) async {
     try {
       final response = await _api.getCategories(parentId: parentId);
-      return (response.data as List<dynamic>)
+      final categories = (response.data as List<dynamic>)
           .map((e) => Category.fromJson(e as Map<String, dynamic>))
           .toList();
-    } catch (_) {
-      return [];
+      return Success(categories);
+    } on DioException catch (e) {
+      return Failure(
+        _extractErrorMessage(e, 'Failed to load categories'),
+        statusCode: e.response?.statusCode,
+      );
+    } catch (e) {
+      return Failure('Failed to load categories: $e');
     }
   }
 
   /// Fetch earnings summary.
-  Future<EarningsSummary?> getEarnings({
+  Future<Result<EarningsSummary>> getEarnings({
     String? period,
     String? from,
     String? to,
@@ -145,14 +173,23 @@ class ProviderRepository {
         from: from,
         to: to,
       );
-      return EarningsSummary.fromJson(response.data as Map<String, dynamic>);
-    } catch (_) {
-      return null;
+      return Success(
+        EarningsSummary.fromJson(response.data as Map<String, dynamic>),
+      );
+    } on DioException catch (e) {
+      return Failure(
+        _extractErrorMessage(e, 'Failed to load earnings'),
+        statusCode: e.response?.statusCode,
+      );
+    } catch (e) {
+      return Failure('Failed to load earnings: $e');
     }
   }
 
   /// Fetch payout history.
-  Future<PaginatedResult<Payout>> getPayoutHistory({int page = 1}) async {
+  Future<Result<PaginatedResult<Payout>>> getPayoutHistory({
+    int page = 1,
+  }) async {
     try {
       final response = await _api.getPayoutHistory(page: page);
       final data = response.data as Map<String, dynamic>;
@@ -160,29 +197,54 @@ class ProviderRepository {
           .map((e) => Payout.fromJson(e as Map<String, dynamic>))
           .toList();
 
-      return PaginatedResult(
+      return Success(PaginatedResult(
         items: items,
         total: data['total'] as int,
         page: data['page'] as int,
         totalPages: data['total_pages'] as int,
+      ));
+    } on DioException catch (e) {
+      return Failure(
+        _extractErrorMessage(e, 'Failed to load payout history'),
+        statusCode: e.response?.statusCode,
       );
-    } catch (_) {
-      return const PaginatedResult(
-        items: [],
-        total: 0,
-        page: 1,
-        totalPages: 1,
-      );
+    } catch (e) {
+      return Failure('Failed to load payout history: $e');
     }
   }
 
   /// Request a payout.
-  Future<Payout?> requestPayout(double amount) async {
+  Future<Result<Payout>> requestPayout(double amount) async {
     try {
       final response = await _api.requestPayout(amount: amount);
-      return Payout.fromJson(response.data as Map<String, dynamic>);
-    } catch (_) {
-      return null;
+      return Success(Payout.fromJson(response.data as Map<String, dynamic>));
+    } on DioException catch (e) {
+      return Failure(
+        _extractErrorMessage(e, 'Failed to request payout'),
+        statusCode: e.response?.statusCode,
+      );
+    } catch (e) {
+      return Failure('Failed to request payout: $e');
+    }
+  }
+
+  /// Extract a human-readable error message from a [DioException].
+  String _extractErrorMessage(DioException e, String fallback) {
+    final data = e.response?.data;
+    if (data is Map<String, dynamic>) {
+      final message = data['message'] ?? data['error'];
+      if (message is String && message.isNotEmpty) return message;
+    }
+
+    switch (e.type) {
+      case DioExceptionType.connectionTimeout:
+      case DioExceptionType.sendTimeout:
+      case DioExceptionType.receiveTimeout:
+        return 'Connection timed out. Please check your network.';
+      case DioExceptionType.connectionError:
+        return 'No internet connection. Please try again later.';
+      default:
+        return fallback;
     }
   }
 }

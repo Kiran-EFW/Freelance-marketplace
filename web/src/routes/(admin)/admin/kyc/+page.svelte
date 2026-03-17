@@ -1,99 +1,79 @@
 <script lang="ts">
-	import { Shield, CheckCircle, XCircle, Eye, FileText, Image, Calendar, User, ChevronDown } from 'lucide-svelte';
+	import { Shield, CheckCircle, XCircle, Eye, FileText, Image, Calendar, User, ChevronDown, Loader2 } from 'lucide-svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Avatar from '$lib/components/ui/Avatar.svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Modal from '$lib/components/ui/Modal.svelte';
 	import { toastSuccess, toastError } from '$lib/stores/toast';
+	import api from '$lib/api/client';
 
 	let filterStatus = $state('pending');
-	let selectedApplication = $state<typeof kycApplications[0] | null>(null);
+	let loading = $state(true);
+	let error = $state('');
+	let kycApplications = $state<any[]>([]);
+	let selectedApplication = $state<any | null>(null);
 	let showDetailModal = $state(false);
 	let rejectReason = $state('');
 	let showRejectModal = $state(false);
 
-	const kycApplications = [
-		{
-			id: '1', name: 'Vikram Singh', category: 'Plumbing', phone: '+91 98765 11111',
-			submittedAt: '2026-03-16', status: 'pending',
-			documents: [
-				{ type: 'Aadhaar Card', name: 'aadhaar_front.jpg', status: 'uploaded' },
-				{ type: 'Aadhaar Card (Back)', name: 'aadhaar_back.jpg', status: 'uploaded' },
-				{ type: 'Skill Certificate', name: 'plumbing_cert.pdf', status: 'uploaded' }
-			],
-			experience: '8 years', bio: 'Experienced plumber specializing in residential plumbing repairs and installations.',
-			serviceArea: 'Koramangala, HSR Layout, BTM Layout'
-		},
-		{
-			id: '2', name: 'Fatima Begum', category: 'Cleaning', phone: '+91 98765 22222',
-			submittedAt: '2026-03-15', status: 'pending',
-			documents: [
-				{ type: 'Aadhaar Card', name: 'aadhaar_fatima.jpg', status: 'uploaded' },
-				{ type: 'Aadhaar Card (Back)', name: 'aadhaar_fatima_back.jpg', status: 'uploaded' },
-				{ type: 'Police Verification', name: 'police_verify.pdf', status: 'uploaded' },
-				{ type: 'Training Certificate', name: 'cleaning_training.pdf', status: 'uploaded' }
-			],
-			experience: '5 years', bio: 'Professional deep cleaning and sanitization services for homes and offices.',
-			serviceArea: 'Indiranagar, Whitefield, Marathahalli'
-		},
-		{
-			id: '3', name: 'Ravi Shankar', category: 'Electrical', phone: '+91 98765 33333',
-			submittedAt: '2026-03-15', status: 'pending',
-			documents: [
-				{ type: 'Aadhaar Card', name: 'aadhaar_ravi.jpg', status: 'uploaded' },
-				{ type: 'Electrician License', name: 'elec_license.pdf', status: 'uploaded' }
-			],
-			experience: '12 years', bio: 'Licensed electrician with expertise in wiring, panel installation, and troubleshooting.',
-			serviceArea: 'JP Nagar, Jayanagar, Bannerghatta'
-		},
-		{
-			id: '4', name: 'Meena Devi', category: 'Gardening', phone: '+91 98765 44444',
-			submittedAt: '2026-03-14', status: 'pending',
-			documents: [
-				{ type: 'Aadhaar Card', name: 'aadhaar_meena.jpg', status: 'uploaded' },
-				{ type: 'Aadhaar Card (Back)', name: 'aadhaar_meena_back.jpg', status: 'uploaded' },
-				{ type: 'Horticulture Certificate', name: 'horticulture.pdf', status: 'uploaded' }
-			],
-			experience: '6 years', bio: 'Gardening and landscaping expert. Tree trimming, lawn maintenance, and plant care.',
-			serviceArea: 'Sarjapur Road, Electronic City, Bommanahalli'
-		},
-		{
-			id: '5', name: 'Mohan Rao', category: 'Electrical', phone: '+91 98765 55555',
-			submittedAt: '2026-03-10', status: 'approved',
-			documents: [
-				{ type: 'Aadhaar Card', name: 'aadhaar_mohan.jpg', status: 'verified' },
-				{ type: 'Electrician License', name: 'elec_mohan.pdf', status: 'verified' },
-				{ type: 'Experience Letter', name: 'exp_letter.pdf', status: 'verified' }
-			],
-			experience: '10 years', bio: 'Certified electrician for residential and commercial projects.',
-			serviceArea: 'Koramangala, Indiranagar'
-		},
-		{
-			id: '6', name: 'Sanjay Patel', category: 'Plumbing', phone: '+91 98765 66666',
-			submittedAt: '2026-03-08', status: 'rejected',
-			documents: [
-				{ type: 'Aadhaar Card', name: 'aadhaar_sanjay.jpg', status: 'rejected' },
-				{ type: 'Certificate', name: 'cert_blurry.jpg', status: 'rejected' }
-			],
-			experience: '3 years', bio: 'Plumber for home repairs.',
-			serviceArea: 'BTM Layout',
-			rejectionReason: 'Documents are blurry and unreadable. Please re-upload clear copies.'
+	async function fetchKYC() {
+		loading = true;
+		error = '';
+		try {
+			const res = await api.admin.pendingKYC({ per_page: 50 });
+			kycApplications = (res.data || []).map((app: any) => ({
+				id: app.id,
+				name: app.name || app.provider_name || '',
+				category: app.category || '',
+				phone: app.phone || '',
+				submittedAt: app.submitted_at?.split('T')[0] || app.created_at?.split('T')[0] || '',
+				status: app.status || 'pending',
+				documents: (app.documents || []).map((doc: any) => ({
+					type: doc.type || doc.document_type || '',
+					name: doc.name || doc.file_name || '',
+					status: doc.status || 'uploaded'
+				})),
+				experience: app.experience || '',
+				bio: app.bio || '',
+				serviceArea: app.service_area || app.serviceArea || '',
+				rejectionReason: app.rejection_reason || app.rejectionReason || null
+			}));
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'Failed to load KYC applications';
+		} finally {
+			loading = false;
 		}
-	];
+	}
+
+	$effect(() => {
+		const _f = filterStatus;
+		fetchKYC();
+	});
 
 	let filteredApplications = $derived(
 		kycApplications.filter((a) => filterStatus === 'all' || a.status === filterStatus)
 	);
 
-	function viewApplication(app: typeof kycApplications[0]) {
+	let pendingCount = $derived(
+		kycApplications.filter((a) => a.status === 'pending').length
+	);
+
+	function viewApplication(app: any) {
 		selectedApplication = app;
 		showDetailModal = true;
 	}
 
-	function approveApplication() {
-		toastSuccess(`KYC approved for ${selectedApplication?.name}`);
-		showDetailModal = false;
+	async function approveApplication() {
+		if (!selectedApplication) return;
+		try {
+			await api.admin.approveKYC(selectedApplication.id);
+			toastSuccess(`KYC approved for ${selectedApplication.name}`);
+			showDetailModal = false;
+			fetchKYC();
+		} catch (err) {
+			toastError(err instanceof Error ? err.message : 'Failed to approve KYC');
+		}
 	}
 
 	function openRejectModal() {
@@ -102,10 +82,16 @@
 		rejectReason = '';
 	}
 
-	function rejectApplication() {
-		if (!rejectReason.trim()) return;
-		toastError(`KYC rejected for ${selectedApplication?.name}`);
-		showRejectModal = false;
+	async function rejectApplication() {
+		if (!rejectReason.trim() || !selectedApplication) return;
+		try {
+			await api.admin.rejectKYC(selectedApplication.id, rejectReason);
+			toastError(`KYC rejected for ${selectedApplication.name}`);
+			showRejectModal = false;
+			fetchKYC();
+		} catch (err) {
+			toastError(err instanceof Error ? err.message : 'Failed to reject KYC');
+		}
 	}
 
 	const statusColors: Record<string, 'warning' | 'success' | 'danger'> = {
@@ -123,7 +109,7 @@
 			<h1 class="text-2xl font-bold text-gray-900 dark:text-white">KYC Verification</h1>
 			<p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Review and verify provider applications.</p>
 		</div>
-		<Badge variant="warning">{kycApplications.filter((a) => a.status === 'pending').length} pending reviews</Badge>
+		<Badge variant="warning">{pendingCount} pending reviews</Badge>
 	</div>
 
 	<!-- Filter Tabs -->
@@ -142,6 +128,15 @@
 	</div>
 
 	<!-- Applications List -->
+	{#if loading}
+		<div class="mt-8 flex items-center justify-center py-12">
+			<Loader2 class="h-8 w-8 animate-spin text-primary-600" />
+		</div>
+	{:else if error}
+		<div class="mt-4 rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-800 dark:bg-red-900/20">
+			<p class="text-red-600 dark:text-red-400">{error}</p>
+		</div>
+	{:else}
 	<div class="mt-6 space-y-4">
 		{#each filteredApplications as app}
 			<Card>
@@ -192,6 +187,7 @@
 			</Card>
 		{/if}
 	</div>
+	{/if}
 </div>
 
 <!-- Application Detail Modal -->

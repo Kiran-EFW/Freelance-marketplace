@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:seva_core/core.dart';
+import 'package:seva_ui_kit/ui_kit.dart';
 import 'main.dart';
 import 'screens/home/home_screen.dart';
 import 'screens/search/search_screen.dart';
@@ -12,6 +13,9 @@ import 'screens/auth/login_screen.dart';
 import 'screens/auth/register_screen.dart';
 import 'screens/profile/profile_screen.dart';
 import 'screens/notifications/notifications_screen.dart';
+import 'screens/messages/messages_screen.dart';
+import 'screens/messages/conversation_screen.dart';
+import 'screens/map/map_screen.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   final authService = ref.watch(authServiceProvider);
@@ -55,6 +59,16 @@ final routerProvider = Provider<GoRouter>((ref) {
             },
           ),
           GoRoute(
+            path: '/messages',
+            name: 'messages',
+            builder: (context, state) => const MessagesScreen(),
+          ),
+          GoRoute(
+            path: '/map',
+            name: 'map',
+            builder: (context, state) => const MapScreen(),
+          ),
+          GoRoute(
             path: '/notifications',
             name: 'notifications',
             builder: (context, state) => const NotificationsScreen(),
@@ -96,6 +110,17 @@ final routerProvider = Provider<GoRouter>((ref) {
           return JobDetailScreen(jobId: state.pathParameters['id']!);
         },
       ),
+      GoRoute(
+        path: '/conversation/:id',
+        name: 'conversation',
+        builder: (context, state) {
+          final conversation = state.extra as Conversation?;
+          return ConversationScreen(
+            conversationId: state.pathParameters['id']!,
+            conversation: conversation,
+          );
+        },
+      ),
 
       // Auth routes
       GoRoute(
@@ -122,8 +147,10 @@ class _CustomerShell extends StatelessWidget {
     final location = GoRouterState.of(context).matchedLocation;
     if (location == '/') return 0;
     if (location.startsWith('/search')) return 1;
-    if (location.startsWith('/notifications')) return 2;
-    if (location.startsWith('/profile')) return 3;
+    if (location.startsWith('/messages')) return 2;
+    if (location.startsWith('/map')) return 3;
+    if (location.startsWith('/notifications')) return 4;
+    if (location.startsWith('/profile')) return 4;
     return 0;
   }
 
@@ -131,9 +158,9 @@ class _CustomerShell extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: child,
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex(context),
-        onTap: (index) {
+      bottomNavigationBar: NavigationBar(
+        selectedIndex: _currentIndex(context),
+        onDestinationSelected: (index) {
           switch (index) {
             case 0:
               context.go('/');
@@ -142,32 +169,40 @@ class _CustomerShell extends StatelessWidget {
               context.go('/search');
               break;
             case 2:
-              context.go('/notifications');
+              context.go('/messages');
               break;
             case 3:
+              context.go('/map');
+              break;
+            case 4:
               context.go('/profile');
               break;
           }
         },
-        items: const [
-          BottomNavigationBarItem(
+        destinations: const [
+          NavigationDestination(
             icon: Icon(Icons.home_outlined),
-            activeIcon: Icon(Icons.home),
+            selectedIcon: Icon(Icons.home),
             label: 'Home',
           ),
-          BottomNavigationBarItem(
+          NavigationDestination(
             icon: Icon(Icons.search_outlined),
-            activeIcon: Icon(Icons.search),
+            selectedIcon: Icon(Icons.search),
             label: 'Search',
           ),
-          BottomNavigationBarItem(
-            icon: Icon(Icons.notifications_outlined),
-            activeIcon: Icon(Icons.notifications),
-            label: 'Alerts',
+          NavigationDestination(
+            icon: Icon(Icons.chat_bubble_outline),
+            selectedIcon: Icon(Icons.chat_bubble),
+            label: 'Messages',
           ),
-          BottomNavigationBarItem(
+          NavigationDestination(
+            icon: Icon(Icons.map_outlined),
+            selectedIcon: Icon(Icons.map),
+            label: 'Map',
+          ),
+          NavigationDestination(
             icon: Icon(Icons.person_outlined),
-            activeIcon: Icon(Icons.person),
+            selectedIcon: Icon(Icons.person),
             label: 'Profile',
           ),
         ],

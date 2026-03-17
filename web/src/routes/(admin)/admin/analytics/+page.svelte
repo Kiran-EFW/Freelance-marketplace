@@ -1,68 +1,126 @@
 <script lang="ts">
-	import { TrendingUp, TrendingDown, Users, Briefcase, IndianRupee, Star, MapPin, Clock } from 'lucide-svelte';
+	import { TrendingUp, TrendingDown, Users, Briefcase, IndianRupee, Star, MapPin, Clock, Loader2 } from 'lucide-svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Tabs from '$lib/components/ui/Tabs.svelte';
+	import api from '$lib/api/client';
 
 	let period = $state('monthly');
+	let loading = $state(true);
+	let error = $state('');
 	const periodTabs = [
 		{ id: 'weekly', label: 'Weekly' },
 		{ id: 'monthly', label: 'Monthly' },
 		{ id: 'yearly', label: 'Yearly' }
 	];
 
-	const kpiCards = [
-		{ label: 'New Users', value: '1,842', change: 12.3, icon: Users, color: 'primary' },
-		{ label: 'Jobs Created', value: '3,456', change: 15.6, icon: Briefcase, color: 'blue' },
-		{ label: 'Revenue', value: 'Rs. 42.5L', change: 18.2, icon: IndianRupee, color: 'secondary' },
-		{ label: 'Avg Rating', value: '4.6', change: 2.1, icon: Star, color: 'yellow' }
-	];
+	let kpiCards = $state([
+		{ label: 'New Users', value: '0', change: 0, icon: Users, color: 'primary' },
+		{ label: 'Jobs Created', value: '0', change: 0, icon: Briefcase, color: 'blue' },
+		{ label: 'Revenue', value: 'Rs. 0', change: 0, icon: IndianRupee, color: 'secondary' },
+		{ label: 'Avg Rating', value: '0', change: 0, icon: Star, color: 'yellow' }
+	]);
 
-	const userGrowth = [
-		{ month: 'Oct', customers: 820, providers: 180 },
-		{ month: 'Nov', customers: 950, providers: 210 },
-		{ month: 'Dec', customers: 1100, providers: 240 },
-		{ month: 'Jan', customers: 980, providers: 220 },
-		{ month: 'Feb', customers: 1250, providers: 280 },
-		{ month: 'Mar', customers: 1450, providers: 320 }
-	];
-	const maxUsers = Math.max(...userGrowth.map((d) => d.customers + d.providers));
+	let userGrowth = $state<{ month: string; customers: number; providers: number }[]>([]);
+	let maxUsers = $derived(Math.max(...userGrowth.map((d) => d.customers + d.providers), 1));
 
-	const jobsByCategory = [
-		{ category: 'Plumbing', count: 4520, percentage: 28 },
-		{ category: 'Electrical', count: 3200, percentage: 20 },
-		{ category: 'Cleaning', count: 2850, percentage: 18 },
-		{ category: 'Painting', count: 1950, percentage: 12 },
-		{ category: 'Gardening', count: 1600, percentage: 10 },
-		{ category: 'Carpentry', count: 1200, percentage: 8 },
-		{ category: 'Other', count: 680, percentage: 4 }
-	];
+	let jobsByCategory = $state<{ category: string; count: number; percentage: number }[]>([]);
 
-	const topProviders = [
-		{ name: 'Lakshmi Bai', category: 'Cleaning', rating: 4.9, jobs: 210, revenue: 850000 },
-		{ name: 'Suresh Nair', category: 'Plumbing', rating: 4.8, jobs: 156, revenue: 720000 },
-		{ name: 'Mohan Rao', category: 'Electrical', rating: 4.7, jobs: 142, revenue: 680000 },
-		{ name: 'Kiran Rao', category: 'Painting', rating: 4.5, jobs: 98, revenue: 450000 },
-		{ name: 'Priya Sharma', category: 'Gardening', rating: 4.6, jobs: 88, revenue: 380000 }
-	];
+	let topProviders = $state<{ name: string; category: string; rating: number; jobs: number; revenue: number }[]>([]);
 
-	const topCities = [
-		{ city: 'Bangalore', jobs: 12500, revenue: 'Rs. 18.5L', growth: 22 },
-		{ city: 'Mumbai', jobs: 8400, revenue: 'Rs. 12.8L', growth: 18 },
-		{ city: 'Delhi', jobs: 6200, revenue: 'Rs. 9.2L', growth: 15 },
-		{ city: 'Chennai', jobs: 4800, revenue: 'Rs. 7.1L', growth: 12 },
-		{ city: 'Hyderabad', jobs: 3500, revenue: 'Rs. 5.2L', growth: 20 }
-	];
+	let topCities = $state<{ city: string; jobs: number; revenue: string; growth: number }[]>([]);
 
-	const platformMetrics = {
-		avgJobValue: 3200,
-		avgResponseTime: '2.4 hours',
-		completionRate: 94.7,
-		repeatCustomerRate: 42,
-		avgProviderRating: 4.6,
-		disputeRate: 2.1,
-		customerSatisfaction: 91
-	};
+	let platformMetrics = $state({
+		avgJobValue: 0,
+		avgResponseTime: '0',
+		completionRate: 0,
+		repeatCustomerRate: 0,
+		avgProviderRating: 0,
+		disputeRate: 0,
+		customerSatisfaction: 0
+	});
+
+	async function fetchAnalytics() {
+		loading = true;
+		error = '';
+		try {
+			const res = await api.admin.getAnalytics({ metric: period });
+			const data = res.data || {};
+
+			// Map KPI cards
+			if (data.kpi) {
+				const kpi = data.kpi as any;
+				kpiCards = [
+					{ label: 'New Users', value: kpi.new_users?.toLocaleString() || '0', change: kpi.new_users_change || 0, icon: Users, color: 'primary' },
+					{ label: 'Jobs Created', value: kpi.jobs_created?.toLocaleString() || '0', change: kpi.jobs_created_change || 0, icon: Briefcase, color: 'blue' },
+					{ label: 'Revenue', value: kpi.revenue_formatted || `Rs. ${((kpi.revenue || 0) / 100000).toFixed(1)}L`, change: kpi.revenue_change || 0, icon: IndianRupee, color: 'secondary' },
+					{ label: 'Avg Rating', value: String(kpi.avg_rating || 0), change: kpi.avg_rating_change || 0, icon: Star, color: 'yellow' }
+				];
+			}
+
+			// Map user growth chart data
+			if (data.user_growth && Array.isArray(data.user_growth)) {
+				userGrowth = (data.user_growth as any[]).map((item) => ({
+					month: item.month || item.label || '',
+					customers: item.customers || 0,
+					providers: item.providers || 0
+				}));
+			}
+
+			// Map jobs by category
+			if (data.jobs_by_category && Array.isArray(data.jobs_by_category)) {
+				jobsByCategory = (data.jobs_by_category as any[]).map((item) => ({
+					category: item.category || item.name || '',
+					count: item.count || 0,
+					percentage: item.percentage || 0
+				}));
+			}
+
+			// Map top providers
+			if (data.top_providers && Array.isArray(data.top_providers)) {
+				topProviders = (data.top_providers as any[]).map((p) => ({
+					name: p.name || '',
+					category: p.category || '',
+					rating: p.rating || 0,
+					jobs: p.jobs || p.completed_jobs || 0,
+					revenue: p.revenue || 0
+				}));
+			}
+
+			// Map top cities
+			if (data.top_cities && Array.isArray(data.top_cities)) {
+				topCities = (data.top_cities as any[]).map((c) => ({
+					city: c.city || c.name || '',
+					jobs: c.jobs || 0,
+					revenue: c.revenue_formatted || `Rs. ${((c.revenue || 0) / 100000).toFixed(1)}L`,
+					growth: c.growth || 0
+				}));
+			}
+
+			// Map platform metrics
+			if (data.platform_metrics) {
+				const pm = data.platform_metrics as any;
+				platformMetrics = {
+					avgJobValue: pm.avg_job_value || 0,
+					avgResponseTime: pm.avg_response_time || '0',
+					completionRate: pm.completion_rate || 0,
+					repeatCustomerRate: pm.repeat_customer_rate || 0,
+					avgProviderRating: pm.avg_provider_rating || 0,
+					disputeRate: pm.dispute_rate || 0,
+					customerSatisfaction: pm.customer_satisfaction || 0
+				};
+			}
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'Failed to load analytics';
+		} finally {
+			loading = false;
+		}
+	}
+
+	$effect(() => {
+		const _p = period;
+		fetchAnalytics();
+	});
 
 	const categoryColors = ['bg-primary-500', 'bg-blue-500', 'bg-secondary-500', 'bg-purple-500', 'bg-yellow-500', 'bg-pink-500', 'bg-gray-400'];
 </script>
@@ -80,6 +138,15 @@
 		<Tabs tabs={periodTabs} bind:activeTab={period} />
 	</div>
 
+	{#if loading}
+		<div class="mt-8 flex items-center justify-center py-12">
+			<Loader2 class="h-8 w-8 animate-spin text-primary-600" />
+		</div>
+	{:else if error}
+		<div class="mt-4 rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-800 dark:bg-red-900/20">
+			<p class="text-red-600 dark:text-red-400">{error}</p>
+		</div>
+	{:else}
 	<!-- KPI Cards -->
 	<div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
 		{#each kpiCards as kpi}
@@ -262,4 +329,5 @@
 			</div>
 		</Card>
 	</div>
+	{/if}
 </div>

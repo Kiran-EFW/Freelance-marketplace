@@ -1,30 +1,39 @@
 package worker
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
+	"math"
+	"net/http"
+	"net/smtp"
+	"time"
 
 	"github.com/hibiken/asynq"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog/log"
 
 	"github.com/seva-platform/backend/internal/adapter/ai"
+	"github.com/seva-platform/backend/internal/adapter/payment"
 	"github.com/seva-platform/backend/internal/adapter/search"
 	"github.com/seva-platform/backend/internal/adapter/sms"
+	"github.com/seva-platform/backend/internal/config"
 )
 
 // Task type constants used across the application.
 const (
-	TypeSendSMS               = "sms:send"
-	TypeSendEmail             = "email:send"
-	TypeMatchProviders        = "job:match_providers"
-	TypeCalculateTrustScore   = "provider:calculate_trust_score"
-	TypeProcessPayout         = "payment:process_payout"
-	TypeSendSeasonalReminder  = "notification:seasonal_reminder"
-	TypeGenerateSEOContent    = "content:generate_seo"
-	TypeIndexProvider         = "search:index_provider"
-	TypeCleanExpiredOTPs      = "maintenance:clean_expired_otps"
-	TypeComputeLeaderboard    = "leaderboard:compute"
+	TypeSendSMS              = "sms:send"
+	TypeSendEmail            = "email:send"
+	TypeMatchProviders       = "job:match_providers"
+	TypeCalculateTrustScore  = "provider:calculate_trust_score"
+	TypeProcessPayout        = "payment:process_payout"
+	TypeSendSeasonalReminder = "notification:seasonal_reminder"
+	TypeGenerateSEOContent   = "content:generate_seo"
+	TypeIndexProvider        = "search:index_provider"
+	TypeCleanExpiredOTPs     = "maintenance:clean_expired_otps"
+	TypeComputeLeaderboard   = "leaderboard:compute"
 )
 
 // SendSMSPayload is the data passed to the SMS sending task.
@@ -103,11 +112,25 @@ type ComputeLeaderboardPayload struct {
 	CategoryID string `json:"category_id"`
 }
 
+// EmailConfig holds SMTP configuration for sending emails.
+type EmailConfig struct {
+	Host     string
+	Port     string
+	User     string
+	Password string
+	From     string
+}
+
 // Deps holds the external dependencies required by task handlers.
 type Deps struct {
-	SMSProvider  sms.SMSProvider
-	Claude       ai.ClaudeProvider
-	Search       search.SearchProvider
+	SMSProvider    sms.SMSProvider
+	Claude         ai.ClaudeProvider
+	Search         search.SearchProvider
+	DB             *pgxpool.Pool
+	Redis          *redis.Client
+	PaymentGateway payment.PaymentGateway
+	Email          *EmailConfig
+	Cfg            *config.Config
 }
 
 // Worker wraps the Asynq server and mux for background job processing.
@@ -192,13 +215,37 @@ func (w *Worker) handleSendEmail(_ context.Context, task *asynq.Task) error {
 		return fmt.Errorf("failed to unmarshal SendEmail payload: %w", err)
 	}
 
-	// TODO: integrate with an email service (SES, SendGrid, etc.)
-	// For now, log the email details.
 	log.Info().
 		Str("to", payload.To).
 		Str("subject", payload.Subject).
-		Msg("processing SendEmail task (logged, not sent)")
+		Msg("processing SendEmail task")
 
+	emailCfg := w.getEmailConfig()
+	if emailCfg == nil || emailCfg.Host == "" || emailCfg.Host == "localhost" {
+		log.Warn().
+			Str("to", payload.To).
+			Str("subject", payload.Subject).
+			Msg("SMTP not configured, email logged but not sent")
+		return nil
+	}
+
+	// Build the email message in RFC 822 format.
+	msg := fmt.Sprintf(
+		"From: %s\r\nTo: %s\r\nSubject: %s\r\nMIME-Version: 1.0\r\nContent-Type: text/html; charset=\"UTF-8\"\r\n\r\n%s",
+		emailCfg.From, payload.To, payload.Subject, payload.Body,
+	)
+
+	addr := fmt.Sprintf("%s:%s", emailCfg.Host, emailCfg.Port)
+	var auth smtp.Auth
+	if emailCfg.User != "" {
+		auth = smtp.PlainAuth("", emailCfg.User, emailCfg.Password, emailCfg.Host)
+	}
+
+	if err := smtp.SendMail(addr, auth, emailCfg.From, []string{payload.To}, []byte(msg)); err != nil {
+		return fmt.Errorf("send email to %s via SMTP: %w", payload.To, err)
+	}
+
+	log.Info().Str("to", payload.To).Str("subject", payload.Subject).Msg("email sent successfully")
 	return nil
 }
 
@@ -251,11 +298,100 @@ func (w *Worker) handleCalculateTrustScore(_ context.Context, task *asynq.Task) 
 		Str("provider_id", payload.ProviderID).
 		Msg("processing CalculateTrustScore task")
 
-	// TODO: aggregate ratings, completion rate, response time, cancellations
-	// and compute a normalized trust score using the formula:
-	// trust_score = (avg_rating * 0.4) + (completion_rate * 0.3) +
-	//              (response_time_score * 0.2) + (tenure_score * 0.1)
-	// Then update the provider's trust_score in the database.
+	if w.deps == nil || w.deps.DB == nil {
+		log.Warn().Msg("DB not available, skipping trust score calculation")
+		return nil
+	}
+
+	ctx := context.Background()
+
+	// 1. Fetch average rating for the provider.
+	var avgRating float64
+	var reviewCount int
+	err := w.deps.DB.QueryRow(ctx,
+		`SELECT COALESCE(AVG(rating), 0), COUNT(*)
+		 FROM reviews
+		 WHERE reviewee_id = $1`, payload.ProviderID,
+	).Scan(&avgRating, &reviewCount)
+	if err != nil {
+		return fmt.Errorf("query reviews for provider %s: %w", payload.ProviderID, err)
+	}
+
+	// 2. Calculate completion rate.
+	var totalJobs, completedJobs int
+	err = w.deps.DB.QueryRow(ctx,
+		`SELECT
+			COUNT(*),
+			COUNT(*) FILTER (WHERE status = 'completed')
+		 FROM jobs
+		 WHERE assigned_provider_id = $1`, payload.ProviderID,
+	).Scan(&totalJobs, &completedJobs)
+	if err != nil {
+		return fmt.Errorf("query jobs for provider %s: %w", payload.ProviderID, err)
+	}
+
+	completionRate := 0.0
+	if totalJobs > 0 {
+		completionRate = float64(completedJobs) / float64(totalJobs)
+	}
+
+	// 3. Calculate response time score (inverse of avg response time in minutes).
+	var avgResponseMinutes float64
+	err = w.deps.DB.QueryRow(ctx,
+		`SELECT COALESCE(AVG(EXTRACT(EPOCH FROM (q.created_at - j.created_at)) / 60), 0)
+		 FROM quotes q
+		 JOIN jobs j ON j.id = q.job_id
+		 WHERE q.provider_id = $1`, payload.ProviderID,
+	).Scan(&avgResponseMinutes)
+	if err != nil {
+		// Non-fatal: if we cannot get response time, default to 0 score.
+		log.Warn().Err(err).Str("provider_id", payload.ProviderID).Msg("failed to compute avg response time")
+		avgResponseMinutes = 1440 // default to 24 hours
+	}
+
+	// Response time score: faster is better. Map 0-1440 minutes to 1.0-0.0.
+	// Use an inverse formula: score = 1 / (1 + avgResponseMinutes/60)
+	responseTimeScore := 1.0 / (1.0 + avgResponseMinutes/60.0)
+
+	// 4. Volume score: log(total_jobs + 1) normalized to 0-1.
+	// Use log base 10; 100 jobs maps to score ~1.0.
+	volumeScore := math.Log10(float64(totalJobs)+1) / 2.0
+	if volumeScore > 1.0 {
+		volumeScore = 1.0
+	}
+
+	// 5. Compute weighted trust score:
+	// avg_rating (40%) + completion_rate (25%) + response_time (20%) + volume (15%)
+	// Normalize avg_rating from 0-5 scale to 0-1.
+	normalizedRating := avgRating / 5.0
+
+	trustScore := (normalizedRating * 0.40) +
+		(completionRate * 0.25) +
+		(responseTimeScore * 0.20) +
+		(volumeScore * 0.15)
+
+	// Scale to 0-100 for storage.
+	trustScoreScaled := math.Round(trustScore * 100)
+
+	// 6. Update provider_profiles.trust_score in the database.
+	_, err = w.deps.DB.Exec(ctx,
+		`UPDATE provider_profiles
+		 SET trust_score = $1, updated_at = NOW()
+		 WHERE id = $2`, trustScoreScaled, payload.ProviderID,
+	)
+	if err != nil {
+		return fmt.Errorf("update trust_score for provider %s: %w", payload.ProviderID, err)
+	}
+
+	log.Info().
+		Str("provider_id", payload.ProviderID).
+		Float64("trust_score", trustScoreScaled).
+		Float64("avg_rating", avgRating).
+		Int("review_count", reviewCount).
+		Float64("completion_rate", completionRate).
+		Float64("response_time_score", responseTimeScore).
+		Float64("volume_score", volumeScore).
+		Msg("trust score calculated and updated")
 
 	return nil
 }
@@ -273,10 +409,149 @@ func (w *Worker) handleProcessPayout(_ context.Context, task *asynq.Task) error 
 		Str("job_id", payload.JobID).
 		Msg("processing ProcessPayout task")
 
-	// TODO: look up provider's bank details / UPI ID from database
-	// TODO: initiate payout via payment gateway (Razorpay / Stripe)
-	// TODO: update payout record status in database
-	// TODO: send SMS/notification to provider on success/failure
+	if w.deps == nil || w.deps.DB == nil {
+		log.Warn().Msg("DB not available, skipping payout processing")
+		return nil
+	}
+
+	ctx := context.Background()
+
+	// 1. Look up provider's bank details / fund account from provider_profiles.
+	var bankAccountID, contactID, phone string
+	err := w.deps.DB.QueryRow(ctx,
+		`SELECT
+			COALESCE(pp.bank_account_id, ''),
+			COALESCE(pp.razorpay_contact_id, ''),
+			COALESCE(u.phone, '')
+		 FROM provider_profiles pp
+		 JOIN users u ON u.id = pp.user_id
+		 WHERE pp.id = $1`, payload.ProviderID,
+	).Scan(&bankAccountID, &contactID, &phone)
+	if err != nil {
+		return fmt.Errorf("look up bank details for provider %s: %w", payload.ProviderID, err)
+	}
+
+	if bankAccountID == "" {
+		log.Error().
+			Str("provider_id", payload.ProviderID).
+			Msg("provider has no bank account configured, cannot process payout")
+		// Update payout status to failed.
+		_, _ = w.deps.DB.Exec(ctx,
+			`UPDATE payouts SET status = 'failed', failure_reason = 'no_bank_account', updated_at = NOW()
+			 WHERE provider_id = $1 AND job_id = $2 AND status = 'pending'`,
+			payload.ProviderID, payload.JobID,
+		)
+		return fmt.Errorf("provider %s has no bank account", payload.ProviderID)
+	}
+
+	// 2. Initiate payout via Razorpay Payouts API.
+	amountPaise := int64(payload.Amount * 100)
+
+	razorpayPayload := map[string]interface{}{
+		"account_number":  bankAccountID,
+		"fund_account_id": contactID,
+		"amount":          amountPaise,
+		"currency":        payload.Currency,
+		"mode":            "NEFT",
+		"purpose":         "payout",
+		"queue_if_low_balance": true,
+		"reference_id":    fmt.Sprintf("payout_%s_%s", payload.JobID, payload.ProviderID),
+		"narration":       fmt.Sprintf("Seva payout for job %s", payload.JobID),
+	}
+
+	payoutJSON, err := json.Marshal(razorpayPayload)
+	if err != nil {
+		return fmt.Errorf("marshal razorpay payout payload: %w", err)
+	}
+
+	// Make the API call to Razorpay.
+	var razorpayKeyID, razorpayKeySecret string
+	if w.deps.Cfg != nil {
+		razorpayKeyID = w.deps.Cfg.RazorpayKeyID
+		razorpayKeySecret = w.deps.Cfg.RazorpayKeySecret
+	}
+
+	if razorpayKeyID == "" || razorpayKeySecret == "" {
+		log.Warn().Msg("Razorpay credentials not configured, logging payout but not executing")
+		// Mark as processing for dev environments.
+		_, _ = w.deps.DB.Exec(ctx,
+			`UPDATE payouts SET status = 'processing', updated_at = NOW()
+			 WHERE provider_id = $1 AND job_id = $2 AND status = 'pending'`,
+			payload.ProviderID, payload.JobID,
+		)
+		return nil
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost,
+		"https://api.razorpay.com/v1/payouts", bytes.NewReader(payoutJSON))
+	if err != nil {
+		return fmt.Errorf("create razorpay payout request: %w", err)
+	}
+	req.SetBasicAuth(razorpayKeyID, razorpayKeySecret)
+	req.Header.Set("Content-Type", "application/json")
+
+	client := &http.Client{Timeout: 30 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return fmt.Errorf("razorpay payout API call: %w", err)
+	}
+	defer resp.Body.Close()
+
+	var razorpayResp struct {
+		ID     string `json:"id"`
+		Status string `json:"status"`
+		Error  struct {
+			Description string `json:"description"`
+		} `json:"error"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&razorpayResp); err != nil {
+		return fmt.Errorf("decode razorpay payout response: %w", err)
+	}
+
+	if resp.StatusCode >= 400 {
+		log.Error().
+			Int("status", resp.StatusCode).
+			Str("error", razorpayResp.Error.Description).
+			Str("provider_id", payload.ProviderID).
+			Msg("razorpay payout failed")
+
+		_, _ = w.deps.DB.Exec(ctx,
+			`UPDATE payouts SET status = 'failed', failure_reason = $1, updated_at = NOW()
+			 WHERE provider_id = $2 AND job_id = $3 AND status = 'pending'`,
+			razorpayResp.Error.Description, payload.ProviderID, payload.JobID,
+		)
+		return fmt.Errorf("razorpay payout failed: %s", razorpayResp.Error.Description)
+	}
+
+	// 3. Update payout status in database.
+	_, err = w.deps.DB.Exec(ctx,
+		`UPDATE payouts
+		 SET status = 'processing', gateway_payout_id = $1, updated_at = NOW()
+		 WHERE provider_id = $2 AND job_id = $3 AND status = 'pending'`,
+		razorpayResp.ID, payload.ProviderID, payload.JobID,
+	)
+	if err != nil {
+		log.Warn().Err(err).Msg("failed to update payout status in DB after successful Razorpay call")
+	}
+
+	// 4. Send notification to provider.
+	if w.deps.SMSProvider != nil && phone != "" {
+		msg := fmt.Sprintf(
+			"Your payout of %s %.2f for job %s has been initiated. You will receive it within 2-3 business days.",
+			payload.Currency, payload.Amount, payload.JobID,
+		)
+		if err := w.deps.SMSProvider.SendSMS(phone, msg); err != nil {
+			log.Warn().Err(err).Str("phone", phone).Msg("failed to send payout notification SMS")
+		}
+	}
+
+	log.Info().
+		Str("provider_id", payload.ProviderID).
+		Str("razorpay_payout_id", razorpayResp.ID).
+		Str("payout_status", razorpayResp.Status).
+		Float64("amount", payload.Amount).
+		Msg("payout initiated successfully")
 
 	return nil
 }
@@ -314,29 +589,86 @@ func (w *Worker) handleGenerateSEOContent(_ context.Context, task *asynq.Task) e
 		Str("language", payload.Language).
 		Msg("processing GenerateSEOContent task")
 
-	if w.deps != nil && w.deps.Claude != nil {
-		ctx := context.Background()
-		prompt := fmt.Sprintf(
-			"Generate an SEO-optimized landing page description for the service category "+
-				"with ID %q in the location %q (postcode: %s). "+
-				"The content should be in %s language, approximately 200 words, "+
-				"and highlight the benefits of finding trusted local service providers "+
-				"through the Seva marketplace platform. Include relevant local context.",
-			payload.CategoryID, payload.Location, payload.Postcode, payload.Language,
-		)
+	if w.deps == nil || w.deps.Claude == nil {
+		log.Warn().Msg("Claude AI not configured, skipping SEO content generation")
+		return nil
+	}
 
-		content, err := w.deps.Claude.GenerateContent(ctx, prompt)
-		if err != nil {
-			return fmt.Errorf("generate SEO content: %w", err)
+	ctx := context.Background()
+
+	// Generate title prompt.
+	titlePrompt := fmt.Sprintf(
+		"Generate a short SEO-optimized page title (under 60 characters) for the service category "+
+			"with ID %q in the location %q (postcode: %s). Language: %s. "+
+			"Format: '[Service] in [Location] - Seva'. Return only the title, nothing else.",
+		payload.CategoryID, payload.Location, payload.Postcode, payload.Language,
+	)
+
+	title, err := w.deps.Claude.GenerateContent(ctx, titlePrompt)
+	if err != nil {
+		return fmt.Errorf("generate SEO title: %w", err)
+	}
+
+	// Generate description prompt.
+	descPrompt := fmt.Sprintf(
+		"Generate an SEO-optimized landing page description for the service category "+
+			"with ID %q in the location %q (postcode: %s). "+
+			"The content should be in %s language, approximately 200 words, "+
+			"and highlight the benefits of finding trusted local service providers "+
+			"through the Seva marketplace platform. Include relevant local context.",
+		payload.CategoryID, payload.Location, payload.Postcode, payload.Language,
+	)
+
+	description, err := w.deps.Claude.GenerateContent(ctx, descPrompt)
+	if err != nil {
+		return fmt.Errorf("generate SEO description: %w", err)
+	}
+
+	// Store in Redis cache for the SEO landing pages to use.
+	if w.deps.Redis != nil {
+		cacheKey := fmt.Sprintf("seo:%s:%s:%s", payload.CategoryID, payload.Postcode, payload.Language)
+		seoData := map[string]string{
+			"title":       title,
+			"description": description,
+			"category_id": payload.CategoryID,
+			"postcode":    payload.Postcode,
+			"location":    payload.Location,
+			"language":    payload.Language,
+			"generated_at": time.Now().UTC().Format(time.RFC3339),
 		}
 
-		log.Info().
-			Str("category_id", payload.CategoryID).
-			Int("content_length", len(content)).
-			Msg("SEO content generated successfully")
+		seoJSON, err := json.Marshal(seoData)
+		if err != nil {
+			return fmt.Errorf("marshal SEO data for cache: %w", err)
+		}
 
-		// TODO: store the generated content in the landing_pages table
+		// Cache for 7 days.
+		if err := w.deps.Redis.Set(ctx, cacheKey, seoJSON, 7*24*time.Hour).Err(); err != nil {
+			log.Warn().Err(err).Str("cache_key", cacheKey).Msg("failed to cache SEO content in Redis")
+		}
 	}
+
+	// Also store in the database if available.
+	if w.deps.DB != nil {
+		_, err = w.deps.DB.Exec(ctx,
+			`INSERT INTO seo_landing_pages (category_id, postcode, location, language, title, description, generated_at, updated_at)
+			 VALUES ($1, $2, $3, $4, $5, $6, NOW(), NOW())
+			 ON CONFLICT (category_id, postcode, language)
+			 DO UPDATE SET title = EXCLUDED.title, description = EXCLUDED.description,
+			              generated_at = NOW(), updated_at = NOW()`,
+			payload.CategoryID, payload.Postcode, payload.Location, payload.Language, title, description,
+		)
+		if err != nil {
+			log.Warn().Err(err).Msg("failed to store SEO content in database (table may not exist yet)")
+		}
+	}
+
+	log.Info().
+		Str("category_id", payload.CategoryID).
+		Str("location", payload.Location).
+		Int("title_length", len(title)).
+		Int("description_length", len(description)).
+		Msg("SEO content generated and cached successfully")
 
 	return nil
 }
@@ -397,8 +729,26 @@ func (w *Worker) handleCleanExpiredOTPs(_ context.Context, task *asynq.Task) err
 		Int("older_than_minutes", payload.OlderThanMinutes).
 		Msg("processing CleanExpiredOTPs task")
 
-	// TODO: execute DELETE FROM otps WHERE created_at < NOW() - INTERVAL 'X minutes'
-	// TODO: log number of rows deleted
+	if w.deps == nil || w.deps.DB == nil {
+		log.Warn().Msg("DB not available, skipping OTP cleanup")
+		return nil
+	}
+
+	ctx := context.Background()
+
+	// Delete expired OTPs from the otp_codes table.
+	result, err := w.deps.DB.Exec(ctx,
+		`DELETE FROM otp_codes WHERE expires_at < NOW()`,
+	)
+	if err != nil {
+		return fmt.Errorf("delete expired OTPs: %w", err)
+	}
+
+	deletedCount := result.RowsAffected()
+
+	log.Info().
+		Int64("deleted_count", deletedCount).
+		Msg("expired OTPs cleaned up successfully")
 
 	return nil
 }
@@ -414,11 +764,113 @@ func (w *Worker) handleComputeLeaderboard(_ context.Context, task *asynq.Task) e
 		Str("category_id", payload.CategoryID).
 		Msg("processing ComputeLeaderboard task")
 
-	// TODO: query providers in the postcode/category
-	// TODO: rank by trust score, job count, and rating
-	// TODO: upsert into leaderboard table with rank positions
-	// TODO: optionally send notifications to providers who moved up
+	if w.deps == nil || w.deps.DB == nil {
+		log.Warn().Msg("DB not available, skipping leaderboard computation")
+		return nil
+	}
 
+	ctx := context.Background()
+
+	// Query providers grouped by postcode/category, ranked by trust_score and total jobs.
+	rows, err := w.deps.DB.Query(ctx,
+		`SELECT
+			pp.id,
+			pp.user_id,
+			COALESCE(u.name, ''),
+			COALESCE(pp.trust_score, 0),
+			COALESCE(pp.rating_average, 0),
+			COUNT(j.id) FILTER (WHERE j.status = 'completed') AS total_completed
+		 FROM provider_profiles pp
+		 JOIN users u ON u.id = pp.user_id
+		 LEFT JOIN jobs j ON j.assigned_provider_id = pp.id
+		 WHERE ($1 = '' OR EXISTS (
+			SELECT 1 FROM provider_service_areas psa
+			WHERE psa.provider_id = pp.id AND psa.postcode = $1
+		 ))
+		 AND ($2 = '' OR EXISTS (
+			SELECT 1 FROM provider_categories pc
+			WHERE pc.provider_id = pp.id AND pc.category_id = $2
+		 ))
+		 GROUP BY pp.id, pp.user_id, u.name, pp.trust_score, pp.rating_average
+		 ORDER BY COALESCE(pp.trust_score, 0) DESC,
+		          COUNT(j.id) FILTER (WHERE j.status = 'completed') DESC
+		 LIMIT 100`,
+		payload.Postcode, payload.CategoryID,
+	)
+	if err != nil {
+		return fmt.Errorf("query providers for leaderboard: %w", err)
+	}
+	defer rows.Close()
+
+	type leaderboardEntry struct {
+		ProviderID     string  `json:"provider_id"`
+		UserID         string  `json:"user_id"`
+		Name           string  `json:"name"`
+		TrustScore     float64 `json:"trust_score"`
+		Rating         float64 `json:"rating"`
+		TotalCompleted int     `json:"total_completed"`
+		Rank           int     `json:"rank"`
+	}
+
+	var entries []leaderboardEntry
+	rank := 1
+	for rows.Next() {
+		var e leaderboardEntry
+		if err := rows.Scan(&e.ProviderID, &e.UserID, &e.Name, &e.TrustScore, &e.Rating, &e.TotalCompleted); err != nil {
+			return fmt.Errorf("scan leaderboard row: %w", err)
+		}
+		e.Rank = rank
+		entries = append(entries, e)
+		rank++
+	}
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("iterate leaderboard rows: %w", err)
+	}
+
+	// Store results in Redis as JSON cache.
+	if w.deps.Redis != nil {
+		cacheKey := fmt.Sprintf("leaderboard:%s:%s", payload.Postcode, payload.CategoryID)
+		if cacheKey == "leaderboard::" {
+			cacheKey = "leaderboard:global"
+		}
+
+		leaderboardJSON, err := json.Marshal(entries)
+		if err != nil {
+			return fmt.Errorf("marshal leaderboard data: %w", err)
+		}
+
+		// Cache for 1 hour.
+		if err := w.deps.Redis.Set(ctx, cacheKey, leaderboardJSON, 1*time.Hour).Err(); err != nil {
+			log.Warn().Err(err).Str("cache_key", cacheKey).Msg("failed to cache leaderboard in Redis")
+		}
+	}
+
+	log.Info().
+		Str("postcode", payload.Postcode).
+		Str("category_id", payload.CategoryID).
+		Int("entries", len(entries)).
+		Msg("leaderboard computed and cached successfully")
+
+	return nil
+}
+
+// --- Helper Methods ---
+
+// getEmailConfig returns the email configuration from deps.
+func (w *Worker) getEmailConfig() *EmailConfig {
+	if w.deps != nil && w.deps.Email != nil {
+		return w.deps.Email
+	}
+	// Fall back to config if Email dep not set.
+	if w.deps != nil && w.deps.Cfg != nil {
+		return &EmailConfig{
+			Host:     w.deps.Cfg.SMTPHost,
+			Port:     w.deps.Cfg.SMTPPort,
+			User:     w.deps.Cfg.SMTPUser,
+			Password: w.deps.Cfg.SMTPPassword,
+			From:     w.deps.Cfg.SMTPFrom,
+		}
+	}
 	return nil
 }
 

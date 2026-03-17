@@ -2,12 +2,16 @@ package handler
 
 import (
 	"context"
+	"fmt"
+	stdmime "mime"
+	"path/filepath"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 
+	"github.com/seva-platform/backend/internal/adapter/storage"
 	"github.com/seva-platform/backend/internal/middleware"
 )
 
@@ -49,11 +53,12 @@ type DisputeService interface {
 // DisputeHandler handles dispute endpoints.
 type DisputeHandler struct {
 	service DisputeService
+	storage storage.StorageProvider
 }
 
 // NewDisputeHandler creates a new DisputeHandler.
-func NewDisputeHandler(svc DisputeService) *DisputeHandler {
-	return &DisputeHandler{service: svc}
+func NewDisputeHandler(svc DisputeService, store storage.StorageProvider) *DisputeHandler {
+	return &DisputeHandler{service: svc, storage: store}
 }
 
 // RegisterRoutes mounts dispute routes on the given Fiber router group.
@@ -277,9 +282,42 @@ func (h *DisputeHandler) AddEvidence(c *fiber.Ctx) error {
 				},
 			})
 		}
-		// TODO: upload to object storage and get URL.
-		url := "https://storage.seva.io/disputes/" + disputeID.String() + "/" + file.Filename
-		fileURL = &url
+
+		// Open the uploaded file for reading.
+		src, openErr := file.Open()
+		if openErr != nil {
+			log.Error().Err(openErr).Msg("failed to open uploaded evidence file")
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": fiber.Map{
+					"code":    "INTERNAL_ERROR",
+					"message": "failed to process uploaded file",
+				},
+			})
+		}
+		defer src.Close()
+
+		// Detect content type from the file extension.
+		ext := filepath.Ext(file.Filename)
+		contentType := stdmime.TypeByExtension(ext)
+		if contentType == "" {
+			contentType = "application/octet-stream"
+		}
+
+		// Generate a unique storage key to avoid filename collisions.
+		uniqueName := fmt.Sprintf("%s%s", uuid.New().String(), ext)
+		key := storage.DisputeEvidenceKey(disputeID.String(), uniqueName)
+
+		uploadedURL, uploadErr := h.storage.Upload(c.UserContext(), key, src, contentType)
+		if uploadErr != nil {
+			log.Error().Err(uploadErr).Str("dispute_id", disputeID.String()).Str("key", key).Msg("failed to upload evidence to storage")
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": fiber.Map{
+					"code":    "STORAGE_ERROR",
+					"message": "failed to upload evidence to storage",
+				},
+			})
+		}
+		fileURL = &uploadedURL
 	}
 
 	var textPtr *string

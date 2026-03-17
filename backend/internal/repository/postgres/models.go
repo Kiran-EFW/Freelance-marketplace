@@ -434,3 +434,13 @@ type AuditLog struct {
 	UserAgent  pgtype.Text     `json:"user_agent"`
 	CreatedAt  time.Time       `json:"created_at"`
 }
+
+type DeviceToken struct {
+	ID        uuid.UUID `json:"id"`
+	UserID    uuid.UUID `json:"user_id"`
+	Token     string    `json:"token"`
+	Platform  string    `json:"platform"`
+	IsActive  bool      `json:"is_active"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+}

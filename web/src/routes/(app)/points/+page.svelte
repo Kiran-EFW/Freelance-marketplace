@@ -1,31 +1,72 @@
 <script lang="ts">
-	import { Award, TrendingUp, Gift, Star, Trophy, ArrowUp, ArrowDown, Info } from 'lucide-svelte';
+	import { onMount } from 'svelte';
+	import { Award, TrendingUp, Gift, Star, Trophy, ArrowUp, ArrowDown, Info, Loader2 } from 'lucide-svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Avatar from '$lib/components/ui/Avatar.svelte';
+	import api from '$lib/api/client';
 
-	const balance = 1250;
-	const currentLevel = { level: 2, name: 'Silver', minPoints: 500, maxPoints: 2000 };
-	const nextLevel = { level: 3, name: 'Gold', minPoints: 2000, maxPoints: 5000 };
-	const progress = ((balance - currentLevel.minPoints) / (nextLevel.minPoints - currentLevel.minPoints)) * 100;
+	let loading = $state(true);
+	let error = $state('');
 
-	const pointsHistory = [
-		{ id: '1', points: 50, type: 'earned', reason: 'Completed job: Fix leaking tap', date: '2026-03-15' },
-		{ id: '2', points: 25, type: 'earned', reason: 'Left a review', date: '2026-03-14' },
-		{ id: '3', points: -100, type: 'spent', reason: 'Redeemed: Priority listing', date: '2026-03-10' },
-		{ id: '4', points: 100, type: 'bonus', reason: 'Referral bonus: Invited Priya', date: '2026-03-05' },
-		{ id: '5', points: 50, type: 'earned', reason: 'Completed job: Electrical repair', date: '2026-03-01' },
-		{ id: '6', points: 75, type: 'earned', reason: '5-star review received', date: '2026-02-28' },
-		{ id: '7', points: 50, type: 'earned', reason: 'Completed job: Deep cleaning', date: '2026-02-20' }
-	];
+	let balance = $state(0);
+	let currentLevel = $state({ level: 1, name: 'Bronze', minPoints: 0, maxPoints: 500 });
+	let nextLevel = $state<{ level: number; name: string; minPoints: number; maxPoints: number } | null>({ level: 2, name: 'Silver', minPoints: 500, maxPoints: 2000 });
+	let progress = $derived(nextLevel ? ((balance - currentLevel.minPoints) / (nextLevel.minPoints - currentLevel.minPoints)) * 100 : 100);
 
-	const leaderboard = [
-		{ rank: 1, name: 'Suresh Nair', points: 4500, level: 'Gold' },
-		{ rank: 2, name: 'Priya Sharma', points: 3800, level: 'Gold' },
-		{ rank: 3, name: 'Ravi Kumar', points: 3200, level: 'Gold' },
-		{ rank: 4, name: 'Deepak Sharma', points: 2800, level: 'Silver' },
-		{ rank: 5, name: 'Anita Gupta', points: 2500, level: 'Silver' }
-	];
+	let pointsHistory = $state<any[]>([]);
+	let leaderboard = $state<any[]>([]);
+
+	onMount(async () => {
+		try {
+			const [balanceRes, historyRes, levelRes, leaderboardRes] = await Promise.all([
+				api.points.getBalance(),
+				api.points.getHistory({ per_page: 10 }),
+				api.points.getLevel(),
+				api.points.getLeaderboard({ limit: 5 }).catch(() => ({ data: [] }))
+			]);
+
+			balance = balanceRes.data?.balance || 0;
+			const level = balanceRes.data?.level || levelRes.data?.current;
+			if (level) {
+				currentLevel = {
+					level: level.level || 1,
+					name: level.name || 'Bronze',
+					minPoints: level.min_points || 0,
+					maxPoints: level.max_points || 500
+				};
+			}
+			if (levelRes.data?.next) {
+				nextLevel = {
+					level: levelRes.data.next.level || 2,
+					name: levelRes.data.next.name || 'Silver',
+					minPoints: levelRes.data.next.min_points || 500,
+					maxPoints: levelRes.data.next.max_points || 2000
+				};
+			} else {
+				nextLevel = null;
+			}
+
+			pointsHistory = (historyRes.data || []).map((entry: any) => ({
+				id: entry.id,
+				points: entry.points || entry.amount || 0,
+				type: entry.type || (entry.points > 0 ? 'earned' : 'spent'),
+				reason: entry.reason || entry.description || '',
+				date: entry.created_at?.split('T')[0] || ''
+			}));
+
+			leaderboard = (leaderboardRes.data || []).map((entry: any, i: number) => ({
+				rank: entry.rank || i + 1,
+				name: entry.user?.name || entry.name || 'User',
+				points: entry.points || entry.total_points || 0,
+				level: entry.level?.name || entry.level || ''
+			}));
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'Failed to load points data';
+		} finally {
+			loading = false;
+		}
+	});
 
 	const earnWays = [
 		{ action: 'Complete a job', points: '50 pts', icon: Star },
@@ -41,6 +82,17 @@
 	<title>Points & Rewards - Seva</title>
 </svelte:head>
 
+{#if loading}
+<div class="flex items-center justify-center py-20">
+	<Loader2 class="h-8 w-8 animate-spin text-primary-600" />
+</div>
+{:else if error}
+<div class="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+	<div class="rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-800 dark:bg-red-900/20">
+		<p class="text-red-600 dark:text-red-400">{error}</p>
+	</div>
+</div>
+{:else}
 <div class="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
 	<h1 class="text-2xl font-bold text-gray-900 dark:text-white">Points & Rewards</h1>
 
@@ -56,12 +108,12 @@
 		<div class="mt-6">
 			<div class="flex items-center justify-between text-sm">
 				<span>{currentLevel.name} (Level {currentLevel.level})</span>
-				<span>{nextLevel.name} (Level {nextLevel.level})</span>
+				<span>{nextLevel ? `${nextLevel.name} (Level ${nextLevel.level})` : 'Max Level'}</span>
 			</div>
 			<div class="mt-2 h-3 rounded-full bg-white/20">
 				<div class="h-3 rounded-full bg-white transition-all" style="width: {progress}%"></div>
 			</div>
-			<p class="mt-1 text-xs text-primary-200">{nextLevel.minPoints - balance} points to reach {nextLevel.name}</p>
+			<p class="mt-1 text-xs text-primary-200">{nextLevel ? `${nextLevel.minPoints - balance} points to reach ${nextLevel.name}` : 'You have reached the highest level!'}</p>
 		</div>
 	</div>
 
@@ -137,3 +189,4 @@
 		</div>
 	</div>
 </div>
+{/if}

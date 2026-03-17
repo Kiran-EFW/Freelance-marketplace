@@ -132,3 +132,36 @@ func (q *Queries) CountRecentOTPs(ctx context.Context, phone string) (int64, err
 	}
 	return count, nil
 }
+
+const getLatestOTPByPhone = `-- name: GetLatestOTPByPhone :one
+SELECT id, phone, code, attempts, max_attempts, expires_at, verified_at, created_at FROM otp_codes
+WHERE phone = $1
+  AND verified_at IS NULL
+  AND expires_at > NOW()
+ORDER BY created_at DESC
+LIMIT 1
+`
+
+func (q *Queries) GetLatestOTPByPhone(ctx context.Context, phone string) (OtpCode, error) {
+	row := q.db.QueryRow(ctx, getLatestOTPByPhone, phone)
+	var i OtpCode
+	err := row.Scan(
+		&i.ID,
+		&i.Phone,
+		&i.Code,
+		&i.Attempts,
+		&i.MaxAttempts,
+		&i.ExpiresAt,
+		&i.VerifiedAt,
+		&i.CreatedAt,
+	)
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			log.Debug().Str("phone", phone).Msg("no active OTP found for phone")
+			return i, err
+		}
+		log.Error().Err(err).Str("phone", phone).Msg("failed to get latest OTP by phone")
+		return i, err
+	}
+	return i, nil
+}

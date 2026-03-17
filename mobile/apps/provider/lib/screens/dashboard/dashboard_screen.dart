@@ -35,9 +35,12 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
     ]);
 
     if (mounted) {
+      final earningsResult = results[0] as Result<EarningsSummary>;
+      final jobsResult = results[1] as Result<PaginatedResult<Job>>;
+
       setState(() {
-        _earnings = results[0] as EarningsSummary?;
-        _activeJobs = (results[1] as PaginatedResult<Job>).items;
+        _earnings = earningsResult.dataOrNull;
+        _activeJobs = jobsResult.dataOrNull?.items ?? [];
         _isLoading = false;
       });
     }

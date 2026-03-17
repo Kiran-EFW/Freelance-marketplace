@@ -3,14 +3,17 @@ package notification
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
 	"github.com/google/uuid"
 	"github.com/rs/zerolog/log"
 
+	"github.com/seva-platform/backend/internal/adapter/push"
 	"github.com/seva-platform/backend/internal/adapter/sms"
 	"github.com/seva-platform/backend/internal/domain"
+	"github.com/seva-platform/backend/internal/repository/postgres"
 )
 
 // Service defines the notification service interface.
@@ -28,6 +31,8 @@ type NotificationService struct {
 	notifications domain.NotificationRepository
 	users         domain.UserRepository
 	smsProvider   sms.SMSProvider
+	pushProvider  push.Provider
+	queries       *postgres.Queries
 }
 
 // NewNotificationService returns a ready-to-use NotificationService.
@@ -35,11 +40,15 @@ func NewNotificationService(
 	notifications domain.NotificationRepository,
 	users domain.UserRepository,
 	smsProvider sms.SMSProvider,
+	pushProvider push.Provider,
+	queries *postgres.Queries,
 ) *NotificationService {
 	return &NotificationService{
 		notifications: notifications,
 		users:         users,
 		smsProvider:   smsProvider,
+		pushProvider:  pushProvider,
+		queries:       queries,
 	}
 }
 
@@ -82,8 +91,7 @@ func (s *NotificationService) Send(ctx context.Context, userID uuid.UUID, notifT
 			}
 		}
 	case domain.ChannelPush:
-		// TODO: integrate with FCM / APNs for push delivery.
-		log.Debug().Str("user_id", userID.String()).Msg("push notification queued")
+		s.deliverPush(ctx, userID, title, body, data)
 	case domain.ChannelEmail:
 		// TODO: integrate with email service.
 		log.Debug().Str("user_id", userID.String()).Msg("email notification queued")
@@ -177,4 +185,54 @@ func (s *NotificationService) SendSeasonalReminder(ctx context.Context, cropID u
 	_ = body
 
 	return nil
+}
+
+// deliverPush sends a push notification to all active device tokens for a user.
+// If FCM reports a token as invalid/unregistered, the token is deactivated.
+func (s *NotificationService) deliverPush(ctx context.Context, userID uuid.UUID, title, body string, data map[string]interface{}) {
+	if s.pushProvider == nil || s.queries == nil {
+		log.Debug().Str("user_id", userID.String()).Msg("push provider or queries not configured, skipping push delivery")
+		return
+	}
+
+	// Look up active device tokens for this user.
+	tokens, err := s.queries.GetDeviceTokensForUser(ctx, userID)
+	if err != nil {
+		log.Warn().Err(err).Str("user_id", userID.String()).Msg("failed to fetch device tokens for push delivery")
+		return
+	}
+
+	if len(tokens) == 0 {
+		log.Debug().Str("user_id", userID.String()).Msg("no active device tokens for user, skipping push delivery")
+		return
+	}
+
+	// Convert data to string map for push notification.
+	pushData := make(map[string]string)
+	for k, v := range data {
+		pushData[k] = fmt.Sprintf("%v", v)
+	}
+
+	notification := push.Notification{
+		Title: title,
+		Body:  body,
+		Data:  pushData,
+	}
+
+	for _, dt := range tokens {
+		if err := s.pushProvider.SendToDevice(ctx, dt.Token, notification); err != nil {
+			if errors.Is(err, push.ErrInvalidToken) {
+				// Deactivate the invalid token.
+				log.Info().
+					Str("token", dt.Token).
+					Str("user_id", userID.String()).
+					Msg("deactivating invalid device token")
+				if deactivateErr := s.queries.DeactivateDeviceToken(ctx, dt.Token); deactivateErr != nil {
+					log.Error().Err(deactivateErr).Str("token", dt.Token).Msg("failed to deactivate device token")
+				}
+			} else {
+				log.Warn().Err(err).Str("token", dt.Token).Str("user_id", userID.String()).Msg("push delivery failed")
+			}
+		}
+	}
 }

@@ -1,86 +1,63 @@
 <script lang="ts">
-	import { Search, Filter, Plus } from 'lucide-svelte';
+	import { onMount } from 'svelte';
+	import { Search, Filter, Plus, Loader2 } from 'lucide-svelte';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import JobCard from '$lib/components/job/JobCard.svelte';
 	import Pagination from '$lib/components/ui/Pagination.svelte';
 	import Tabs from '$lib/components/ui/Tabs.svelte';
+	import api from '$lib/api/client';
 
 	let searchQuery = $state('');
 	let statusFilter = $state('all');
 	let currentPage = $state(1);
+	let loading = $state(true);
+	let error = $state('');
+	let allJobs = $state<any[]>([]);
+	let totalPages = $state(1);
 
 	const statusTabs = [
 		{ id: 'all', label: 'All' },
-		{ id: 'posted', label: 'Posted' },
+		{ id: 'open', label: 'Posted' },
 		{ id: 'quoted', label: 'Quoted' },
 		{ id: 'in_progress', label: 'In Progress' },
 		{ id: 'completed', label: 'Completed' }
 	];
 
-	const mockJobs = [
-		{
-			id: '1', title: 'Fix kitchen plumbing', description: 'Leaking tap and clogged drain in kitchen. Need an experienced plumber for repair.',
-			category: 'Plumbing', status: 'in_progress', budget: 3500,
-			createdAt: '2026-03-15', quotesCount: 4,
-			images: []
-		},
-		{
-			id: '2', title: 'Living room painting', description: 'Full living room painting with premium paint. Approximately 400 sq ft area.',
-			category: 'Painting', status: 'quoted', budget: 8000,
-			createdAt: '2026-03-14', quotesCount: 6,
-			images: []
-		},
-		{
-			id: '3', title: 'AC servicing - 3 units', description: 'Annual maintenance service for 3 split AC units. Include gas refill if needed.',
-			category: 'HVAC', status: 'completed', budget: 4500,
-			createdAt: '2026-03-10', quotesCount: 3,
-			images: []
-		},
-		{
-			id: '4', title: 'Garden maintenance', description: 'Monthly garden maintenance - trimming, weeding, watering, and fertilizing.',
-			category: 'Gardening', status: 'posted', budget: 1500,
-			createdAt: '2026-03-13', quotesCount: 2,
-			images: []
-		},
-		{
-			id: '5', title: 'Bathroom renovation', description: 'Complete bathroom renovation including tiling, plumbing, and fixtures.',
-			category: 'Plumbing', status: 'posted', budget: 25000,
-			createdAt: '2026-03-12', quotesCount: 0,
-			images: []
-		},
-		{
-			id: '6', title: 'Electrical wiring check', description: 'Full house electrical inspection and wiring check. 3BHK apartment.',
-			category: 'Electrical', status: 'quoted', budget: 3000,
-			createdAt: '2026-03-11', quotesCount: 5,
-			images: []
-		},
-		{
-			id: '7', title: 'Deep cleaning - 2BHK', description: 'Move-in deep cleaning for a 2BHK apartment. Kitchen, bathrooms, and all rooms.',
-			category: 'Cleaning', status: 'completed', budget: 2500,
-			createdAt: '2026-03-08', quotesCount: 4,
-			images: []
-		},
-		{
-			id: '8', title: 'Custom bookshelf installation', description: 'Design and install a custom bookshelf in the study room. Need quality wood.',
-			category: 'Carpentry', status: 'completed', budget: 12000,
-			createdAt: '2026-03-05', quotesCount: 3,
-			images: []
-		}
-	];
+	async function fetchJobs() {
+		loading = true;
+		error = '';
+		try {
+			const params: any = {
+				page: currentPage,
+				per_page: 10
+			};
+			if (statusFilter !== 'all') params.status = statusFilter;
+			if (searchQuery.trim()) params.search = searchQuery.trim();
 
-	let filteredJobs = $derived(
-		mockJobs.filter((j) => {
-			const matchesSearch = !searchQuery ||
-				j.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-				j.category.toLowerCase().includes(searchQuery.toLowerCase());
-			const matchesStatus = statusFilter === 'all' || j.status === statusFilter;
-			return matchesSearch && matchesStatus;
-		})
-	);
+			const res = await api.jobs.list(params);
+			allJobs = res.data || [];
+			totalPages = res.meta?.total_pages || Math.ceil((res.meta?.total || 1) / 10);
+		} catch (err) {
+			error = err instanceof Error ? err.message : 'Failed to load jobs';
+		} finally {
+			loading = false;
+		}
+	}
+
+	// Fetch on mount and re-fetch when filters change
+	$effect(() => {
+		// Access reactive values to track them
+		const _status = statusFilter;
+		const _page = currentPage;
+		const _search = searchQuery;
+		fetchJobs();
+	});
+
+	let filteredJobs = $derived(allJobs);
 
 	function getTimeAgo(dateStr: string): string {
-		const diff = new Date('2026-03-17').getTime() - new Date(dateStr).getTime();
+		const diff = Date.now() - new Date(dateStr).getTime();
 		const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 		if (days === 0) return 'Today';
 		if (days === 1) return '1 day ago';
@@ -125,32 +102,42 @@
 	</div>
 
 	<!-- Results -->
-	<div class="mt-2 text-sm text-gray-500 dark:text-gray-400">{filteredJobs.length} jobs</div>
-
-	<!-- Jobs List -->
-	{#if filteredJobs.length > 0}
-		<div class="mt-4 space-y-4">
-			{#each filteredJobs as job}
-				<JobCard job={{ id: job.id, title: job.title, description: '', status: job.status, category: { id: '', name: job.category, slug: job.category.toLowerCase() }, budget_min: job.budget, quotes_count: job.quotesCount, images: job.images, created_at: job.createdAt } as any} />
-			{/each}
+	{#if loading}
+		<div class="mt-8 flex items-center justify-center py-12">
+			<Loader2 class="h-8 w-8 animate-spin text-primary-600" />
 		</div>
-		<div class="mt-8">
-			<Pagination {currentPage} totalPages={2} onPageChange={(p) => (currentPage = p)} />
+	{:else if error}
+		<div class="mt-4 rounded-lg border border-red-200 bg-red-50 p-6 text-center dark:border-red-800 dark:bg-red-900/20">
+			<p class="text-red-600 dark:text-red-400">{error}</p>
 		</div>
 	{:else}
-		<div class="mt-8 rounded-lg border border-gray-200 bg-white p-12 text-center dark:border-gray-700 dark:bg-gray-800">
-			<Search class="mx-auto h-12 w-12 text-gray-300 dark:text-gray-600" />
-			<h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">No jobs found</h3>
-			<p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
-				{#if statusFilter !== 'all'}
-					No jobs with status "{statusFilter}". Try a different filter.
-				{:else}
-					Post your first job to get started finding service providers.
-				{/if}
-			</p>
-			<div class="mt-4">
-				<Button variant="primary" href="/jobs/new">Post a Job</Button>
+		<div class="mt-2 text-sm text-gray-500 dark:text-gray-400">{filteredJobs.length} jobs</div>
+
+		<!-- Jobs List -->
+		{#if filteredJobs.length > 0}
+			<div class="mt-4 space-y-4">
+				{#each filteredJobs as job}
+					<JobCard {job} />
+				{/each}
 			</div>
-		</div>
+			<div class="mt-8">
+				<Pagination {currentPage} {totalPages} onPageChange={(p) => (currentPage = p)} />
+			</div>
+		{:else}
+			<div class="mt-8 rounded-lg border border-gray-200 bg-white p-12 text-center dark:border-gray-700 dark:bg-gray-800">
+				<Search class="mx-auto h-12 w-12 text-gray-300 dark:text-gray-600" />
+				<h3 class="mt-4 text-lg font-medium text-gray-900 dark:text-white">No jobs found</h3>
+				<p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+					{#if statusFilter !== 'all'}
+						No jobs with status "{statusFilter}". Try a different filter.
+					{:else}
+						Post your first job to get started finding service providers.
+					{/if}
+				</p>
+				<div class="mt-4">
+					<Button variant="primary" href="/jobs/new">Post a Job</Button>
+				</div>
+			</div>
+		{/if}
 	{/if}
 </div>
