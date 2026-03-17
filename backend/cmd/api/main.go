@@ -157,7 +157,7 @@ func main() {
 	// These adapters bridge the handler-level interfaces (handler-local types)
 	// to the service-level implementations (domain types).
 	userSvcAdapter := svcadapter.NewUserServiceAdapter(userSvc)
-	jobSvcAdapter := svcadapter.NewJobServiceAdapter(jobSvc)
+	jobSvcAdapter := svcadapter.NewJobServiceAdapter(jobSvc, queries)
 	reviewSvcAdapter := svcadapter.NewReviewServiceAdapter(reviewSvc, reviewRepo)
 	paymentSvcAdapter := svcadapter.NewPaymentServiceAdapter(paymentSvc, transactionRepo)
 	notifSvcAdapter := svcadapter.NewNotificationServiceAdapter(notifSvc, notificationRepo)
@@ -171,8 +171,8 @@ func main() {
 	aiSvcAdapter := svcadapter.NewAIServiceAdapter(aiSvc)
 	messagingSvcAdapter := svcadapter.NewMessageServiceAdapter(messagingSvc)
 	subscriptionSvcAdapter := svcadapter.NewSubscriptionServiceAdapter(subscriptionSvc)
-	escrowSvcAdapter := svcadapter.NewEscrowServiceAdapter(nil)
-	recurringSvcAdapter := svcadapter.NewRecurringServiceAdapter()
+	escrowSvcAdapter := svcadapter.NewEscrowServiceAdapter(queries)
+	recurringSvcAdapter := svcadapter.NewRecurringServiceAdapter(queries)
 	analyticsSvcAdapter := svcadapter.NewAnalyticsServiceAdapter(queries)
 
 	// ---- Handlers ----

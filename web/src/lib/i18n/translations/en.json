@@ -16,7 +16,8 @@
 		"or": "or",
 		"sign_in": "Sign In",
 		"sign_out": "Sign Out",
-		"sign_up": "Sign Up"
+		"sign_up": "Sign Up",
+		"help": "Help Center"
 	},
 	"nav": {
 		"find_providers": "Find Providers",
@@ -33,7 +34,11 @@
 		"settings": "Settings",
 		"account": "Account",
 		"organization": "Organization",
-		"safety": "Safety"
+		"safety": "Safety",
+		"reviews": "My Reviews",
+		"payments": "Payments",
+		"subscription": "Subscription",
+		"schedule": "Schedule"
 	},
 	"home": {
 		"hero_title": "Find trusted service providers",

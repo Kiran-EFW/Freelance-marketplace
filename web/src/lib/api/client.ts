@@ -35,7 +35,13 @@ import type {
 	CreateReviewRequest,
 	CreateDisputeRequest,
 	CreateRouteRequest,
-	AddRouteStopRequest
+	AddRouteStopRequest,
+	EscrowTransaction,
+	Jurisdiction,
+	SubscriptionPlan,
+	ProviderSubscription,
+	DeviceToken,
+	CropCalendarEntry
 } from '$lib/types';
 
 // ---------------------------------------------------------------------------
@@ -1159,6 +1165,106 @@ export const seo = {
 };
 
 // ---------------------------------------------------------------------------
+// Escrow API
+// ---------------------------------------------------------------------------
+
+export const escrow = {
+	create(data: {
+		job_id: string;
+		provider_id: string;
+		amount: number;
+		currency?: string;
+		gateway_payment_id?: string;
+	}): Promise<ApiResponse<EscrowTransaction>> {
+		return request('/escrow', { method: 'POST', body: data });
+	},
+
+	getByJob(jobId: string): Promise<ApiResponse<EscrowTransaction>> {
+		return request(`/escrow/${jobId}`);
+	},
+
+	list(params?: { page?: number; limit?: number }): Promise<ApiResponse<EscrowTransaction[]>> {
+		return request('/escrow', { params });
+	},
+
+	release(id: string): Promise<ApiResponse<EscrowTransaction>> {
+		return request(`/escrow/${id}/release`, { method: 'POST' });
+	},
+
+	refund(id: string): Promise<ApiResponse<EscrowTransaction>> {
+		return request(`/escrow/${id}/refund`, { method: 'POST' });
+	},
+
+	dispute(id: string): Promise<ApiResponse<EscrowTransaction>> {
+		return request(`/escrow/${id}/dispute`, { method: 'POST' });
+	}
+};
+
+// ---------------------------------------------------------------------------
+// Subscriptions API
+// ---------------------------------------------------------------------------
+
+export const subscriptions = {
+	getPlans(): Promise<ApiResponse<SubscriptionPlan[]>> {
+		return request('/subscriptions/plans', { auth: false });
+	},
+
+	getCurrentSubscription(): Promise<ApiResponse<ProviderSubscription>> {
+		return request('/subscriptions/current');
+	},
+
+	subscribe(planId: string, billingCycle: 'monthly' | 'yearly'): Promise<ApiResponse<ProviderSubscription>> {
+		return request('/subscriptions', { method: 'POST', body: { plan_id: planId, billing_cycle: billingCycle } });
+	},
+
+	cancel(): Promise<ApiResponse<ProviderSubscription>> {
+		return request('/subscriptions/cancel', { method: 'POST' });
+	}
+};
+
+// ---------------------------------------------------------------------------
+// Jurisdictions API
+// ---------------------------------------------------------------------------
+
+export const jurisdictions = {
+	list(): Promise<ApiResponse<Jurisdiction[]>> {
+		return request('/jurisdictions', { auth: false });
+	},
+
+	get(id: string): Promise<ApiResponse<Jurisdiction>> {
+		return request(`/jurisdictions/${id}`, { auth: false });
+	}
+};
+
+// ---------------------------------------------------------------------------
+// Crops API
+// ---------------------------------------------------------------------------
+
+export const crops = {
+	getCalendar(jurisdictionId: string, month?: number): Promise<ApiResponse<any[]>> {
+		return request(`/crops/calendar/${jurisdictionId}`, { params: { month } });
+	},
+
+	getCatalog(jurisdictionId: string): Promise<ApiResponse<CropCalendarEntry[]>> {
+		return request(`/crops/${jurisdictionId}`);
+	}
+};
+
+// ---------------------------------------------------------------------------
+// Device Tokens API
+// ---------------------------------------------------------------------------
+
+export const deviceTokens = {
+	register(data: { token: string; platform: 'android' | 'ios' | 'web' }): Promise<ApiResponse<DeviceToken>> {
+		return request('/device-tokens', { method: 'POST', body: data });
+	},
+
+	remove(tokenId: string): Promise<void> {
+		return request(`/device-tokens/${tokenId}`, { method: 'DELETE' });
+	}
+};
+
+// ---------------------------------------------------------------------------
 // Default export for convenience
 // ---------------------------------------------------------------------------
 
@@ -1185,6 +1291,11 @@ const api = {
 	organizations,
 	safety,
 	recurring,
+	escrow,
+	subscriptions,
+	jurisdictions,
+	crops,
+	deviceTokens,
 	setTokens,
 	clearTokens,
 	getAccessToken

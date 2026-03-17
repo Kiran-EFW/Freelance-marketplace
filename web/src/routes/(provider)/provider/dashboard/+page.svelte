@@ -177,7 +177,7 @@
 			</Card>
 
 			<!-- Quick Actions -->
-			<div class="grid gap-3 sm:grid-cols-4">
+			<div class="grid gap-3 sm:grid-cols-5">
 				<Button variant="primary" href="/provider/schedule" class="justify-center">
 					<Calendar class="h-4 w-4" />
 					View Schedule
@@ -190,6 +190,9 @@
 				</Button>
 				<Button variant="outline" href="/provider/analytics" class="justify-center">
 					Analytics
+				</Button>
+				<Button variant="outline" href="/provider/subscription" class="justify-center">
+					Subscription
 				</Button>
 			</div>
 		</div>

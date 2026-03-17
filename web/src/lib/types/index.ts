@@ -251,6 +251,26 @@ export interface DisputeMessage {
 	created_at: string;
 }
 
+// --- Escrow ---
+
+export type EscrowStatus = 'held' | 'released' | 'refunded' | 'disputed';
+
+export interface EscrowTransaction {
+	id: string;
+	job_id: string;
+	customer_id: string;
+	provider_id: string;
+	amount: number;
+	currency: string;
+	status: EscrowStatus;
+	gateway_payment_id?: string;
+	held_at: string;
+	released_at?: string;
+	refunded_at?: string;
+	created_at: string;
+	updated_at: string;
+}
+
 // --- Payment / Transaction ---
 
 export interface Payment {
@@ -329,6 +349,114 @@ export interface LeaderboardEntry {
 	provider?: ProviderProfile;
 	total_points: number;
 	level: UserLevel;
+}
+
+// --- Recurring Schedule ---
+
+export type RecurringFrequency = 'daily' | 'weekly' | 'biweekly' | 'monthly' | 'quarterly';
+export type RecurringStatus = 'active' | 'paused' | 'cancelled';
+
+export interface RecurringSchedule {
+	id: string;
+	customer_id: string;
+	provider_id: string;
+	category_id: string;
+	title: string;
+	description?: string;
+	frequency: RecurringFrequency;
+	day_of_week?: number;
+	day_of_month?: number;
+	preferred_time?: string;
+	amount: number;
+	currency: string;
+	status: RecurringStatus;
+	next_occurrence?: string;
+	last_occurrence?: string;
+	total_occurrences: number;
+	max_occurrences?: number;
+	created_at: string;
+	updated_at: string;
+}
+
+// --- Jurisdiction ---
+
+export interface Jurisdiction {
+	id: string;
+	name: string;
+	default_language: string;
+	currency: string;
+	currency_symbol: string;
+	phone_prefix: string;
+	timezone: string;
+	is_active: boolean;
+	config?: Record<string, unknown>;
+	created_at: string;
+	updated_at: string;
+}
+
+// --- Subscription ---
+
+export type SubscriptionTier = 'free' | 'basic' | 'professional' | 'enterprise';
+
+export interface SubscriptionPlan {
+	id: string;
+	tier: SubscriptionTier;
+	name: string;
+	price_monthly: number;
+	price_yearly: number;
+	currency: string;
+	features: string[];
+	max_jobs_per_month?: number;
+	priority_listing: boolean;
+	is_active: boolean;
+}
+
+export interface ProviderSubscription {
+	id: string;
+	provider_id: string;
+	plan_id: string;
+	plan?: SubscriptionPlan;
+	tier: SubscriptionTier;
+	status: 'active' | 'cancelled' | 'expired' | 'past_due';
+	current_period_start: string;
+	current_period_end: string;
+	cancel_at_period_end: boolean;
+	created_at: string;
+	updated_at: string;
+}
+
+// --- Device Token ---
+
+export interface DeviceToken {
+	id: string;
+	user_id: string;
+	token: string;
+	platform: 'android' | 'ios' | 'web';
+	is_active: boolean;
+	created_at: string;
+	updated_at: string;
+}
+
+// --- Crop Calendar ---
+
+export interface CropCalendarEntry {
+	id: string;
+	jurisdiction_id: string;
+	crop_slug: string;
+	name: string;
+	work_types: CropWorkType[];
+	seasonal_calendar: Record<string, unknown>;
+	is_active: boolean;
+	created_at: string;
+	updated_at: string;
+}
+
+export interface CropWorkType {
+	slug: string;
+	name: string;
+	pricing_model: string;
+	typical_price: { min: number; max: number; currency: string };
+	is_in_season: boolean;
 }
 
 // --- Routes (Provider) ---
