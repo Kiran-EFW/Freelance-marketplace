@@ -1,0 +1,159 @@
+language: "en"
+provider_config:
+  sender_id: "SEVA"
+  max_length: 160  # Standard SMS limit
+  unicode_max_length: 70  # Unicode SMS limit
+
+templates:
+  otp:
+    id: "sms_otp"
+    content: "{{otp}} is your verification code for Seva. Valid for {{validity_minutes}} minutes. Do not share this code with anyone."
+    variables:
+      - name: "otp"
+        required: true
+        type: "string"
+      - name: "validity_minutes"
+        required: true
+        type: "integer"
+        default: 10
+    dlt_template_id: "1707161234567890"  # DLT registration ID for India
+    priority: "high"
+    ttl_seconds: 600
+    max_retries: 2
+
+  job_notification:
+    id: "sms_job_notification"
+    content: "New job request! {{category}} service needed in {{location}}. Budget: {{currency_symbol}}{{amount}}. Open the app to view details and accept. - Seva"
+    variables:
+      - name: "category"
+        required: true
+        type: "string"
+      - name: "location"
+        required: true
+        type: "string"
+      - name: "currency_symbol"
+        required: true
+        type: "string"
+      - name: "amount"
+        required: true
+        type: "string"
+    dlt_template_id: "1707161234567891"
+    priority: "high"
+    ttl_seconds: 3600
+    max_retries: 1
+
+  job_accepted:
+    id: "sms_job_accepted"
+    content: "Great news! {{provider_name}} has accepted your {{category}} request. They will arrive on {{scheduled_date}} at {{scheduled_time}}. Contact: {{provider_phone}}. - Seva"
+    variables:
+      - name: "provider_name"
+        required: true
+        type: "string"
+      - name: "category"
+        required: true
+        type: "string"
+      - name: "scheduled_date"
+        required: true
+        type: "string"
+      - name: "scheduled_time"
+        required: true
+        type: "string"
+      - name: "provider_phone"
+        required: true
+        type: "string"
+    dlt_template_id: "1707161234567892"
+    priority: "high"
+    ttl_seconds: 3600
+    max_retries: 2
+
+  job_completed:
+    id: "sms_job_completed"
+    content: "Your {{category}} job has been marked complete by {{provider_name}}. Total: {{currency_symbol}}{{amount}}. Please rate your experience in the app. - Seva"
+    variables:
+      - name: "category"
+        required: true
+        type: "string"
+      - name: "provider_name"
+        required: true
+        type: "string"
+      - name: "currency_symbol"
+        required: true
+        type: "string"
+      - name: "amount"
+        required: true
+        type: "string"
+    dlt_template_id: "1707161234567893"
+    priority: "medium"
+    ttl_seconds: 7200
+    max_retries: 1
+
+  payment_received:
+    id: "sms_payment_received"
+    content: "Payment of {{currency_symbol}}{{amount}} received for {{category}} job (ID: {{job_id}}). Amount will be credited to your account within {{settlement_hours}} hours. - Seva"
+    variables:
+      - name: "currency_symbol"
+        required: true
+        type: "string"
+      - name: "amount"
+        required: true
+        type: "string"
+      - name: "category"
+        required: true
+        type: "string"
+      - name: "job_id"
+        required: true
+        type: "string"
+      - name: "settlement_hours"
+        required: true
+        type: "integer"
+        default: 24
+    dlt_template_id: "1707161234567894"
+    priority: "high"
+    ttl_seconds: 7200
+    max_retries: 2
+
+  weekly_summary:
+    id: "sms_weekly_summary"
+    content: "Your weekly summary: {{jobs_completed}} jobs completed, {{currency_symbol}}{{total_earned}} earned. Rating: {{rating}}/5. You have {{pending_jobs}} pending requests. Keep up the great work! - Seva"
+    variables:
+      - name: "jobs_completed"
+        required: true
+        type: "integer"
+      - name: "currency_symbol"
+        required: true
+        type: "string"
+      - name: "total_earned"
+        required: true
+        type: "string"
+      - name: "rating"
+        required: true
+        type: "string"
+      - name: "pending_jobs"
+        required: true
+        type: "integer"
+    dlt_template_id: "1707161234567895"
+    priority: "low"
+    ttl_seconds: 86400
+    max_retries: 0
+
+  dispute_raised:
+    id: "sms_dispute_raised"
+    content: "A dispute has been raised for job {{job_id}} ({{category}}). Reason: {{reason}}. Our team will review within {{resolution_hours}} hours. Check app for details. - Seva"
+    variables:
+      - name: "job_id"
+        required: true
+        type: "string"
+      - name: "category"
+        required: true
+        type: "string"
+      - name: "reason"
+        required: true
+        type: "string"
+      - name: "resolution_hours"
+        required: true
+        type: "integer"
+        default: 48
+    dlt_template_id: "1707161234567896"
+    priority: "high"
+    ttl_seconds: 7200
+    max_retries: 2

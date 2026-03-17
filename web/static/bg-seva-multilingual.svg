@@ -1,0 +1,98 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800">
+  <defs>
+    <style>
+      text { font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; fill-opacity: 0.06; }
+    </style>
+  </defs>
+  <rect width="800" height="800" fill="none"/>
+
+  <!-- Row 1 -->
+  <text x="45" y="35" font-size="22" font-weight="700" fill="#F97316" transform="rotate(-15, 45, 35)">Seva</text>
+  <text x="160" y="55" font-size="18" font-weight="600" fill="#EA580C" transform="rotate(25, 160, 55)">&#x0938;&#x0947;&#x0935;&#x093E;</text>
+  <text x="290" y="30" font-size="20" font-weight="700" fill="#C2410C" transform="rotate(-8, 290, 30)">&#xC0B8;&#xBC14;</text>
+  <text x="410" y="60" font-size="16" font-weight="600" fill="#F97316" transform="rotate(35, 410, 60)">&#x0D38;&#x0D47;&#x0D35;</text>
+  <text x="530" y="40" font-size="24" font-weight="700" fill="#EA580C" transform="rotate(-20, 530, 40)">Seva</text>
+  <text x="660" y="50" font-size="17" font-weight="600" fill="#C2410C" transform="rotate(12, 660, 50)">&#x0B38;&#x0B47;&#x0B2C;&#x0B3E;</text>
+  <text x="760" y="35" font-size="19" font-weight="700" fill="#F97316" transform="rotate(-30, 760, 35)">&#x0CB8;&#x0CC7;&#x0CB5;&#x0CC6;</text>
+
+  <!-- Row 2 -->
+  <text x="30" y="120" font-size="19" font-weight="600" fill="#C2410C" transform="rotate(18, 30, 120)">&#x0BB8;&#x0BC7;&#x0BB5;&#x0BC8;</text>
+  <text x="140" y="140" font-size="23" font-weight="700" fill="#F97316" transform="rotate(-12, 140, 140)">Seva</text>
+  <text x="270" y="115" font-size="17" font-weight="600" fill="#EA580C" transform="rotate(30, 270, 115)">&#x0938;&#x0947;&#x0935;&#x093E;</text>
+  <text x="380" y="135" font-size="20" font-weight="700" fill="#C2410C" transform="rotate(-25, 380, 135)">&#x30BB;&#x30D0;</text>
+  <text x="500" y="125" font-size="18" font-weight="600" fill="#F97316" transform="rotate(8, 500, 125)">&#x0D38;&#x0D47;&#x0D35;</text>
+  <text x="620" y="140" font-size="22" font-weight="700" fill="#EA580C" transform="rotate(-18, 620, 140)">Seva</text>
+  <text x="740" y="120" font-size="16" font-weight="600" fill="#C2410C" transform="rotate(22, 740, 120)">&#xC0B8;&#xBC14;</text>
+
+  <!-- Row 3 -->
+  <text x="60" y="200" font-size="21" font-weight="700" fill="#EA580C" transform="rotate(-22, 60, 200)">&#x0CB8;&#x0CC7;&#x0CB5;&#x0CC6;</text>
+  <text x="190" y="220" font-size="16" font-weight="600" fill="#C2410C" transform="rotate(15, 190, 220)">Seva</text>
+  <text x="310" y="205" font-size="24" font-weight="700" fill="#F97316" transform="rotate(-5, 310, 205)">&#x0938;&#x0947;&#x0935;&#x093E;</text>
+  <text x="440" y="215" font-size="18" font-weight="600" fill="#EA580C" transform="rotate(28, 440, 215)">&#x0BB8;&#x0BC7;&#x0BB5;&#x0BC8;</text>
+  <text x="560" y="195" font-size="20" font-weight="700" fill="#C2410C" transform="rotate(-32, 560, 195)">Seva</text>
+  <text x="680" y="210" font-size="17" font-weight="600" fill="#F97316" transform="rotate(10, 680, 210)">&#x0B38;&#x0B47;&#x0B2C;&#x0B3E;</text>
+  <text x="770" y="225" font-size="22" font-weight="700" fill="#EA580C" transform="rotate(-14, 770, 225)">&#x0D38;&#x0D47;&#x0D35;</text>
+
+  <!-- Row 4 -->
+  <text x="25" y="290" font-size="18" font-weight="600" fill="#F97316" transform="rotate(20, 25, 290)">&#xC0B8;&#xBC14;</text>
+  <text x="130" y="310" font-size="22" font-weight="700" fill="#EA580C" transform="rotate(-28, 130, 310)">&#x0938;&#x0947;&#x0935;&#x093E;</text>
+  <text x="260" y="295" font-size="16" font-weight="600" fill="#C2410C" transform="rotate(5, 260, 295)">Seva</text>
+  <text x="370" y="305" font-size="20" font-weight="700" fill="#F97316" transform="rotate(-10, 370, 305)">&#x30BB;&#x30D0;</text>
+  <text x="490" y="285" font-size="23" font-weight="600" fill="#EA580C" transform="rotate(33, 490, 285)">&#x0CB8;&#x0CC7;&#x0CB5;&#x0CC6;</text>
+  <text x="610" y="300" font-size="17" font-weight="700" fill="#C2410C" transform="rotate(-20, 610, 300)">&#x0BB8;&#x0BC7;&#x0BB5;&#x0BC8;</text>
+  <text x="730" y="310" font-size="21" font-weight="600" fill="#F97316" transform="rotate(16, 730, 310)">Seva</text>
+
+  <!-- Row 5 -->
+  <text x="50" y="375" font-size="20" font-weight="700" fill="#C2410C" transform="rotate(-35, 50, 375)">&#x0D38;&#x0D47;&#x0D35;</text>
+  <text x="170" y="395" font-size="17" font-weight="600" fill="#F97316" transform="rotate(22, 170, 395)">Seva</text>
+  <text x="280" y="380" font-size="22" font-weight="700" fill="#EA580C" transform="rotate(-8, 280, 380)">&#x0B38;&#x0B47;&#x0B2C;&#x0B3E;</text>
+  <text x="420" y="390" font-size="16" font-weight="600" fill="#C2410C" transform="rotate(30, 420, 390)">&#x0938;&#x0947;&#x0935;&#x093E;</text>
+  <text x="540" y="370" font-size="24" font-weight="700" fill="#F97316" transform="rotate(-15, 540, 370)">&#xC0B8;&#xBC14;</text>
+  <text x="650" y="385" font-size="18" font-weight="600" fill="#EA580C" transform="rotate(12, 650, 385)">&#x30BB;&#x30D0;</text>
+  <text x="760" y="400" font-size="20" font-weight="700" fill="#C2410C" transform="rotate(-25, 760, 400)">&#x0CB8;&#x0CC7;&#x0CB5;&#x0CC6;</text>
+
+  <!-- Row 6 -->
+  <text x="35" y="460" font-size="23" font-weight="700" fill="#EA580C" transform="rotate(8, 35, 460)">Seva</text>
+  <text x="155" y="475" font-size="18" font-weight="600" fill="#C2410C" transform="rotate(-18, 155, 475)">&#x0BB8;&#x0BC7;&#x0BB5;&#x0BC8;</text>
+  <text x="300" y="455" font-size="20" font-weight="700" fill="#F97316" transform="rotate(25, 300, 455)">&#x0D38;&#x0D47;&#x0D35;</text>
+  <text x="430" y="470" font-size="16" font-weight="600" fill="#EA580C" transform="rotate(-30, 430, 470)">Seva</text>
+  <text x="550" y="450" font-size="22" font-weight="700" fill="#C2410C" transform="rotate(18, 550, 450)">&#x0938;&#x0947;&#x0935;&#x093E;</text>
+  <text x="660" y="465" font-size="17" font-weight="600" fill="#F97316" transform="rotate(-12, 660, 465)">&#x0B38;&#x0B47;&#x0B2C;&#x0B3E;</text>
+  <text x="760" y="480" font-size="21" font-weight="700" fill="#EA580C" transform="rotate(28, 760, 480)">&#xC0B8;&#xBC14;</text>
+
+  <!-- Row 7 -->
+  <text x="55" y="545" font-size="17" font-weight="600" fill="#C2410C" transform="rotate(-20, 55, 545)">&#x30BB;&#x30D0;</text>
+  <text x="165" y="560" font-size="22" font-weight="700" fill="#F97316" transform="rotate(15, 165, 560)">&#x0CB8;&#x0CC7;&#x0CB5;&#x0CC6;</text>
+  <text x="290" y="540" font-size="18" font-weight="600" fill="#EA580C" transform="rotate(-5, 290, 540)">Seva</text>
+  <text x="400" y="555" font-size="24" font-weight="700" fill="#C2410C" transform="rotate(32, 400, 555)">&#x0938;&#x0947;&#x0935;&#x093E;</text>
+  <text x="530" y="535" font-size="16" font-weight="600" fill="#F97316" transform="rotate(-28, 530, 535)">&#x0BB8;&#x0BC7;&#x0BB5;&#x0BC8;</text>
+  <text x="640" y="550" font-size="20" font-weight="700" fill="#EA580C" transform="rotate(10, 640, 550)">&#x0D38;&#x0D47;&#x0D35;</text>
+  <text x="750" y="565" font-size="19" font-weight="600" fill="#C2410C" transform="rotate(-15, 750, 565)">Seva</text>
+
+  <!-- Row 8 -->
+  <text x="40" y="630" font-size="20" font-weight="700" fill="#F97316" transform="rotate(25, 40, 630)">&#x0B38;&#x0B47;&#x0B2C;&#x0B3E;</text>
+  <text x="150" y="645" font-size="16" font-weight="600" fill="#EA580C" transform="rotate(-10, 150, 645)">Seva</text>
+  <text x="270" y="625" font-size="23" font-weight="700" fill="#C2410C" transform="rotate(18, 270, 625)">&#xC0B8;&#xBC14;</text>
+  <text x="390" y="640" font-size="18" font-weight="600" fill="#F97316" transform="rotate(-22, 390, 640)">&#x30BB;&#x30D0;</text>
+  <text x="510" y="620" font-size="21" font-weight="700" fill="#EA580C" transform="rotate(8, 510, 620)">&#x0CB8;&#x0CC7;&#x0CB5;&#x0CC6;</text>
+  <text x="630" y="635" font-size="17" font-weight="600" fill="#C2410C" transform="rotate(-30, 630, 635)">&#x0938;&#x0947;&#x0935;&#x093E;</text>
+  <text x="740" y="650" font-size="22" font-weight="700" fill="#F97316" transform="rotate(20, 740, 650)">&#x0BB8;&#x0BC7;&#x0BB5;&#x0BC8;</text>
+
+  <!-- Row 9 -->
+  <text x="65" y="715" font-size="22" font-weight="700" fill="#EA580C" transform="rotate(-12, 65, 715)">&#x0D38;&#x0D47;&#x0D35;</text>
+  <text x="185" y="730" font-size="18" font-weight="600" fill="#C2410C" transform="rotate(28, 185, 730)">Seva</text>
+  <text x="310" y="710" font-size="16" font-weight="700" fill="#F97316" transform="rotate(-25, 310, 710)">&#x0938;&#x0947;&#x0935;&#x093E;</text>
+  <text x="420" y="725" font-size="20" font-weight="600" fill="#EA580C" transform="rotate(5, 420, 725)">&#x0B38;&#x0B47;&#x0B2C;&#x0B3E;</text>
+  <text x="550" y="705" font-size="23" font-weight="700" fill="#C2410C" transform="rotate(-18, 550, 705)">&#xC0B8;&#xBC14;</text>
+  <text x="670" y="720" font-size="17" font-weight="600" fill="#F97316" transform="rotate(33, 670, 720)">&#x30BB;&#x30D0;</text>
+  <text x="770" y="735" font-size="21" font-weight="700" fill="#EA580C" transform="rotate(-8, 770, 735)">Seva</text>
+
+  <!-- Row 10 -->
+  <text x="30" y="790" font-size="18" font-weight="600" fill="#C2410C" transform="rotate(15, 30, 790)">&#x0CB8;&#x0CC7;&#x0CB5;&#x0CC6;</text>
+  <text x="145" y="780" font-size="24" font-weight="700" fill="#F97316" transform="rotate(-32, 145, 780)">Seva</text>
+  <text x="280" y="795" font-size="17" font-weight="600" fill="#EA580C" transform="rotate(10, 280, 795)">&#x0BB8;&#x0BC7;&#x0BB5;&#x0BC8;</text>
+  <text x="400" y="785" font-size="20" font-weight="700" fill="#C2410C" transform="rotate(-15, 400, 785)">&#x0938;&#x0947;&#x0935;&#x093E;</text>
+  <text x="520" y="790" font-size="16" font-weight="600" fill="#F97316" transform="rotate(22, 520, 790)">&#x0D38;&#x0D47;&#x0D35;</text>
+  <text x="640" y="780" font-size="22" font-weight="700" fill="#EA580C" transform="rotate(-20, 640, 780)">&#x0B38;&#x0B47;&#x0B2C;&#x0B3E;</text>
+  <text x="750" y="795" font-size="19" font-weight="600" fill="#C2410C" transform="rotate(12, 750, 795)">&#xC0B8;&#xBC14;</text>
+</svg>

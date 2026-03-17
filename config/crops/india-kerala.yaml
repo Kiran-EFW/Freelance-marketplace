@@ -1,0 +1,585 @@
+region:
+  jurisdiction: "in"
+  state: "kerala"
+  state_code: "KL"
+  agro_climatic_zone: "tropical_humid"
+
+crops:
+  - slug: "coconut"
+    name:
+      en: "Coconut"
+      ml: "തേങ്ങ"
+    scientific_name: "Cocos nucifera"
+    icon: "coconut-tree"
+    seasonal_calendar:
+      harvesting_months: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]  # Year-round, every 45 days
+      peak_harvest: [1, 2, 5, 6, 9, 10]
+      planting_season: [6, 7, 8]  # Monsoon onset
+      fertilizer_schedule: [5, 9, 12]
+    common_work_types:
+      - type: "climbing_harvest"
+        description: "Coconut tree climbing and harvesting"
+        typical_pricing_model: "per_unit"
+        unit: "per_tree"
+        typical_rate_range:
+          min: 30
+          max: 80
+          currency: "INR"
+      - type: "dehusking"
+        description: "Removing husk from harvested coconuts"
+        typical_pricing_model: "per_unit"
+        unit: "per_coconut"
+        typical_rate_range:
+          min: 2
+          max: 5
+          currency: "INR"
+      - type: "palm_cleaning"
+        description: "Cleaning dead fronds and crown"
+        typical_pricing_model: "per_unit"
+        unit: "per_tree"
+        typical_rate_range:
+          min: 40
+          max: 100
+          currency: "INR"
+      - type: "fertilizer_application"
+        description: "Applying fertilizer around base"
+        typical_pricing_model: "per_unit"
+        unit: "per_tree"
+        typical_rate_range:
+          min: 20
+          max: 50
+          currency: "INR"
+      - type: "pest_treatment"
+        description: "Rhinoceros beetle and red palm weevil treatment"
+        typical_pricing_model: "per_unit"
+        unit: "per_tree"
+        typical_rate_range:
+          min: 50
+          max: 150
+          currency: "INR"
+
+  - slug: "rubber"
+    name:
+      en: "Rubber"
+      ml: "റബ്ബർ"
+    scientific_name: "Hevea brasiliensis"
+    icon: "rubber-tree"
+    seasonal_calendar:
+      tapping_months: [1, 2, 3, 4, 5, 10, 11, 12]  # Avoid heavy monsoon
+      rest_period: [6, 7, 8, 9]  # Monsoon - leaf shedding and wintering
+      planting_season: [6, 7]
+      fertilizer_schedule: [5, 9, 12]
+    common_work_types:
+      - type: "tapping"
+        description: "Daily rubber tapping (latex collection)"
+        typical_pricing_model: "hourly"
+        unit: "per_day"
+        typical_rate_range:
+          min: 600
+          max: 1000
+          currency: "INR"
+      - type: "rain_guarding"
+        description: "Rain guard installation on trees"
+        typical_pricing_model: "per_unit"
+        unit: "per_tree"
+        typical_rate_range:
+          min: 15
+          max: 30
+          currency: "INR"
+      - type: "weeding"
+        description: "Clearing weeds from rubber plantation"
+        typical_pricing_model: "per_sqft"
+        unit: "per_cent"
+        typical_rate_range:
+          min: 200
+          max: 500
+          currency: "INR"
+      - type: "replanting"
+        description: "Removing old trees and replanting"
+        typical_pricing_model: "per_unit"
+        unit: "per_tree"
+        typical_rate_range:
+          min: 200
+          max: 500
+          currency: "INR"
+
+  - slug: "pepper"
+    name:
+      en: "Black Pepper"
+      ml: "കുരുമുളക്"
+    scientific_name: "Piper nigrum"
+    icon: "pepper"
+    seasonal_calendar:
+      harvesting_months: [12, 1, 2, 3]
+      flowering_months: [5, 6, 7]
+      planting_season: [6, 7]
+      fertilizer_schedule: [5, 9]
+    common_work_types:
+      - type: "vine_training"
+        description: "Training pepper vines on standards"
+        typical_pricing_model: "per_unit"
+        unit: "per_vine"
+        typical_rate_range:
+          min: 10
+          max: 30
+          currency: "INR"
+      - type: "harvesting"
+        description: "Picking pepper berries from vines"
+        typical_pricing_model: "hourly"
+        unit: "per_day"
+        typical_rate_range:
+          min: 700
+          max: 1200
+          currency: "INR"
+      - type: "drying_processing"
+        description: "Drying and processing harvested pepper"
+        typical_pricing_model: "per_unit"
+        unit: "per_kg"
+        typical_rate_range:
+          min: 5
+          max: 15
+          currency: "INR"
+      - type: "disease_treatment"
+        description: "Quick wilt and phytophthora treatment"
+        typical_pricing_model: "per_unit"
+        unit: "per_vine"
+        typical_rate_range:
+          min: 20
+          max: 50
+          currency: "INR"
+
+  - slug: "cardamom"
+    name:
+      en: "Cardamom"
+      ml: "ഏലം"
+    scientific_name: "Elettaria cardamomum"
+    icon: "cardamom"
+    seasonal_calendar:
+      harvesting_months: [8, 9, 10, 11, 12, 1, 2]
+      peak_harvest: [9, 10, 11]
+      flowering_months: [4, 5, 6]
+      planting_season: [6, 7]
+    common_work_types:
+      - type: "harvesting"
+        description: "Picking cardamom capsules at right maturity"
+        typical_pricing_model: "hourly"
+        unit: "per_day"
+        typical_rate_range:
+          min: 600
+          max: 1000
+          currency: "INR"
+      - type: "curing"
+        description: "Drying cardamom in curing chambers"
+        typical_pricing_model: "per_unit"
+        unit: "per_kg"
+        typical_rate_range:
+          min: 10
+          max: 25
+          currency: "INR"
+      - type: "shade_management"
+        description: "Managing shade trees in cardamom plantation"
+        typical_pricing_model: "hourly"
+        unit: "per_day"
+        typical_rate_range:
+          min: 700
+          max: 1000
+          currency: "INR"
+      - type: "trashing"
+        description: "Removing dry leaves and old pseudostems"
+        typical_pricing_model: "hourly"
+        unit: "per_day"
+        typical_rate_range:
+          min: 600
+          max: 900
+          currency: "INR"
+
+  - slug: "tea"
+    name:
+      en: "Tea"
+      ml: "ചായ"
+    scientific_name: "Camellia sinensis"
+    icon: "tea-leaf"
+    seasonal_calendar:
+      harvesting_months: [3, 4, 5, 6, 7, 8, 9, 10, 11]  # Most of the year
+      peak_harvest: [4, 5, 9, 10]
+      planting_season: [6, 7, 8]
+      pruning_months: [12, 1, 2]
+    common_work_types:
+      - type: "plucking"
+        description: "Tea leaf plucking (two leaves and a bud)"
+        typical_pricing_model: "per_unit"
+        unit: "per_kg"
+        typical_rate_range:
+          min: 8
+          max: 15
+          currency: "INR"
+      - type: "pruning"
+        description: "Bush pruning and shaping"
+        typical_pricing_model: "hourly"
+        unit: "per_day"
+        typical_rate_range:
+          min: 600
+          max: 900
+          currency: "INR"
+      - type: "weeding"
+        description: "Manual and chemical weeding"
+        typical_pricing_model: "hourly"
+        unit: "per_day"
+        typical_rate_range:
+          min: 500
+          max: 800
+          currency: "INR"
+      - type: "spraying"
+        description: "Pesticide and fungicide spraying"
+        typical_pricing_model: "hourly"
+        unit: "per_day"
+        typical_rate_range:
+          min: 700
+          max: 1100
+          currency: "INR"
+
+  - slug: "coffee"
+    name:
+      en: "Coffee"
+      ml: "കാപ്പി"
+    scientific_name: "Coffea arabica / Coffea canephora"
+    icon: "coffee-bean"
+    seasonal_calendar:
+      harvesting_months: [11, 12, 1, 2, 3]
+      peak_harvest: [12, 1, 2]
+      flowering_months: [3, 4]
+      planting_season: [6, 7]
+    common_work_types:
+      - type: "harvesting"
+        description: "Picking ripe coffee cherries"
+        typical_pricing_model: "per_unit"
+        unit: "per_kg"
+        typical_rate_range:
+          min: 5
+          max: 12
+          currency: "INR"
+      - type: "pulping_processing"
+        description: "Pulping and wet processing of cherries"
+        typical_pricing_model: "per_unit"
+        unit: "per_kg"
+        typical_rate_range:
+          min: 3
+          max: 8
+          currency: "INR"
+      - type: "shade_management"
+        description: "Pruning shade trees and managing canopy"
+        typical_pricing_model: "hourly"
+        unit: "per_day"
+        typical_rate_range:
+          min: 700
+          max: 1000
+          currency: "INR"
+      - type: "de-suckering"
+        description: "Removing unwanted shoots from coffee plants"
+        typical_pricing_model: "hourly"
+        unit: "per_day"
+        typical_rate_range:
+          min: 600
+          max: 900
+          currency: "INR"
+
+  - slug: "arecanut"
+    name:
+      en: "Arecanut (Betel Nut)"
+      ml: "അടയ്ക്ക"
+    scientific_name: "Areca catechu"
+    icon: "areca-palm"
+    seasonal_calendar:
+      harvesting_months: [10, 11, 12, 1, 2, 3]
+      peak_harvest: [11, 12, 1]
+      flowering_months: [1, 2, 3]
+      planting_season: [6, 7]
+    common_work_types:
+      - type: "climbing_harvest"
+        description: "Palm climbing and bunch harvesting"
+        typical_pricing_model: "per_unit"
+        unit: "per_tree"
+        typical_rate_range:
+          min: 30
+          max: 70
+          currency: "INR"
+      - type: "dehusking"
+        description: "Removing husk from arecanut"
+        typical_pricing_model: "per_unit"
+        unit: "per_kg"
+        typical_rate_range:
+          min: 5
+          max: 10
+          currency: "INR"
+      - type: "drying"
+        description: "Sun drying and processing"
+        typical_pricing_model: "per_unit"
+        unit: "per_kg"
+        typical_rate_range:
+          min: 3
+          max: 8
+          currency: "INR"
+      - type: "fertilizer_application"
+        description: "Applying manure and fertilizer"
+        typical_pricing_model: "per_unit"
+        unit: "per_tree"
+        typical_rate_range:
+          min: 15
+          max: 40
+          currency: "INR"
+
+  - slug: "banana"
+    name:
+      en: "Banana"
+      ml: "വാഴ"
+    scientific_name: "Musa spp."
+    icon: "banana"
+    seasonal_calendar:
+      harvesting_months: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]  # Year-round
+      planting_season: [2, 3, 6, 7, 10, 11]  # Three crop seasons
+      fertilizer_schedule: [2, 4, 6, 8, 10, 12]
+    common_work_types:
+      - type: "planting"
+        description: "Pit digging and sucker planting"
+        typical_pricing_model: "per_unit"
+        unit: "per_plant"
+        typical_rate_range:
+          min: 10
+          max: 25
+          currency: "INR"
+      - type: "propping"
+        description: "Supporting heavy bunches with props"
+        typical_pricing_model: "per_unit"
+        unit: "per_plant"
+        typical_rate_range:
+          min: 5
+          max: 15
+          currency: "INR"
+      - type: "harvesting"
+        description: "Bunch cutting and handling"
+        typical_pricing_model: "per_unit"
+        unit: "per_bunch"
+        typical_rate_range:
+          min: 10
+          max: 30
+          currency: "INR"
+      - type: "de-suckering"
+        description: "Removing excess suckers"
+        typical_pricing_model: "hourly"
+        unit: "per_day"
+        typical_rate_range:
+          min: 500
+          max: 800
+          currency: "INR"
+
+  - slug: "rice"
+    name:
+      en: "Rice (Paddy)"
+      ml: "നെല്ല്"
+    scientific_name: "Oryza sativa"
+    icon: "rice-plant"
+    seasonal_calendar:
+      virippu:  # First crop season
+        sowing: [5, 6]
+        harvesting: [9, 10]
+      mundakan:  # Second crop season
+        sowing: [9, 10]
+        harvesting: [12, 1]
+      punja:  # Third crop season (limited areas)
+        sowing: [12, 1]
+        harvesting: [3, 4]
+    common_work_types:
+      - type: "ploughing"
+        description: "Field preparation with tractor or tiller"
+        typical_pricing_model: "per_sqft"
+        unit: "per_acre"
+        typical_rate_range:
+          min: 2000
+          max: 4000
+          currency: "INR"
+      - type: "transplanting"
+        description: "Seedling transplanting in puddled field"
+        typical_pricing_model: "hourly"
+        unit: "per_day"
+        typical_rate_range:
+          min: 600
+          max: 1000
+          currency: "INR"
+      - type: "harvesting_threshing"
+        description: "Mechanized or manual harvesting and threshing"
+        typical_pricing_model: "per_sqft"
+        unit: "per_acre"
+        typical_rate_range:
+          min: 3000
+          max: 6000
+          currency: "INR"
+      - type: "weeding"
+        description: "Manual and chemical weed management"
+        typical_pricing_model: "hourly"
+        unit: "per_day"
+        typical_rate_range:
+          min: 600
+          max: 900
+          currency: "INR"
+
+  - slug: "cashew"
+    name:
+      en: "Cashew"
+      ml: "കശുമാവ്"
+    scientific_name: "Anacardium occidentale"
+    icon: "cashew"
+    seasonal_calendar:
+      harvesting_months: [2, 3, 4, 5]
+      flowering_months: [12, 1, 2]
+      planting_season: [6, 7]
+      pruning_months: [9, 10]
+    common_work_types:
+      - type: "harvesting"
+        description: "Collecting fallen cashew apples and nuts"
+        typical_pricing_model: "hourly"
+        unit: "per_day"
+        typical_rate_range:
+          min: 500
+          max: 800
+          currency: "INR"
+      - type: "processing"
+        description: "Separating nut from apple, initial drying"
+        typical_pricing_model: "per_unit"
+        unit: "per_kg"
+        typical_rate_range:
+          min: 5
+          max: 12
+          currency: "INR"
+      - type: "pruning"
+        description: "Canopy management and dead wood removal"
+        typical_pricing_model: "hourly"
+        unit: "per_day"
+        typical_rate_range:
+          min: 600
+          max: 900
+          currency: "INR"
+      - type: "spraying"
+        description: "Tea mosquito and stem borer control"
+        typical_pricing_model: "per_unit"
+        unit: "per_tree"
+        typical_rate_range:
+          min: 20
+          max: 50
+          currency: "INR"
+
+  - slug: "nutmeg"
+    name:
+      en: "Nutmeg"
+      ml: "ജാതിക്ക"
+    scientific_name: "Myristica fragrans"
+    icon: "nutmeg"
+    seasonal_calendar:
+      harvesting_months: [6, 7, 8, 12, 1, 2]  # Two seasons
+      peak_harvest: [7, 8, 1, 2]
+      planting_season: [6, 7]
+    common_work_types:
+      - type: "harvesting"
+        description: "Picking mature nutmeg fruits"
+        typical_pricing_model: "hourly"
+        unit: "per_day"
+        typical_rate_range:
+          min: 600
+          max: 1000
+          currency: "INR"
+      - type: "processing"
+        description: "Separating mace, shell cracking, drying"
+        typical_pricing_model: "per_unit"
+        unit: "per_kg"
+        typical_rate_range:
+          min: 10
+          max: 20
+          currency: "INR"
+      - type: "tree_maintenance"
+        description: "Pruning and canopy management"
+        typical_pricing_model: "hourly"
+        unit: "per_day"
+        typical_rate_range:
+          min: 700
+          max: 1000
+          currency: "INR"
+
+  - slug: "jackfruit"
+    name:
+      en: "Jackfruit"
+      ml: "ചക്ക"
+    scientific_name: "Artocarpus heterophyllus"
+    icon: "jackfruit"
+    seasonal_calendar:
+      harvesting_months: [3, 4, 5, 6, 7]
+      peak_harvest: [4, 5, 6]
+      flowering_months: [12, 1, 2]
+    common_work_types:
+      - type: "harvesting"
+        description: "Picking ripe jackfruit from tree"
+        typical_pricing_model: "per_unit"
+        unit: "per_fruit"
+        typical_rate_range:
+          min: 20
+          max: 50
+          currency: "INR"
+      - type: "processing"
+        description: "Cutting, deseeding, and packing"
+        typical_pricing_model: "per_unit"
+        unit: "per_fruit"
+        typical_rate_range:
+          min: 30
+          max: 60
+          currency: "INR"
+      - type: "pruning"
+        description: "Branch pruning and crown management"
+        typical_pricing_model: "hourly"
+        unit: "per_day"
+        typical_rate_range:
+          min: 700
+          max: 1100
+          currency: "INR"
+
+  - slug: "mango"
+    name:
+      en: "Mango"
+      ml: "മാങ്ങ"
+    scientific_name: "Mangifera indica"
+    icon: "mango"
+    seasonal_calendar:
+      harvesting_months: [3, 4, 5, 6]
+      peak_harvest: [4, 5]
+      flowering_months: [12, 1, 2]
+      planting_season: [6, 7, 8]
+    common_work_types:
+      - type: "harvesting"
+        description: "Picking mangoes using long poles or climbing"
+        typical_pricing_model: "per_unit"
+        unit: "per_tree"
+        typical_rate_range:
+          min: 50
+          max: 200
+          currency: "INR"
+      - type: "spraying"
+        description: "Flowering spray and pest control"
+        typical_pricing_model: "per_unit"
+        unit: "per_tree"
+        typical_rate_range:
+          min: 30
+          max: 80
+          currency: "INR"
+      - type: "pruning"
+        description: "Post-harvest pruning and shape management"
+        typical_pricing_model: "hourly"
+        unit: "per_day"
+        typical_rate_range:
+          min: 600
+          max: 1000
+          currency: "INR"
+      - type: "grafting"
+        description: "Top-working and grafting superior varieties"
+        typical_pricing_model: "per_unit"
+        unit: "per_graft"
+        typical_rate_range:
+          min: 50
+          max: 150
+          currency: "INR"

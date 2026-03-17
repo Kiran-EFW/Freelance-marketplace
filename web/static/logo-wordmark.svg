@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 80" fill="none">
+  <!-- Icon (scaled down) -->
+  <circle cx="40" cy="40" r="35" fill="url(#wm-gradient)"/>
+  <path d="M24 40 C24 28, 32 22, 40 22" stroke="white" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+  <path d="M56 40 C56 28, 48 22, 40 22" stroke="white" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+  <path d="M24 40 C24 52, 32 58, 40 58" stroke="white" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+  <path d="M56 40 C56 52, 48 58, 40 58" stroke="white" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+  <circle cx="40" cy="22" r="2.5" fill="white"/>
+  <circle cx="40" cy="58" r="2.5" fill="white"/>
+  <circle cx="24" cy="40" r="2.5" fill="white"/>
+  <circle cx="56" cy="40" r="2.5" fill="white"/>
+  <circle cx="40" cy="40" r="4" fill="white"/>
+
+  <!-- Wordmark -->
+  <text x="90" y="52" font-family="system-ui, -apple-system, sans-serif" font-size="42" font-weight="700" fill="#1F2937">
+    Seva
+  </text>
+
+  <defs>
+    <linearGradient id="wm-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F97316"/>
+      <stop offset="50%" stop-color="#EA580C"/>
+      <stop offset="100%" stop-color="#C2410C"/>
+    </linearGradient>
+  </defs>
+</svg>

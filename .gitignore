@@ -1,0 +1,197 @@
+# =============================================================================
+# Go
+# =============================================================================
+# Binaries
+backend/bin/
+backend/server
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Go workspace file
+go.work.sum
+
+# Output of go coverage
+*.out
+coverage.html
+
+# Go vendor directory (if not vendoring)
+# backend/vendor/
+
+# Air live-reload temp directory
+backend/tmp/
+
+# =============================================================================
+# Node.js / SvelteKit
+# =============================================================================
+node_modules/
+web/node_modules/
+web/.svelte-kit/
+web/build/
+web/.vercel/
+web/.netlify/
+
+# npm
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# =============================================================================
+# Flutter / Dart
+# =============================================================================
+mobile/.dart_tool/
+mobile/.packages
+mobile/build/
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/android/.gradle/
+mobile/android/app/debug/
+mobile/android/app/profile/
+mobile/android/app/release/
+mobile/android/local.properties
+mobile/android/key.properties
+mobile/android/app/*.jks
+mobile/android/app/*.keystore
+mobile/ios/Pods/
+mobile/ios/.symlinks/
+mobile/ios/Flutter/Flutter.framework
+mobile/ios/Flutter/Flutter.podspec
+mobile/ios/Runner.xcworkspace/
+mobile/ios/ServiceDefinitions.json
+mobile/.pub-cache/
+mobile/.pub/
+mobile/pubspec.lock
+
+# =============================================================================
+# IDE & Editor Files
+# =============================================================================
+# VS Code
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+!.vscode/extensions.json
+
+# JetBrains (GoLand, WebStorm, IntelliJ)
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Vim
+*.swp
+*.swo
+*~
+.netrwhist
+
+# Emacs
+*~
+\#*\#
+*.elc
+.dir-locals.el
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# =============================================================================
+# Environment & Secrets
+# =============================================================================
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.staging
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+credentials.json
+service-account*.json
+secrets/
+
+# =============================================================================
+# Docker
+# =============================================================================
+docker-compose.override.yml
+infrastructure/docker/data/
+
+# =============================================================================
+# Database
+# =============================================================================
+*.sql.bak
+*.db
+*.sqlite
+*.sqlite3
+dump.rdb
+
+# =============================================================================
+# Build Outputs
+# =============================================================================
+dist/
+build/
+out/
+.next/
+.nuxt/
+.cache/
+tmp/
+
+# =============================================================================
+# Operating System
+# =============================================================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.Spotlight-V100
+.Trashes
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+.directory
+
+# =============================================================================
+# Miscellaneous
+# =============================================================================
+# Logs
+logs/
+*.log
+
+# Generated API clients
+generated/
+
+# OpenAPI generated docs (keep the spec, ignore generated output)
+api/generated/
+
+# Test artifacts
+coverage/
+.nyc_output/
+test-results/
+playwright-report/
+
+# Terraform
+infrastructure/terraform/.terraform/
+infrastructure/terraform/*.tfstate
+infrastructure/terraform/*.tfstate.backup
+infrastructure/terraform/*.tfvars
+!infrastructure/terraform/*.tfvars.example
+
+# Uploaded files (local dev)
+uploads/
+media/

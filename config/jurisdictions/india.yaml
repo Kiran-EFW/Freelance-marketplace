@@ -1,0 +1,36 @@
+jurisdiction:
+  id: "in"
+  name: "India"
+  default_language: "en"
+  supported_languages: ["en", "hi", "ml", "ta", "te", "kn", "bn", "mr", "gu", "pa"]
+  currency: "INR"
+  currency_symbol: "₹"
+  phone_prefix: "+91"
+  phone_format: "XXXXXXXXXX"
+  timezone: "Asia/Kolkata"
+
+  payment_gateways:
+    primary: "razorpay"
+    fallback: "paytm"
+
+  sms_providers:
+    primary: "msg91"
+    fallback: "twilio"
+
+  tax:
+    type: "GST"
+    rates:
+      standard: 18
+      reduced: 5
+    provider_threshold: 2000000  # INR 20 lakh - GST registration required
+
+  verification:
+    provider_required: ["aadhaar", "pan"]
+    company_required: ["gstin", "pan", "bank_account"]
+
+  categories_enabled: ["home-services", "professional-services", "crop-and-land", "automotive", "health-wellness", "education-tutoring", "events", "pet-services", "tech-services", "logistics"]
+
+  regulations:
+    max_cash_payment: 200000
+    invoice_required_above: 500
+    digital_payment_mandate: false

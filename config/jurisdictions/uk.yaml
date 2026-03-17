@@ -1,0 +1,127 @@
+# UK Jurisdiction Configuration
+# Governs currency, payment, verification, and compliance rules
+# for the United Kingdom market.
+
+jurisdiction:
+  code: GB
+  name: United Kingdom
+  timezone: Europe/London
+
+currency:
+  code: GBP
+  symbol: "\u00A3"
+  decimal_places: 2
+  min_job_value: 10.00
+  max_job_value: 50000.00
+  # VAT is added to platform fees, not to provider earnings
+  vat_rate: 0.20
+  vat_registration_threshold: 85000.00
+
+payment:
+  provider: stripe
+  stripe:
+    country: GB
+    supported_methods:
+      - card
+      - apple_pay
+      - google_pay
+      - bank_transfer
+    payout_schedule: weekly
+    payout_delay_days: 7
+    min_payout_amount: 10.00
+    platform_fee_percent: 12.0
+    stripe_fee_percent: 1.4
+    stripe_fee_fixed: 0.20
+
+verification:
+  provider: gov_uk_verify
+  kyc_required: true
+  kyc_methods:
+    - gov_uk_verify
+    - manual_document
+  required_documents:
+    individual:
+      - passport_or_driving_licence
+      - proof_of_address
+    business:
+      - companies_house_registration
+      - vat_certificate
+      - public_liability_insurance
+  background_check:
+    enabled: true
+    provider: dbs
+    check_type: basic  # basic, standard, or enhanced
+    validity_months: 36
+  right_to_work:
+    enabled: true
+    share_code_verification: true
+
+compliance:
+  # GDPR
+  data_protection:
+    regulation: GDPR
+    data_retention_months: 36
+    right_to_erasure: true
+    data_portability: true
+    cookie_consent_required: true
+    dpo_email: dpo@seva.app
+
+  # Trade-specific regulations
+  trade_regulations:
+    electrical:
+      certification_required: true
+      certifications:
+        - Part P (Building Regulations)
+        - 18th Edition Wiring Regulations (BS 7671)
+      body: NICEIC or NAPIT
+    gas:
+      certification_required: true
+      certifications:
+        - Gas Safe Register
+      verification_url: https://www.gassaferegister.co.uk
+    plumbing:
+      certification_required: false
+      recommended:
+        - WaterSafe approved
+        - CIPHE member
+    building:
+      certification_required: false
+      recommended:
+        - Federation of Master Builders
+        - NHBC registered
+
+  # Insurance requirements
+  insurance:
+    public_liability:
+      required: true
+      min_coverage: 1000000
+    professional_indemnity:
+      required: false
+      recommended_for:
+        - electrical
+        - gas
+        - structural
+
+languages:
+  primary: en
+  supported:
+    - en
+  sms_language: en
+
+contact:
+  support_phone: "+44 800 000 0000"
+  support_email: support-uk@seva.app
+  business_hours:
+    start: "08:00"
+    end: "20:00"
+    timezone: Europe/London
+    days: [1, 2, 3, 4, 5]  # Monday to Friday
+
+seo:
+  domain: seva.co.uk
+  default_city: London
+  currency_format: "{symbol}{amount}"
+  # UK-specific numbering: 1,000.00
+  number_format:
+    thousands_separator: ","
+    decimal_separator: "."

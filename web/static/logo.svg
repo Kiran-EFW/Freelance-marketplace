@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="90" fill="url(#gradient)" />
+
+  <!-- Inner connecting hands/arcs motif -->
+  <!-- Left arc (representing service seeker) -->
+  <path d="M60 100 C60 70, 80 55, 100 55" stroke="white" stroke-width="8" stroke-linecap="round" fill="none"/>
+  <!-- Right arc (representing service provider) -->
+  <path d="M140 100 C140 70, 120 55, 100 55" stroke="white" stroke-width="8" stroke-linecap="round" fill="none"/>
+  <!-- Left lower arc -->
+  <path d="M60 100 C60 130, 80 145, 100 145" stroke="white" stroke-width="8" stroke-linecap="round" fill="none"/>
+  <!-- Right lower arc -->
+  <path d="M140 100 C140 130, 120 145, 100 145" stroke="white" stroke-width="8" stroke-linecap="round" fill="none"/>
+
+  <!-- Connection dots at meeting points -->
+  <circle cx="100" cy="55" r="6" fill="white"/>
+  <circle cx="100" cy="145" r="6" fill="white"/>
+  <circle cx="60" cy="100" r="6" fill="white"/>
+  <circle cx="140" cy="100" r="6" fill="white"/>
+
+  <!-- Center dot - the platform -->
+  <circle cx="100" cy="100" r="10" fill="white"/>
+
+  <!-- Gradient definition -->
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F97316"/>
+      <stop offset="50%" stop-color="#EA580C"/>
+      <stop offset="100%" stop-color="#C2410C"/>
+    </linearGradient>
+  </defs>
+</svg>

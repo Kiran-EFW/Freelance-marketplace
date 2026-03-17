@@ -1,0 +1,4242 @@
+openapi: 3.1.0
+info:
+  title: Seva API
+  description: |
+    API specification for the Seva platform.
+    This is the single source of truth that generates Go server stubs,
+    SvelteKit TypeScript client, and Flutter Dart client.
+  version: 1.0.0
+  contact:
+    name: Platform Engineering
+    email: engineering@seva.io
+  license:
+    name: Proprietary
+    identifier: LicenseRef-Proprietary
+
+servers:
+  - url: http://localhost:8080
+    description: Local development
+  - url: https://api.staging.seva.io
+    description: Staging
+  - url: https://api.seva.io
+    description: Production
+
+tags:
+  - name: Health
+    description: Service health and readiness checks
+  - name: Auth
+    description: Authentication via OTP and JWT tokens
+  - name: Users
+    description: User profile management
+  - name: Providers
+    description: Service provider profiles, search, and availability
+  - name: Jobs
+    description: Job lifecycle — creation, quoting, acceptance, completion, and reviews
+  - name: Categories
+    description: Service categories and subcategories
+  - name: Payments
+    description: Payment creation, verification, and refunds
+  - name: Disputes
+    description: Dispute resolution workflow
+  - name: Reviews
+    description: Job reviews and provider ratings
+  - name: Notifications
+    description: User notifications and preferences
+  - name: Points
+    description: Gamification — points, levels, and leaderboards
+  - name: Routes
+    description: Route management for crop and land service workers
+  - name: Search
+    description: Provider, job, and category search
+  - name: Admin
+    description: Admin dashboard, user management, and analytics
+  - name: AI
+    description: AI-powered features — chat booking, photo analysis, translation
+
+security:
+  - BearerAuth: []
+
+paths:
+  # ---------------------------------------------------------------------------
+  # Health
+  # ---------------------------------------------------------------------------
+  /api/v1/health:
+    get:
+      operationId: healthCheck
+      summary: Health check
+      description: Returns the basic health status of the service.
+      tags: [Health]
+      security: []
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+              example:
+                status: ok
+                timestamp: "2026-03-17T10:00:00Z"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/health/ready:
+    get:
+      operationId: readinessCheck
+      summary: Readiness check
+      description: |
+        Returns whether the service is ready to accept traffic.
+        Checks database connectivity, cache, and downstream dependencies.
+      tags: [Health]
+      security: []
+      responses:
+        "200":
+          description: Service is ready
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReadinessResponse"
+              example:
+                status: ready
+                checks:
+                  database: ok
+                  cache: ok
+                timestamp: "2026-03-17T10:00:00Z"
+        "503":
+          description: Service is not ready
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ReadinessResponse"
+              example:
+                status: not_ready
+                checks:
+                  database: ok
+                  cache: failed
+                timestamp: "2026-03-17T10:00:00Z"
+
+  # ---------------------------------------------------------------------------
+  # Auth
+  # ---------------------------------------------------------------------------
+  /api/v1/auth/send-otp:
+    post:
+      operationId: sendOtp
+      summary: Send OTP to phone number
+      description: Sends a one-time password to the provided phone number for authentication.
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OTPRequest"
+            example:
+              phone: "+919876543210"
+              jurisdiction_id: "IN-KA"
+      responses:
+        "200":
+          description: OTP sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [message, expires_in]
+                properties:
+                  message:
+                    type: string
+                  expires_in:
+                    type: integer
+                    description: OTP validity in seconds
+              example:
+                message: OTP sent successfully
+                expires_in: 300
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/auth/verify-otp:
+    post:
+      operationId: verifyOtp
+      summary: Verify OTP and get JWT tokens
+      description: Verifies the OTP and returns access and refresh JWT tokens.
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OTPVerify"
+            example:
+              phone: "+919876543210"
+              otp: "482916"
+      responses:
+        "200":
+          description: OTP verified, tokens issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenResponse"
+              example:
+                access_token: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9...
+                refresh_token: dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4...
+                expires_in: 3600
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/auth/refresh:
+    post:
+      operationId: refreshToken
+      summary: Refresh access token
+      description: Issues a new access token using a valid refresh token.
+      tags: [Auth]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [refresh_token]
+              properties:
+                refresh_token:
+                  type: string
+                  description: The refresh token obtained from login
+            example:
+              refresh_token: dGhpcyBpcyBhIHJlZnJlc2ggdG9rZW4...
+      responses:
+        "200":
+          description: New tokens issued
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TokenResponse"
+              example:
+                access_token: eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.new...
+                refresh_token: dGhpcyBpcyBhIG5ldyByZWZyZXNoIHRva2Vu...
+                expires_in: 3600
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  # ---------------------------------------------------------------------------
+  # Users
+  # ---------------------------------------------------------------------------
+  /api/v1/users/me:
+    get:
+      operationId: getCurrentUser
+      summary: Get current user profile
+      description: Returns the profile of the currently authenticated user.
+      tags: [Users]
+      responses:
+        "200":
+          description: User profile retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+              example:
+                id: "usr_01HQXK5V8R3N0E7YGZM2PFWT4A"
+                type: customer
+                phone: "+919876543210"
+                email: priya@example.com
+                name: Priya Sharma
+                jurisdiction_id: "IN-KA"
+                preferred_language: en
+                device_type: android
+                created_at: "2026-01-15T08:30:00Z"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+    put:
+      operationId: updateCurrentUser
+      summary: Update current user profile
+      description: Updates the profile of the currently authenticated user.
+      tags: [Users]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdate"
+            example:
+              name: Priya S.
+              email: priya.s@example.com
+              preferred_language: kn
+      responses:
+        "200":
+          description: User profile updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/users/{id}:
+    get:
+      operationId: getUserById
+      summary: Get user by ID
+      description: Returns a user profile by ID. Restricted to admin users.
+      tags: [Users]
+      parameters:
+        - $ref: "#/components/parameters/UserIdPath"
+      responses:
+        "200":
+          description: User profile retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  # ---------------------------------------------------------------------------
+  # Providers
+  # ---------------------------------------------------------------------------
+  /api/v1/providers/register:
+    post:
+      operationId: registerProvider
+      summary: Register as provider
+      description: Registers the current user as a service provider.
+      tags: [Providers]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProviderRegistration"
+            example:
+              skills:
+                - plumbing
+                - pipe-fitting
+              service_radius_km: 15
+              postcode: "560001"
+              latitude: 12.9716
+              longitude: 77.5946
+      responses:
+        "201":
+          description: Provider registered successfully
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderProfile"
+              example:
+                user_id: "usr_01HQXK5V8R3N0E7YGZM2PFWT4A"
+                skills:
+                  - plumbing
+                  - pipe-fitting
+                service_radius_km: 15
+                postcode: "560001"
+                latitude: 12.9716
+                longitude: 77.5946
+                trust_score: 0.0
+                level: beginner
+                verification_status: pending
+                availability_schedule: {}
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/providers/{id}:
+    get:
+      operationId: getProvider
+      summary: Get provider profile
+      description: Returns a provider's public profile.
+      tags: [Providers]
+      parameters:
+        - $ref: "#/components/parameters/ProviderIdPath"
+      responses:
+        "200":
+          description: Provider profile retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderProfile"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+    put:
+      operationId: updateProvider
+      summary: Update provider profile
+      description: Updates a provider's profile. Only the provider themselves or an admin may update.
+      tags: [Providers]
+      parameters:
+        - $ref: "#/components/parameters/ProviderIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProviderUpdate"
+            example:
+              skills:
+                - plumbing
+                - pipe-fitting
+                - bathroom-renovation
+              service_radius_km: 20
+      responses:
+        "200":
+          description: Provider profile updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderProfile"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/providers/search:
+    get:
+      operationId: searchProviders
+      summary: Search providers
+      description: |
+        Search for service providers by location, category, skills, rating, and language.
+        At least one of `postcode` or (`latitude` + `longitude`) must be provided.
+      tags: [Providers]
+      parameters:
+        - name: postcode
+          in: query
+          description: Postcode / PIN code to search around
+          schema:
+            type: string
+          example: "560001"
+        - name: category
+          in: query
+          description: Category slug to filter by
+          schema:
+            type: string
+          example: plumbing
+        - name: latitude
+          in: query
+          description: Latitude of the search centre
+          schema:
+            type: number
+            format: double
+          example: 12.9716
+        - name: longitude
+          in: query
+          description: Longitude of the search centre
+          schema:
+            type: number
+            format: double
+          example: 77.5946
+        - name: radius
+          in: query
+          description: Search radius in kilometres (default 10)
+          schema:
+            type: number
+            format: double
+            default: 10
+          example: 15
+        - name: skills
+          in: query
+          description: Comma-separated list of skill slugs
+          schema:
+            type: string
+          example: pipe-fitting,leak-repair
+        - name: min_rating
+          in: query
+          description: Minimum average rating (1-5)
+          schema:
+            type: number
+            format: double
+            minimum: 1
+            maximum: 5
+          example: 4.0
+        - name: language
+          in: query
+          description: Preferred language code (ISO 639-1)
+          schema:
+            type: string
+          example: kn
+        - $ref: "#/components/parameters/PageQuery"
+        - $ref: "#/components/parameters/LimitQuery"
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PaginatedResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/ProviderProfile"
+              example:
+                data:
+                  - user_id: "usr_01HQXK5V8R3N0E7YGZM2PFWT4A"
+                    skills: [plumbing, pipe-fitting]
+                    service_radius_km: 15
+                    postcode: "560001"
+                    latitude: 12.9716
+                    longitude: 77.5946
+                    trust_score: 4.8
+                    level: expert
+                    verification_status: verified
+                    availability_schedule:
+                      monday: { start: "09:00", end: "18:00" }
+                total: 42
+                page: 1
+                limit: 20
+                has_more: true
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/providers/{id}/availability:
+    get:
+      operationId: getProviderAvailability
+      summary: Get provider availability
+      description: Returns the availability schedule for a provider.
+      tags: [Providers]
+      parameters:
+        - $ref: "#/components/parameters/ProviderIdPath"
+      responses:
+        "200":
+          description: Provider availability retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AvailabilitySchedule"
+              example:
+                monday: { start: "09:00", end: "18:00" }
+                tuesday: { start: "09:00", end: "18:00" }
+                wednesday: { start: "09:00", end: "18:00" }
+                thursday: { start: "09:00", end: "18:00" }
+                friday: { start: "09:00", end: "17:00" }
+                saturday: null
+                sunday: null
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+    put:
+      operationId: updateProviderAvailability
+      summary: Update provider availability
+      description: Updates the availability schedule for a provider.
+      tags: [Providers]
+      parameters:
+        - $ref: "#/components/parameters/ProviderIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AvailabilitySchedule"
+            example:
+              monday: { start: "09:00", end: "18:00" }
+              tuesday: { start: "09:00", end: "18:00" }
+              wednesday: { start: "09:00", end: "18:00" }
+              thursday: { start: "09:00", end: "18:00" }
+              friday: { start: "09:00", end: "17:00" }
+              saturday: { start: "10:00", end: "14:00" }
+              sunday: null
+      responses:
+        "200":
+          description: Availability updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AvailabilitySchedule"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  # ---------------------------------------------------------------------------
+  # Jobs
+  # ---------------------------------------------------------------------------
+  /api/v1/jobs:
+    post:
+      operationId: createJob
+      summary: Create a new job
+      description: Creates a new job request from a customer.
+      tags: [Jobs]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/JobCreate"
+            example:
+              category_id: "cat_plumbing"
+              postcode: "560001"
+              latitude: 12.9716
+              longitude: 77.5946
+              description: Kitchen sink leaking, need urgent repair
+              scheduled_at: "2026-03-20T10:00:00Z"
+              payment_method: online
+              is_recurring: false
+              jurisdiction_id: "IN-KA"
+      responses:
+        "201":
+          description: Job created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+              example:
+                id: "job_01HRZ3KFWBN9T1E7YGZM2PFWT4"
+                customer_id: "usr_01HQXK5V8R3N0E7YGZM2PFWT4A"
+                provider_id: null
+                category_id: "cat_plumbing"
+                postcode: "560001"
+                latitude: 12.9716
+                longitude: 77.5946
+                status: pending
+                description: Kitchen sink leaking, need urgent repair
+                scheduled_at: "2026-03-20T10:00:00Z"
+                quoted_price: null
+                final_price: null
+                currency: INR
+                payment_method: online
+                is_recurring: false
+                jurisdiction_id: "IN-KA"
+                created_at: "2026-03-17T10:00:00Z"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+    get:
+      operationId: listJobs
+      summary: List jobs
+      description: Lists jobs with optional filters. Customers see their own jobs; providers see jobs assigned to them; admins see all.
+      tags: [Jobs]
+      parameters:
+        - name: status
+          in: query
+          description: Filter by job status
+          schema:
+            $ref: "#/components/schemas/JobStatus"
+        - name: customer_id
+          in: query
+          description: Filter by customer ID (admin only)
+          schema:
+            type: string
+        - name: provider_id
+          in: query
+          description: Filter by provider ID
+          schema:
+            type: string
+        - name: category
+          in: query
+          description: Filter by category slug
+          schema:
+            type: string
+        - name: postcode
+          in: query
+          description: Filter by postcode
+          schema:
+            type: string
+        - $ref: "#/components/parameters/PageQuery"
+        - $ref: "#/components/parameters/LimitQuery"
+      responses:
+        "200":
+          description: Jobs retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PaginatedResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Job"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/jobs/{id}:
+    get:
+      operationId: getJob
+      summary: Get job details
+      description: Returns full details for a specific job.
+      tags: [Jobs]
+      parameters:
+        - $ref: "#/components/parameters/JobIdPath"
+      responses:
+        "200":
+          description: Job details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/jobs/{id}/status:
+    put:
+      operationId: updateJobStatus
+      summary: Update job status
+      description: Updates the status of a job. Valid transitions depend on the current status and user role.
+      tags: [Jobs]
+      parameters:
+        - $ref: "#/components/parameters/JobIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [status]
+              properties:
+                status:
+                  $ref: "#/components/schemas/JobStatus"
+                reason:
+                  type: string
+                  description: Optional reason for the status change
+            example:
+              status: cancelled
+              reason: Customer requested cancellation
+      responses:
+        "200":
+          description: Job status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/jobs/{id}/quote:
+    post:
+      operationId: submitQuote
+      summary: Submit a quote for a job
+      description: Allows a provider to submit a price quote for an open job.
+      tags: [Jobs]
+      parameters:
+        - $ref: "#/components/parameters/JobIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/QuoteRequest"
+            example:
+              amount: 1500.00
+              currency: INR
+              message: I can fix the leak within 2 hours. Parts included.
+              estimated_duration_minutes: 120
+      responses:
+        "201":
+          description: Quote submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Quote"
+              example:
+                id: "qte_01HRZFK8N4P7E3DYGZM2PFWT4B"
+                job_id: "job_01HRZ3KFWBN9T1E7YGZM2PFWT4"
+                provider_id: "usr_01HQXK5V8R3N0E7YGZM2PFWT4A"
+                amount: 1500.00
+                currency: INR
+                message: I can fix the leak within 2 hours. Parts included.
+                estimated_duration_minutes: 120
+                status: pending
+                created_at: "2026-03-17T11:00:00Z"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/jobs/{id}/accept:
+    post:
+      operationId: acceptJob
+      summary: Accept a job
+      description: A provider accepts an assigned or quoted job.
+      tags: [Jobs]
+      parameters:
+        - $ref: "#/components/parameters/JobIdPath"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                quote_id:
+                  type: string
+                  description: ID of the quote being accepted (if applicable)
+            example:
+              quote_id: "qte_01HRZFK8N4P7E3DYGZM2PFWT4B"
+      responses:
+        "200":
+          description: Job accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/jobs/{id}/complete:
+    post:
+      operationId: completeJob
+      summary: Mark job complete
+      description: Marks a job as completed. Typically called by the provider after finishing the work.
+      tags: [Jobs]
+      parameters:
+        - $ref: "#/components/parameters/JobIdPath"
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                final_price:
+                  type: number
+                  format: double
+                  description: Final price after completion (may differ from quote)
+                notes:
+                  type: string
+                  description: Completion notes
+            example:
+              final_price: 1500.00
+              notes: Replaced the washer and sealed the pipe joints.
+      responses:
+        "200":
+          description: Job marked as complete
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Job"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/jobs/{id}/review:
+    post:
+      operationId: submitReview
+      summary: Submit review for completed job
+      description: Submits a review for a completed job. Both customer and provider can submit reviews for each other.
+      tags: [Jobs]
+      parameters:
+        - $ref: "#/components/parameters/JobIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReviewCreate"
+            example:
+              rating: 5
+              comment: Excellent work! Fixed the leak quickly and cleaned up after.
+      responses:
+        "201":
+          description: Review submitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Review"
+              example:
+                id: "rev_01HS2NKFP3R7E3DYGZM2PFWT4C"
+                job_id: "job_01HRZ3KFWBN9T1E7YGZM2PFWT4"
+                reviewer_id: "usr_01HQXK5V8R3N0E7YGZM2PFWT4A"
+                reviewee_id: "usr_01HQXK5V8R3N0E7YGZM2PFWT4B"
+                rating: 5
+                comment: Excellent work! Fixed the leak quickly and cleaned up after.
+                created_at: "2026-03-17T15:00:00Z"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  # ---------------------------------------------------------------------------
+  # Categories
+  # ---------------------------------------------------------------------------
+  /api/v1/categories:
+    get:
+      operationId: listCategories
+      summary: List all active categories
+      description: Returns all active top-level service categories.
+      tags: [Categories]
+      security: []
+      responses:
+        "200":
+          description: Categories retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+              example:
+                - id: "cat_plumbing"
+                  slug: plumbing
+                  name: Plumbing
+                  parent_id: null
+                  icon: wrench
+                  is_active: true
+                  requires_license: true
+                - id: "cat_electrical"
+                  slug: electrical
+                  name: Electrical
+                  parent_id: null
+                  icon: zap
+                  is_active: true
+                  requires_license: true
+                - id: "cat_cleaning"
+                  slug: cleaning
+                  name: Cleaning
+                  parent_id: null
+                  icon: sparkles
+                  is_active: true
+                  requires_license: false
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/categories/{slug}:
+    get:
+      operationId: getCategoryBySlug
+      summary: Get category by slug
+      description: Returns a single category by its URL-friendly slug.
+      tags: [Categories]
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/CategorySlugPath"
+      responses:
+        "200":
+          description: Category retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+              example:
+                id: "cat_plumbing"
+                slug: plumbing
+                name: Plumbing
+                parent_id: null
+                icon: wrench
+                is_active: true
+                requires_license: true
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/categories/{slug}/subcategories:
+    get:
+      operationId: listSubcategories
+      summary: List subcategories
+      description: Returns all active subcategories under the specified parent category.
+      tags: [Categories]
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/CategorySlugPath"
+      responses:
+        "200":
+          description: Subcategories retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+              example:
+                - id: "cat_leak_repair"
+                  slug: leak-repair
+                  name: Leak Repair
+                  parent_id: "cat_plumbing"
+                  icon: droplet
+                  is_active: true
+                  requires_license: true
+                - id: "cat_pipe_fitting"
+                  slug: pipe-fitting
+                  name: Pipe Fitting
+                  parent_id: "cat_plumbing"
+                  icon: cylinder
+                  is_active: true
+                  requires_license: true
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  # ---------------------------------------------------------------------------
+  # Payments
+  # ---------------------------------------------------------------------------
+  /api/v1/payments/create-order:
+    post:
+      operationId: createPaymentOrder
+      summary: Create payment order
+      description: Creates a payment order for a job. Returns gateway-specific details needed to complete the payment on the client.
+      tags: [Payments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [job_id, amount, currency]
+              properties:
+                job_id:
+                  type: string
+                  description: ID of the job being paid for
+                amount:
+                  type: number
+                  format: double
+                  description: Payment amount
+                currency:
+                  type: string
+                  description: ISO 4217 currency code
+                  default: INR
+            example:
+              job_id: "job_01HRZ3KFWBN9T1E7YGZM2PFWT4"
+              amount: 1500.00
+              currency: INR
+      responses:
+        "201":
+          description: Payment order created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+              example:
+                id: "pay_01HS5MKFP3R7E3DYGZM2PFWT4D"
+                job_id: "job_01HRZ3KFWBN9T1E7YGZM2PFWT4"
+                amount: 1500.00
+                currency: INR
+                status: created
+                gateway_ref: "order_PmQ7R8sTuVwXyZ"
+                created_at: "2026-03-17T12:00:00Z"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/payments/verify:
+    post:
+      operationId: verifyPayment
+      summary: Verify payment
+      description: Verifies a payment after the client completes the gateway flow. Validates the payment signature and updates status.
+      tags: [Payments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [payment_id, gateway_ref, gateway_signature]
+              properties:
+                payment_id:
+                  type: string
+                  description: Internal payment ID
+                gateway_ref:
+                  type: string
+                  description: Payment gateway reference / order ID
+                gateway_signature:
+                  type: string
+                  description: Signature from the payment gateway for verification
+            example:
+              payment_id: "pay_01HS5MKFP3R7E3DYGZM2PFWT4D"
+              gateway_ref: "order_PmQ7R8sTuVwXyZ"
+              gateway_signature: "a1b2c3d4e5f6..."
+      responses:
+        "200":
+          description: Payment verified
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+              example:
+                id: "pay_01HS5MKFP3R7E3DYGZM2PFWT4D"
+                job_id: "job_01HRZ3KFWBN9T1E7YGZM2PFWT4"
+                amount: 1500.00
+                currency: INR
+                status: captured
+                gateway_ref: "order_PmQ7R8sTuVwXyZ"
+                created_at: "2026-03-17T12:00:00Z"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/payments/{id}:
+    get:
+      operationId: getPayment
+      summary: Get payment details
+      description: Returns details for a specific payment.
+      tags: [Payments]
+      parameters:
+        - $ref: "#/components/parameters/PaymentIdPath"
+      responses:
+        "200":
+          description: Payment details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/payments/refund:
+    post:
+      operationId: requestRefund
+      summary: Request refund
+      description: Initiates a refund for a captured payment. Partial refunds are supported.
+      tags: [Payments]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [payment_id, amount, reason]
+              properties:
+                payment_id:
+                  type: string
+                  description: ID of the payment to refund
+                amount:
+                  type: number
+                  format: double
+                  description: Refund amount (may be partial)
+                reason:
+                  type: string
+                  description: Reason for the refund
+            example:
+              payment_id: "pay_01HS5MKFP3R7E3DYGZM2PFWT4D"
+              amount: 1500.00
+              reason: Job cancelled by customer before provider arrived
+      responses:
+        "200":
+          description: Refund initiated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Payment"
+              example:
+                id: "pay_01HS5MKFP3R7E3DYGZM2PFWT4D"
+                job_id: "job_01HRZ3KFWBN9T1E7YGZM2PFWT4"
+                amount: 1500.00
+                currency: INR
+                status: refunded
+                gateway_ref: "order_PmQ7R8sTuVwXyZ"
+                created_at: "2026-03-17T12:00:00Z"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  # ---------------------------------------------------------------------------
+  # Disputes
+  # ---------------------------------------------------------------------------
+  /api/v1/disputes:
+    post:
+      operationId: raiseDispute
+      summary: Raise a dispute
+      description: Raises a dispute against a job. Either customer or provider can raise a dispute.
+      tags: [Disputes]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DisputeCreate"
+            example:
+              job_id: "job_01HRZ3KFWBN9T1E7YGZM2PFWT4"
+              type: quality
+              severity_tier: medium
+              description: The repair was not done properly. Leak reappeared within 24 hours.
+              evidence:
+                - type: photo
+                  url: https://storage.seva.io/evidence/img_001.jpg
+                - type: text
+                  content: Provider left without testing the fix.
+      responses:
+        "201":
+          description: Dispute raised
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dispute"
+              example:
+                id: "dsp_01HS8PKFP3R7E3DYGZM2PFWT4E"
+                job_id: "job_01HRZ3KFWBN9T1E7YGZM2PFWT4"
+                raised_by: "usr_01HQXK5V8R3N0E7YGZM2PFWT4A"
+                type: quality
+                severity_tier: medium
+                status: open
+                description: The repair was not done properly. Leak reappeared within 24 hours.
+                resolution: null
+                evidence:
+                  - type: photo
+                    url: https://storage.seva.io/evidence/img_001.jpg
+                  - type: text
+                    content: Provider left without testing the fix.
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/disputes/{id}:
+    get:
+      operationId: getDispute
+      summary: Get dispute details
+      description: Returns full details for a specific dispute.
+      tags: [Disputes]
+      parameters:
+        - $ref: "#/components/parameters/DisputeIdPath"
+      responses:
+        "200":
+          description: Dispute details retrieved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dispute"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/disputes/{id}/respond:
+    put:
+      operationId: respondToDispute
+      summary: Respond to dispute
+      description: Allows the other party (or admin) to respond to a dispute with their side of the story and evidence.
+      tags: [Disputes]
+      parameters:
+        - $ref: "#/components/parameters/DisputeIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [response]
+              properties:
+                response:
+                  type: string
+                  description: Response text
+                evidence:
+                  type: array
+                  items:
+                    $ref: "#/components/schemas/Evidence"
+                  description: Supporting evidence
+            example:
+              response: I tested the pipe before leaving. The leak may be from a different joint. See attached photo.
+              evidence:
+                - type: photo
+                  url: https://storage.seva.io/evidence/img_002.jpg
+      responses:
+        "200":
+          description: Response recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dispute"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  /api/v1/disputes/{id}/escalate:
+    put:
+      operationId: escalateDispute
+      summary: Escalate dispute
+      description: Escalates a dispute to a higher severity tier or to admin review.
+      tags: [Disputes]
+      parameters:
+        - $ref: "#/components/parameters/DisputeIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+                  description: Reason for escalation
+                severity_tier:
+                  $ref: "#/components/schemas/SeverityTier"
+            example:
+              reason: Provider is unresponsive and dispute has not been resolved for 5 days.
+              severity_tier: high
+      responses:
+        "200":
+          description: Dispute escalated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dispute"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/UnprocessableEntity"
+        "500":
+          $ref: "#/components/responses/InternalServerError"
+
+  # ---------------------------------------------------------------------------
+  # Reviews
+  # ---------------------------------------------------------------------------
+  /api/v1/reviews:
+    get:
+      operationId: listReviews
+      summary: List reviews for current user
+      description: Lists reviews written by or about the current user.
+      tags: [Reviews]
+      parameters:
+        - name: role
+          in: query
+          description: Filter by role in the review (reviewer or reviewee)
+          schema:
+            type: string
+            enum: [reviewer, reviewee]
+        - $ref: "#/components/parameters/PageQuery"
+        - $ref: "#/components/parameters/LimitQuery"
+      responses:
+        "200":
+          description: Reviews retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PaginatedResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Review"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/reviews/{id}/respond:
+    post:
+      operationId: respondToReview
+      summary: Respond to a review
+      description: Allows a provider to respond to a review left by a customer.
+      tags: [Reviews]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [response]
+              properties:
+                response:
+                  type: string
+                  maxLength: 1000
+      responses:
+        "200":
+          description: Response recorded
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Review"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/providers/{id}/reviews:
+    get:
+      operationId: listProviderReviews
+      summary: List reviews for a provider
+      tags: [Reviews]
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/ProviderIdPath"
+        - $ref: "#/components/parameters/PageQuery"
+        - $ref: "#/components/parameters/LimitQuery"
+      responses:
+        "200":
+          description: Provider reviews retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PaginatedResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Review"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/providers/{id}/ratings:
+    get:
+      operationId: getProviderRatingStats
+      summary: Get provider rating statistics
+      tags: [Reviews]
+      security: []
+      parameters:
+        - $ref: "#/components/parameters/ProviderIdPath"
+      responses:
+        "200":
+          description: Rating statistics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RatingStats"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ---------------------------------------------------------------------------
+  # Notifications
+  # ---------------------------------------------------------------------------
+  /api/v1/notifications:
+    get:
+      operationId: listNotifications
+      summary: List notifications
+      description: Returns paginated notifications for the current user, unread first.
+      tags: [Notifications]
+      parameters:
+        - name: unread_only
+          in: query
+          schema:
+            type: boolean
+            default: false
+        - $ref: "#/components/parameters/PageQuery"
+        - $ref: "#/components/parameters/LimitQuery"
+      responses:
+        "200":
+          description: Notifications retrieved
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PaginatedResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Notification"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/notifications/count:
+    get:
+      operationId: getUnreadNotificationCount
+      summary: Get unread notification count
+      tags: [Notifications]
+      responses:
+        "200":
+          description: Unread count
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  count:
+                    type: integer
+              example:
+                count: 5
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/notifications/{id}/read:
+    patch:
+      operationId: markNotificationRead
+      summary: Mark notification as read
+      tags: [Notifications]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Marked as read
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/notifications/read-all:
+    post:
+      operationId: markAllNotificationsRead
+      summary: Mark all notifications as read
+      tags: [Notifications]
+      responses:
+        "200":
+          description: All marked as read
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  updated:
+                    type: integer
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/notifications/preferences:
+    put:
+      operationId: updateNotificationPreferences
+      summary: Update notification preferences
+      tags: [Notifications]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationPreferences"
+      responses:
+        "200":
+          description: Preferences updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationPreferences"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  # ---------------------------------------------------------------------------
+  # Gamification / Points
+  # ---------------------------------------------------------------------------
+  /api/v1/points:
+    get:
+      operationId: getPointsBalance
+      summary: Get current points balance
+      tags: [Points]
+      responses:
+        "200":
+          description: Points balance
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PointsBalance"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/points/history:
+    get:
+      operationId: getPointsHistory
+      summary: Get points transaction history
+      tags: [Points]
+      parameters:
+        - $ref: "#/components/parameters/PageQuery"
+        - $ref: "#/components/parameters/LimitQuery"
+      responses:
+        "200":
+          description: Points history
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PaginatedResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/PointsEntry"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/points/level:
+    get:
+      operationId: getUserLevel
+      summary: Get user level and progress
+      tags: [Points]
+      responses:
+        "200":
+          description: Level details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserLevel"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/points/leaderboard:
+    get:
+      operationId: getLeaderboard
+      summary: Get postcode leaderboard
+      tags: [Points]
+      parameters:
+        - name: postcode
+          in: query
+          required: true
+          schema:
+            type: string
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+            maximum: 50
+      responses:
+        "200":
+          description: Leaderboard entries
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/LeaderboardEntry"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/points/spend:
+    post:
+      operationId: spendPoints
+      summary: Spend points
+      tags: [Points]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [amount, purpose]
+              properties:
+                amount:
+                  type: integer
+                  minimum: 1
+                purpose:
+                  type: string
+                  enum: [boost, badge, premium_listing]
+      responses:
+        "200":
+          description: Points spent
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PointsBalance"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  # ---------------------------------------------------------------------------
+  # Routes (Crop / Land Service Management)
+  # ---------------------------------------------------------------------------
+  /api/v1/routes:
+    get:
+      operationId: listRoutes
+      summary: List provider's routes
+      tags: [Routes]
+      responses:
+        "200":
+          description: Routes retrieved
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Route"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+    post:
+      operationId: createRoute
+      summary: Create a new route
+      description: Creates a new service route for a provider. Used by crop and land service workers.
+      tags: [Routes]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RouteCreate"
+      responses:
+        "201":
+          description: Route created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Route"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/routes/{id}:
+    get:
+      operationId: getRoute
+      summary: Get route details with stops
+      tags: [Routes]
+      parameters:
+        - $ref: "#/components/parameters/RouteIdPath"
+      responses:
+        "200":
+          description: Route details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RouteDetail"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/routes/{id}/stops:
+    post:
+      operationId: addRouteStop
+      summary: Add a stop to a route
+      tags: [Routes]
+      parameters:
+        - $ref: "#/components/parameters/RouteIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RouteStopCreate"
+      responses:
+        "201":
+          description: Stop added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RouteStop"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/routes/{id}/stops/{stopId}:
+    delete:
+      operationId: removeRouteStop
+      summary: Remove a stop from a route
+      tags: [Routes]
+      parameters:
+        - $ref: "#/components/parameters/RouteIdPath"
+        - name: stopId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "204":
+          description: Stop removed
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/routes/{id}/optimize:
+    post:
+      operationId: optimizeRoute
+      summary: Optimize route stop order
+      description: Reorders stops by geographic proximity for efficient travel.
+      tags: [Routes]
+      parameters:
+        - $ref: "#/components/parameters/RouteIdPath"
+      responses:
+        "200":
+          description: Route optimized
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RouteDetail"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/routes/schedule:
+    get:
+      operationId: getWeeklySchedule
+      summary: Get weekly visit schedule
+      description: Returns all scheduled visits for the current week.
+      tags: [Routes]
+      responses:
+        "200":
+          description: Weekly schedule
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ScheduledVisit"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/routes/request:
+    post:
+      operationId: requestRouteService
+      summary: Request to be added to a route
+      description: Customer requests a provider to add them to an existing route.
+      tags: [Routes]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [route_id, address, latitude, longitude]
+              properties:
+                route_id:
+                  type: string
+                address:
+                  type: string
+                latitude:
+                  type: number
+                  format: double
+                longitude:
+                  type: number
+                  format: double
+                tree_count:
+                  type: integer
+                area_sqft:
+                  type: number
+                notes:
+                  type: string
+      responses:
+        "201":
+          description: Request submitted
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  # ---------------------------------------------------------------------------
+  # Search
+  # ---------------------------------------------------------------------------
+  /api/v1/search/providers:
+    get:
+      operationId: searchProvidersGlobal
+      summary: Search providers
+      description: Full-text and geo search across providers using Meilisearch.
+      tags: [Search]
+      security: []
+      parameters:
+        - name: q
+          in: query
+          description: Search query text
+          schema:
+            type: string
+        - name: postcode
+          in: query
+          schema:
+            type: string
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: lat
+          in: query
+          schema:
+            type: number
+            format: double
+        - name: lng
+          in: query
+          schema:
+            type: number
+            format: double
+        - name: radius_km
+          in: query
+          schema:
+            type: number
+            default: 10
+        - name: min_rating
+          in: query
+          schema:
+            type: number
+            minimum: 1
+            maximum: 5
+        - name: sort_by
+          in: query
+          schema:
+            type: string
+            enum: [relevance, distance, rating, price]
+            default: relevance
+        - $ref: "#/components/parameters/PageQuery"
+        - $ref: "#/components/parameters/LimitQuery"
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PaginatedResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/ProviderSearchResult"
+
+  /api/v1/search/jobs:
+    get:
+      operationId: searchJobsGlobal
+      summary: Search available jobs
+      description: Providers search for available jobs near them.
+      tags: [Search]
+      parameters:
+        - name: postcode
+          in: query
+          schema:
+            type: string
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: lat
+          in: query
+          schema:
+            type: number
+            format: double
+        - name: lng
+          in: query
+          schema:
+            type: number
+            format: double
+        - name: radius_km
+          in: query
+          schema:
+            type: number
+            default: 15
+        - $ref: "#/components/parameters/PageQuery"
+        - $ref: "#/components/parameters/LimitQuery"
+      responses:
+        "200":
+          description: Job search results
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PaginatedResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Job"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/search/categories:
+    get:
+      operationId: searchCategories
+      summary: Search categories
+      description: Autocomplete search across categories.
+      tags: [Search]
+      security: []
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        "200":
+          description: Category matches
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Category"
+
+  # ---------------------------------------------------------------------------
+  # Provider Dashboard
+  # ---------------------------------------------------------------------------
+  /api/v1/providers/me/dashboard:
+    get:
+      operationId: getProviderDashboard
+      summary: Get provider dashboard data
+      tags: [Providers]
+      responses:
+        "200":
+          description: Dashboard data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProviderDashboard"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/providers/me/earnings:
+    get:
+      operationId: getProviderEarnings
+      summary: Get provider earnings
+      tags: [Providers]
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [daily, weekly, monthly]
+            default: monthly
+      responses:
+        "200":
+          description: Earnings data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EarningsReport"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/providers/me/kyc:
+    post:
+      operationId: uploadKYCDocument
+      summary: Upload KYC verification document
+      tags: [Providers]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [document_type, file]
+              properties:
+                document_type:
+                  type: string
+                  enum: [aadhaar, pan, driving_license, passport, selfie]
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "201":
+          description: Document uploaded
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  # ---------------------------------------------------------------------------
+  # Payment History & Webhooks
+  # ---------------------------------------------------------------------------
+  /api/v1/payments/history:
+    get:
+      operationId: getPaymentHistory
+      summary: Get payment history
+      tags: [Payments]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/PaymentStatus"
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date
+        - $ref: "#/components/parameters/PageQuery"
+        - $ref: "#/components/parameters/LimitQuery"
+      responses:
+        "200":
+          description: Payment history
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PaginatedResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Payment"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /webhooks/payments:
+    post:
+      operationId: paymentWebhook
+      summary: Payment gateway webhook
+      description: Receives payment status updates from payment gateways. Verified by gateway signature.
+      tags: [Payments]
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        "200":
+          description: Webhook processed
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  # ---------------------------------------------------------------------------
+  # Admin
+  # ---------------------------------------------------------------------------
+  /api/v1/admin/stats:
+    get:
+      operationId: getAdminStats
+      summary: Get platform statistics
+      tags: [Admin]
+      responses:
+        "200":
+          description: Platform stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminStats"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/admin/users:
+    get:
+      operationId: adminListUsers
+      summary: List all users
+      tags: [Admin]
+      parameters:
+        - name: type
+          in: query
+          schema:
+            $ref: "#/components/schemas/UserType"
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [active, suspended, deactivated]
+        - name: q
+          in: query
+          description: Search by name or phone
+          schema:
+            type: string
+        - $ref: "#/components/parameters/PageQuery"
+        - $ref: "#/components/parameters/LimitQuery"
+      responses:
+        "200":
+          description: Users list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PaginatedResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/User"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/admin/users/{id}/suspend:
+    post:
+      operationId: suspendUser
+      summary: Suspend a user
+      tags: [Admin]
+      parameters:
+        - $ref: "#/components/parameters/UserIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: User suspended
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/admin/kyc/pending:
+    get:
+      operationId: listPendingKYC
+      summary: List pending KYC verifications
+      tags: [Admin]
+      parameters:
+        - $ref: "#/components/parameters/PageQuery"
+        - $ref: "#/components/parameters/LimitQuery"
+      responses:
+        "200":
+          description: Pending KYC list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PaginatedResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/KYCDocument"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/admin/kyc/{id}/approve:
+    post:
+      operationId: approveKYC
+      summary: Approve KYC document
+      tags: [Admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: KYC approved
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/admin/kyc/{id}/reject:
+    post:
+      operationId: rejectKYC
+      summary: Reject KYC document
+      tags: [Admin]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [reason]
+              properties:
+                reason:
+                  type: string
+      responses:
+        "200":
+          description: KYC rejected
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/admin/disputes:
+    get:
+      operationId: adminListDisputes
+      summary: List all disputes
+      tags: [Admin]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/DisputeStatus"
+        - name: severity
+          in: query
+          schema:
+            $ref: "#/components/schemas/SeverityTier"
+        - $ref: "#/components/parameters/PageQuery"
+        - $ref: "#/components/parameters/LimitQuery"
+      responses:
+        "200":
+          description: Disputes list
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: "#/components/schemas/PaginatedResponse"
+                  - type: object
+                    properties:
+                      data:
+                        type: array
+                        items:
+                          $ref: "#/components/schemas/Dispute"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/admin/disputes/{id}/resolve:
+    post:
+      operationId: adminResolveDispute
+      summary: Resolve a dispute
+      tags: [Admin]
+      parameters:
+        - $ref: "#/components/parameters/DisputeIdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [resolution, resolution_type]
+              properties:
+                resolution:
+                  type: string
+                resolution_type:
+                  type: string
+                  enum: [refund_full, refund_partial, no_action, warning, suspension]
+                refund_amount:
+                  type: number
+                  format: double
+      responses:
+        "200":
+          description: Dispute resolved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Dispute"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/admin/analytics:
+    get:
+      operationId: getAdminAnalytics
+      summary: Get analytics data
+      tags: [Admin]
+      parameters:
+        - name: period
+          in: query
+          schema:
+            type: string
+            enum: [7d, 30d, 90d, 1y]
+            default: 30d
+      responses:
+        "200":
+          description: Analytics data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AnalyticsData"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/admin/categories:
+    post:
+      operationId: adminCreateCategory
+      summary: Create a category
+      tags: [Admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [slug, name]
+              properties:
+                slug:
+                  type: string
+                name:
+                  type: string
+                parent_id:
+                  type: string
+                icon:
+                  type: string
+                requires_license:
+                  type: boolean
+                  default: false
+      responses:
+        "201":
+          description: Category created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Category"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  # ---------------------------------------------------------------------------
+  # AI
+  # ---------------------------------------------------------------------------
+  /api/v1/ai/chat:
+    post:
+      operationId: aiChatBooking
+      summary: Conversational booking
+      description: AI-powered conversational interface for booking services.
+      tags: [AI]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [message]
+              properties:
+                message:
+                  type: string
+                  description: User message
+                conversation_id:
+                  type: string
+                  description: Conversation ID for context continuity
+      responses:
+        "200":
+          description: AI response
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AIChatResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/ai/photo:
+    post:
+      operationId: aiAnalyzePhoto
+      summary: Analyze photo for job creation
+      description: Uses computer vision to identify the issue and suggest service category.
+      tags: [AI]
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [photo]
+              properties:
+                photo:
+                  type: string
+                  format: binary
+                context:
+                  type: string
+                  description: Additional context from the user
+      responses:
+        "200":
+          description: Analysis result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PhotoAnalysis"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/ai/translate:
+    post:
+      operationId: aiTranslate
+      summary: Translate text
+      description: Translates text between supported languages.
+      tags: [AI]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text, target_language]
+              properties:
+                text:
+                  type: string
+                source_language:
+                  type: string
+                  description: Source language code (auto-detected if omitted)
+                target_language:
+                  type: string
+                  description: Target language code
+      responses:
+        "200":
+          description: Translation result
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  translated_text:
+                    type: string
+                  source_language:
+                    type: string
+                  target_language:
+                    type: string
+                  confidence:
+                    type: number
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /api/v1/ai/price-estimate:
+    post:
+      operationId: aiPriceEstimate
+      summary: Get AI price estimate
+      description: Returns fair price range for a service based on category, location, and historical data.
+      tags: [AI]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [category_id, postcode]
+              properties:
+                category_id:
+                  type: string
+                postcode:
+                  type: string
+                description:
+                  type: string
+      responses:
+        "200":
+          description: Price estimate
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PriceEstimate"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+# =============================================================================
+# Components
+# =============================================================================
+components:
+  # ---------------------------------------------------------------------------
+  # Security Schemes
+  # ---------------------------------------------------------------------------
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT access token obtained from the /auth/verify-otp or /auth/refresh endpoints.
+
+  # ---------------------------------------------------------------------------
+  # Reusable Parameters
+  # ---------------------------------------------------------------------------
+  parameters:
+    UserIdPath:
+      name: id
+      in: path
+      required: true
+      description: User ID
+      schema:
+        type: string
+      example: "usr_01HQXK5V8R3N0E7YGZM2PFWT4A"
+
+    ProviderIdPath:
+      name: id
+      in: path
+      required: true
+      description: Provider (user) ID
+      schema:
+        type: string
+      example: "usr_01HQXK5V8R3N0E7YGZM2PFWT4A"
+
+    JobIdPath:
+      name: id
+      in: path
+      required: true
+      description: Job ID
+      schema:
+        type: string
+      example: "job_01HRZ3KFWBN9T1E7YGZM2PFWT4"
+
+    PaymentIdPath:
+      name: id
+      in: path
+      required: true
+      description: Payment ID
+      schema:
+        type: string
+      example: "pay_01HS5MKFP3R7E3DYGZM2PFWT4D"
+
+    DisputeIdPath:
+      name: id
+      in: path
+      required: true
+      description: Dispute ID
+      schema:
+        type: string
+      example: "dsp_01HS8PKFP3R7E3DYGZM2PFWT4E"
+
+    CategorySlugPath:
+      name: slug
+      in: path
+      required: true
+      description: Category URL slug
+      schema:
+        type: string
+      example: plumbing
+
+    RouteIdPath:
+      name: id
+      in: path
+      required: true
+      description: Route ID
+      schema:
+        type: string
+      example: "rte_01HT2NKFP3R7E3DYGZM2PFWT4F"
+
+    ReviewIdPath:
+      name: id
+      in: path
+      required: true
+      description: Review ID
+      schema:
+        type: string
+      example: "rev_01HS2NKFP3R7E3DYGZM2PFWT4C"
+
+    NotificationIdPath:
+      name: id
+      in: path
+      required: true
+      description: Notification ID
+      schema:
+        type: string
+      example: "ntf_01HT5PKFP3R7E3DYGZM2PFWT4G"
+
+    PageQuery:
+      name: page
+      in: query
+      description: Page number (1-indexed)
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+      example: 1
+
+    LimitQuery:
+      name: limit
+      in: query
+      description: Number of items per page
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+      example: 20
+
+  # ---------------------------------------------------------------------------
+  # Reusable Responses
+  # ---------------------------------------------------------------------------
+  responses:
+    BadRequest:
+      description: Bad request — invalid input or missing required fields
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error: BAD_REQUEST
+            message: Invalid request parameters
+            details:
+              - field: phone
+                message: Phone number must include country code
+
+    Unauthorized:
+      description: Unauthorized — missing or invalid authentication token
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error: UNAUTHORIZED
+            message: Authentication required
+            details: null
+
+    Forbidden:
+      description: Forbidden — insufficient permissions for the requested action
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error: FORBIDDEN
+            message: You do not have permission to perform this action
+            details: null
+
+    NotFound:
+      description: Not found — the requested resource does not exist
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error: NOT_FOUND
+            message: Resource not found
+            details: null
+
+    UnprocessableEntity:
+      description: Unprocessable entity — the request is well-formed but semantically invalid
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error: UNPROCESSABLE_ENTITY
+            message: Validation failed
+            details:
+              - field: rating
+                message: Rating must be between 1 and 5
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+          example:
+            error: INTERNAL_SERVER_ERROR
+            message: An unexpected error occurred
+            details: null
+
+  # ---------------------------------------------------------------------------
+  # Schemas
+  # ---------------------------------------------------------------------------
+  schemas:
+    # --- Health ---
+    HealthResponse:
+      type: object
+      required: [status, timestamp]
+      properties:
+        status:
+          type: string
+          enum: [ok, degraded]
+        timestamp:
+          type: string
+          format: date-time
+
+    ReadinessResponse:
+      type: object
+      required: [status, checks, timestamp]
+      properties:
+        status:
+          type: string
+          enum: [ready, not_ready]
+        checks:
+          type: object
+          additionalProperties:
+            type: string
+            enum: [ok, failed]
+        timestamp:
+          type: string
+          format: date-time
+
+    # --- Auth ---
+    OTPRequest:
+      type: object
+      required: [phone, jurisdiction_id]
+      properties:
+        phone:
+          type: string
+          description: Phone number with country code (E.164 format)
+          pattern: '^\+[1-9]\d{6,14}$'
+          examples:
+            - "+919876543210"
+        jurisdiction_id:
+          type: string
+          description: Jurisdiction identifier (ISO 3166-2 code)
+          examples:
+            - "IN-KA"
+
+    OTPVerify:
+      type: object
+      required: [phone, otp]
+      properties:
+        phone:
+          type: string
+          description: Phone number with country code (E.164 format)
+          pattern: '^\+[1-9]\d{6,14}$'
+          examples:
+            - "+919876543210"
+        otp:
+          type: string
+          description: One-time password (6 digits)
+          pattern: '^\d{6}$'
+          examples:
+            - "482916"
+
+    TokenResponse:
+      type: object
+      required: [access_token, refresh_token, expires_in]
+      properties:
+        access_token:
+          type: string
+          description: JWT access token
+        refresh_token:
+          type: string
+          description: JWT refresh token for obtaining new access tokens
+        expires_in:
+          type: integer
+          description: Access token validity in seconds
+          examples:
+            - 3600
+
+    # --- Users ---
+    UserType:
+      type: string
+      enum: [customer, provider, admin]
+      description: The role type of the user
+
+    DeviceType:
+      type: string
+      enum: [android, ios, web]
+      description: Device type the user registered from
+
+    User:
+      type: object
+      required: [id, type, phone, name, jurisdiction_id, created_at]
+      properties:
+        id:
+          type: string
+          description: Unique user identifier (ULID)
+          examples:
+            - "usr_01HQXK5V8R3N0E7YGZM2PFWT4A"
+        type:
+          $ref: "#/components/schemas/UserType"
+        phone:
+          type: string
+          description: Phone number (E.164 format)
+          examples:
+            - "+919876543210"
+        email:
+          type: string
+          format: email
+          description: Email address (optional)
+          examples:
+            - "priya@example.com"
+        name:
+          type: string
+          description: Full name
+          minLength: 1
+          maxLength: 200
+          examples:
+            - "Priya Sharma"
+        jurisdiction_id:
+          type: string
+          description: Jurisdiction identifier (ISO 3166-2)
+          examples:
+            - "IN-KA"
+        preferred_language:
+          type: string
+          description: Preferred language (ISO 639-1)
+          default: en
+          examples:
+            - "en"
+        device_type:
+          $ref: "#/components/schemas/DeviceType"
+        created_at:
+          type: string
+          format: date-time
+          description: Account creation timestamp
+
+    UserUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        email:
+          type: string
+          format: email
+        preferred_language:
+          type: string
+          description: ISO 639-1 language code
+        device_type:
+          $ref: "#/components/schemas/DeviceType"
+
+    # --- Providers ---
+    VerificationStatus:
+      type: string
+      enum: [pending, verified, rejected, suspended]
+      description: Provider identity verification status
+
+    ProviderLevel:
+      type: string
+      enum: [beginner, intermediate, expert, master]
+      description: Provider skill level based on completed jobs and ratings
+
+    ProviderProfile:
+      type: object
+      required:
+        - user_id
+        - skills
+        - service_radius_km
+        - postcode
+        - latitude
+        - longitude
+        - trust_score
+        - level
+        - verification_status
+      properties:
+        user_id:
+          type: string
+          description: User ID of the provider
+          examples:
+            - "usr_01HQXK5V8R3N0E7YGZM2PFWT4A"
+        skills:
+          type: array
+          items:
+            type: string
+          description: List of skill slugs
+          examples:
+            - ["plumbing", "pipe-fitting"]
+        service_radius_km:
+          type: number
+          format: double
+          description: Maximum distance in km the provider is willing to travel
+          minimum: 1
+          maximum: 100
+          examples:
+            - 15
+        postcode:
+          type: string
+          description: Provider's base postcode / PIN code
+          examples:
+            - "560001"
+        latitude:
+          type: number
+          format: double
+          description: Provider's base latitude
+          minimum: -90
+          maximum: 90
+          examples:
+            - 12.9716
+        longitude:
+          type: number
+          format: double
+          description: Provider's base longitude
+          minimum: -180
+          maximum: 180
+          examples:
+            - 77.5946
+        trust_score:
+          type: number
+          format: double
+          description: Computed trust score (0.0 - 5.0)
+          minimum: 0
+          maximum: 5
+          examples:
+            - 4.8
+        level:
+          $ref: "#/components/schemas/ProviderLevel"
+        verification_status:
+          $ref: "#/components/schemas/VerificationStatus"
+        availability_schedule:
+          $ref: "#/components/schemas/AvailabilitySchedule"
+
+    ProviderRegistration:
+      type: object
+      required: [skills, service_radius_km, postcode, latitude, longitude]
+      properties:
+        skills:
+          type: array
+          items:
+            type: string
+          minItems: 1
+          description: List of skill slugs
+        service_radius_km:
+          type: number
+          format: double
+          minimum: 1
+          maximum: 100
+        postcode:
+          type: string
+        latitude:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+        longitude:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+
+    ProviderUpdate:
+      type: object
+      properties:
+        skills:
+          type: array
+          items:
+            type: string
+          minItems: 1
+        service_radius_km:
+          type: number
+          format: double
+          minimum: 1
+          maximum: 100
+        postcode:
+          type: string
+        latitude:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+        longitude:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+
+    TimeSlot:
+      type: object
+      required: [start, end]
+      properties:
+        start:
+          type: string
+          description: Start time in HH:MM format (24h)
+          pattern: '^\d{2}:\d{2}$'
+          examples:
+            - "09:00"
+        end:
+          type: string
+          description: End time in HH:MM format (24h)
+          pattern: '^\d{2}:\d{2}$'
+          examples:
+            - "18:00"
+
+    AvailabilitySchedule:
+      type: object
+      description: Weekly availability schedule. Null values indicate the provider is unavailable on that day.
+      properties:
+        monday:
+          oneOf:
+            - $ref: "#/components/schemas/TimeSlot"
+            - type: "null"
+        tuesday:
+          oneOf:
+            - $ref: "#/components/schemas/TimeSlot"
+            - type: "null"
+        wednesday:
+          oneOf:
+            - $ref: "#/components/schemas/TimeSlot"
+            - type: "null"
+        thursday:
+          oneOf:
+            - $ref: "#/components/schemas/TimeSlot"
+            - type: "null"
+        friday:
+          oneOf:
+            - $ref: "#/components/schemas/TimeSlot"
+            - type: "null"
+        saturday:
+          oneOf:
+            - $ref: "#/components/schemas/TimeSlot"
+            - type: "null"
+        sunday:
+          oneOf:
+            - $ref: "#/components/schemas/TimeSlot"
+            - type: "null"
+
+    # --- Jobs ---
+    JobStatus:
+      type: string
+      enum:
+        - pending
+        - quoted
+        - accepted
+        - in_progress
+        - completed
+        - cancelled
+        - disputed
+      description: |
+        Job lifecycle states:
+        - pending: Newly created, awaiting quotes or assignment
+        - quoted: At least one provider has submitted a quote
+        - accepted: A provider has been assigned and accepted
+        - in_progress: Work has started
+        - completed: Work finished successfully
+        - cancelled: Job was cancelled
+        - disputed: A dispute has been raised
+
+    PaymentMethod:
+      type: string
+      enum: [online, cash, wallet]
+      description: How the job will be paid
+
+    Job:
+      type: object
+      required:
+        - id
+        - customer_id
+        - category_id
+        - postcode
+        - latitude
+        - longitude
+        - status
+        - description
+        - currency
+        - payment_method
+        - is_recurring
+        - jurisdiction_id
+        - created_at
+      properties:
+        id:
+          type: string
+          description: Unique job identifier
+          examples:
+            - "job_01HRZ3KFWBN9T1E7YGZM2PFWT4"
+        customer_id:
+          type: string
+          description: ID of the customer who created the job
+          examples:
+            - "usr_01HQXK5V8R3N0E7YGZM2PFWT4A"
+        provider_id:
+          type: string
+          description: ID of the assigned provider (null if unassigned)
+          examples:
+            - "usr_01HQXK5V8R3N0E7YGZM2PFWT4B"
+        category_id:
+          type: string
+          description: Service category ID
+          examples:
+            - "cat_plumbing"
+        postcode:
+          type: string
+          description: Job location postcode
+          examples:
+            - "560001"
+        latitude:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+          examples:
+            - 12.9716
+        longitude:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+          examples:
+            - 77.5946
+        status:
+          $ref: "#/components/schemas/JobStatus"
+        description:
+          type: string
+          description: Detailed description of the work needed
+          maxLength: 2000
+          examples:
+            - "Kitchen sink leaking, need urgent repair"
+        scheduled_at:
+          type: string
+          format: date-time
+          description: Requested date and time for the job
+        quoted_price:
+          type: number
+          format: double
+          description: Price quoted by the provider
+        final_price:
+          type: number
+          format: double
+          description: Final agreed / actual price after completion
+        currency:
+          type: string
+          description: ISO 4217 currency code
+          default: INR
+          examples:
+            - "INR"
+        payment_method:
+          $ref: "#/components/schemas/PaymentMethod"
+        is_recurring:
+          type: boolean
+          description: Whether this is a recurring job
+          default: false
+        jurisdiction_id:
+          type: string
+          description: Jurisdiction identifier (ISO 3166-2)
+          examples:
+            - "IN-KA"
+        created_at:
+          type: string
+          format: date-time
+          description: Job creation timestamp
+
+    JobCreate:
+      type: object
+      required:
+        - category_id
+        - postcode
+        - latitude
+        - longitude
+        - description
+        - payment_method
+        - jurisdiction_id
+      properties:
+        category_id:
+          type: string
+        postcode:
+          type: string
+        latitude:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+        longitude:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+        description:
+          type: string
+          maxLength: 2000
+        scheduled_at:
+          type: string
+          format: date-time
+        payment_method:
+          $ref: "#/components/schemas/PaymentMethod"
+        is_recurring:
+          type: boolean
+          default: false
+        jurisdiction_id:
+          type: string
+
+    QuoteRequest:
+      type: object
+      required: [amount, currency]
+      properties:
+        amount:
+          type: number
+          format: double
+          description: Quoted price
+          minimum: 0
+        currency:
+          type: string
+          description: ISO 4217 currency code
+          default: INR
+        message:
+          type: string
+          description: Optional message from the provider
+          maxLength: 1000
+        estimated_duration_minutes:
+          type: integer
+          description: Estimated job duration in minutes
+          minimum: 1
+
+    Quote:
+      type: object
+      required: [id, job_id, provider_id, amount, currency, status, created_at]
+      properties:
+        id:
+          type: string
+          description: Unique quote identifier
+        job_id:
+          type: string
+          description: Job this quote is for
+        provider_id:
+          type: string
+          description: Provider who submitted the quote
+        amount:
+          type: number
+          format: double
+        currency:
+          type: string
+        message:
+          type: string
+        estimated_duration_minutes:
+          type: integer
+        status:
+          type: string
+          enum: [pending, accepted, rejected, expired]
+        created_at:
+          type: string
+          format: date-time
+
+    # --- Categories ---
+    Category:
+      type: object
+      required: [id, slug, name, is_active, requires_license]
+      properties:
+        id:
+          type: string
+          description: Unique category identifier
+          examples:
+            - "cat_plumbing"
+        slug:
+          type: string
+          description: URL-friendly slug
+          pattern: '^[a-z0-9]+(?:-[a-z0-9]+)*$'
+          examples:
+            - "plumbing"
+        name:
+          type: string
+          description: Human-readable category name
+          examples:
+            - "Plumbing"
+        parent_id:
+          type: string
+          description: Parent category ID (null for top-level)
+        icon:
+          type: string
+          description: Icon name / identifier
+          examples:
+            - "wrench"
+        is_active:
+          type: boolean
+          description: Whether the category is currently active
+          default: true
+        requires_license:
+          type: boolean
+          description: Whether providers in this category require a professional license
+          default: false
+
+    # --- Reviews ---
+    ReviewCreate:
+      type: object
+      required: [rating, comment]
+      properties:
+        rating:
+          type: integer
+          description: Rating from 1 to 5
+          minimum: 1
+          maximum: 5
+        comment:
+          type: string
+          description: Review text
+          maxLength: 2000
+
+    Review:
+      type: object
+      required: [id, job_id, reviewer_id, reviewee_id, rating, comment, created_at]
+      properties:
+        id:
+          type: string
+          description: Unique review identifier
+          examples:
+            - "rev_01HS2NKFP3R7E3DYGZM2PFWT4C"
+        job_id:
+          type: string
+          description: Job this review is for
+        reviewer_id:
+          type: string
+          description: User who wrote the review
+        reviewee_id:
+          type: string
+          description: User being reviewed
+        rating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: Rating (1-5 stars)
+        comment:
+          type: string
+          description: Review text
+          maxLength: 2000
+        created_at:
+          type: string
+          format: date-time
+          description: Review creation timestamp
+
+    # --- Disputes ---
+    DisputeType:
+      type: string
+      enum: [quality, payment, no_show, misconduct, other]
+      description: Type of dispute
+
+    SeverityTier:
+      type: string
+      enum: [low, medium, high, critical]
+      description: Severity tier of the dispute
+
+    DisputeStatus:
+      type: string
+      enum: [open, under_review, resolved, escalated, closed]
+      description: Current status of the dispute
+
+    Evidence:
+      type: object
+      required: [type]
+      properties:
+        type:
+          type: string
+          enum: [photo, video, text, document]
+          description: Type of evidence
+        url:
+          type: string
+          format: uri
+          description: URL of the evidence file (for photo, video, document)
+        content:
+          type: string
+          description: Text content (for text type evidence)
+
+    DisputeCreate:
+      type: object
+      required: [job_id, type, severity_tier, description]
+      properties:
+        job_id:
+          type: string
+          description: Job the dispute is about
+        type:
+          $ref: "#/components/schemas/DisputeType"
+        severity_tier:
+          $ref: "#/components/schemas/SeverityTier"
+        description:
+          type: string
+          description: Detailed description of the dispute
+          maxLength: 5000
+        evidence:
+          type: array
+          items:
+            $ref: "#/components/schemas/Evidence"
+          description: Supporting evidence
+
+    Dispute:
+      type: object
+      required:
+        - id
+        - job_id
+        - raised_by
+        - type
+        - severity_tier
+        - status
+        - description
+      properties:
+        id:
+          type: string
+          description: Unique dispute identifier
+          examples:
+            - "dsp_01HS8PKFP3R7E3DYGZM2PFWT4E"
+        job_id:
+          type: string
+          description: Job the dispute is about
+        raised_by:
+          type: string
+          description: User ID of the person who raised the dispute
+        type:
+          $ref: "#/components/schemas/DisputeType"
+        severity_tier:
+          $ref: "#/components/schemas/SeverityTier"
+        status:
+          $ref: "#/components/schemas/DisputeStatus"
+        description:
+          type: string
+          description: Detailed description of the dispute
+        resolution:
+          type: string
+          description: Resolution summary (populated when resolved)
+        evidence:
+          type: array
+          items:
+            $ref: "#/components/schemas/Evidence"
+          description: Evidence submitted with the dispute
+
+    # --- Payments ---
+    PaymentStatus:
+      type: string
+      enum: [created, authorized, captured, failed, refunded, partially_refunded]
+      description: Payment lifecycle status
+
+    Payment:
+      type: object
+      required: [id, job_id, amount, currency, status, created_at]
+      properties:
+        id:
+          type: string
+          description: Unique payment identifier
+          examples:
+            - "pay_01HS5MKFP3R7E3DYGZM2PFWT4D"
+        job_id:
+          type: string
+          description: Job this payment is for
+        amount:
+          type: number
+          format: double
+          description: Payment amount
+          examples:
+            - 1500.00
+        currency:
+          type: string
+          description: ISO 4217 currency code
+          examples:
+            - "INR"
+        status:
+          $ref: "#/components/schemas/PaymentStatus"
+        gateway_ref:
+          type: string
+          description: Payment gateway reference ID
+          examples:
+            - "order_PmQ7R8sTuVwXyZ"
+        created_at:
+          type: string
+          format: date-time
+          description: Payment creation timestamp
+
+    # --- Common ---
+    PaginatedResponse:
+      type: object
+      required: [data, total, page, limit, has_more]
+      properties:
+        data:
+          type: array
+          items: {}
+          description: Array of result items
+        total:
+          type: integer
+          description: Total number of items matching the query
+          examples:
+            - 42
+        page:
+          type: integer
+          description: Current page number (1-indexed)
+          examples:
+            - 1
+        limit:
+          type: integer
+          description: Number of items per page
+          examples:
+            - 20
+        has_more:
+          type: boolean
+          description: Whether more pages are available
+          examples:
+            - true
+
+    ErrorResponse:
+      type: object
+      required: [error, message]
+      properties:
+        error:
+          type: string
+          description: Machine-readable error code
+          examples:
+            - "BAD_REQUEST"
+        message:
+          type: string
+          description: Human-readable error message
+          examples:
+            - "Invalid request parameters"
+        details:
+          description: Additional error details (validation errors, etc.)
+          oneOf:
+            - type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                  message:
+                    type: string
+            - type: "null"
+
+    # --- Notifications ---
+    NotificationType:
+      type: string
+      enum:
+        - job_new
+        - job_accepted
+        - job_completed
+        - payment_received
+        - review_received
+        - dispute_update
+        - points_earned
+        - level_up
+        - route_visit
+        - seasonal_reminder
+
+    Notification:
+      type: object
+      required: [id, type, title, body, created_at]
+      properties:
+        id:
+          type: string
+        type:
+          $ref: "#/components/schemas/NotificationType"
+        title:
+          type: string
+        body:
+          type: string
+        data:
+          type: object
+          description: Additional data (job_id, provider_id, etc.)
+        channel:
+          type: string
+          enum: [push, sms, email]
+        read_at:
+          type: string
+          format: date-time
+        created_at:
+          type: string
+          format: date-time
+
+    NotificationPreferences:
+      type: object
+      properties:
+        push_enabled:
+          type: boolean
+          default: true
+        sms_enabled:
+          type: boolean
+          default: true
+        email_enabled:
+          type: boolean
+          default: false
+        job_notifications:
+          type: boolean
+          default: true
+        payment_notifications:
+          type: boolean
+          default: true
+        marketing_notifications:
+          type: boolean
+          default: false
+
+    # --- Gamification ---
+    PointsBalance:
+      type: object
+      required: [balance, lifetime_earned]
+      properties:
+        balance:
+          type: integer
+          description: Current spendable balance
+        lifetime_earned:
+          type: integer
+          description: Total points ever earned
+
+    PointsEntry:
+      type: object
+      required: [id, points, reason, balance, created_at]
+      properties:
+        id:
+          type: string
+        points:
+          type: integer
+          description: Points change (positive for earned, negative for spent)
+        reason:
+          type: string
+          enum:
+            - job_completed
+            - review_given
+            - five_star_review
+            - referral_provider
+            - referral_customer
+            - fast_response
+            - early_adopter
+            - provider_onboarded
+            - job_posted
+            - spent
+        reference_type:
+          type: string
+        reference_id:
+          type: string
+        balance:
+          type: integer
+          description: Balance after this entry
+        created_at:
+          type: string
+          format: date-time
+
+    UserLevel:
+      type: object
+      required: [level, name, current_points, next_level_points]
+      properties:
+        level:
+          type: integer
+        name:
+          type: string
+          enum: [newcomer, rising_star, trusted, expert, master]
+        current_points:
+          type: integer
+        next_level_points:
+          type: integer
+        jobs_completed:
+          type: integer
+        avg_rating:
+          type: number
+          format: double
+
+    LeaderboardEntry:
+      type: object
+      required: [rank, user_id, name, points]
+      properties:
+        rank:
+          type: integer
+        user_id:
+          type: string
+        name:
+          type: string
+        points:
+          type: integer
+        level:
+          type: string
+        postcode:
+          type: string
+
+    # --- Routes ---
+    RouteStatus:
+      type: string
+      enum: [active, paused, completed]
+
+    Route:
+      type: object
+      required: [id, provider_id, name, postcode_area, interval_days, status, stop_count]
+      properties:
+        id:
+          type: string
+        provider_id:
+          type: string
+        name:
+          type: string
+        postcode_area:
+          type: string
+        max_stops:
+          type: integer
+        stop_count:
+          type: integer
+        interval_days:
+          type: integer
+          description: Days between visits (e.g., 30 for monthly)
+        status:
+          $ref: "#/components/schemas/RouteStatus"
+        created_at:
+          type: string
+          format: date-time
+
+    RouteCreate:
+      type: object
+      required: [name, postcode_area, interval_days]
+      properties:
+        name:
+          type: string
+        postcode_area:
+          type: string
+        max_stops:
+          type: integer
+          default: 20
+        interval_days:
+          type: integer
+          minimum: 1
+          maximum: 365
+
+    RouteStop:
+      type: object
+      required: [id, route_id, customer_id, address, latitude, longitude, status]
+      properties:
+        id:
+          type: string
+        route_id:
+          type: string
+        customer_id:
+          type: string
+        customer_name:
+          type: string
+        address:
+          type: string
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        tree_count:
+          type: integer
+        area_sqft:
+          type: number
+        last_visited:
+          type: string
+          format: date-time
+        next_visit:
+          type: string
+          format: date-time
+        notes:
+          type: string
+        status:
+          type: string
+          enum: [active, paused, removed]
+
+    RouteStopCreate:
+      type: object
+      required: [customer_id, address, latitude, longitude]
+      properties:
+        customer_id:
+          type: string
+        address:
+          type: string
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        tree_count:
+          type: integer
+        area_sqft:
+          type: number
+        notes:
+          type: string
+
+    RouteDetail:
+      allOf:
+        - $ref: "#/components/schemas/Route"
+        - type: object
+          properties:
+            stops:
+              type: array
+              items:
+                $ref: "#/components/schemas/RouteStop"
+
+    ScheduledVisit:
+      type: object
+      required: [route_id, route_name, stop_id, customer_name, address, scheduled_date]
+      properties:
+        route_id:
+          type: string
+        route_name:
+          type: string
+        stop_id:
+          type: string
+        customer_name:
+          type: string
+        address:
+          type: string
+        latitude:
+          type: number
+          format: double
+        longitude:
+          type: number
+          format: double
+        scheduled_date:
+          type: string
+          format: date
+        tree_count:
+          type: integer
+        notes:
+          type: string
+
+    # --- Search Results ---
+    ProviderSearchResult:
+      allOf:
+        - $ref: "#/components/schemas/ProviderProfile"
+        - type: object
+          properties:
+            name:
+              type: string
+            avatar_url:
+              type: string
+            distance_km:
+              type: number
+              format: double
+            avg_rating:
+              type: number
+              format: double
+            review_count:
+              type: integer
+            jobs_completed:
+              type: integer
+            match_score:
+              type: number
+              format: double
+              description: Matching algorithm score (0-100)
+
+    # --- Provider Dashboard ---
+    ProviderDashboard:
+      type: object
+      properties:
+        earnings_today:
+          type: number
+          format: double
+        earnings_this_week:
+          type: number
+          format: double
+        earnings_this_month:
+          type: number
+          format: double
+        active_jobs:
+          type: integer
+        completed_this_month:
+          type: integer
+        trust_score:
+          type: number
+          format: double
+        avg_rating:
+          type: number
+          format: double
+        review_count:
+          type: integer
+        level:
+          $ref: "#/components/schemas/ProviderLevel"
+        upcoming_schedule:
+          type: array
+          items:
+            $ref: "#/components/schemas/ScheduledVisit"
+
+    EarningsReport:
+      type: object
+      properties:
+        total_earned:
+          type: number
+          format: double
+        total_commission:
+          type: number
+          format: double
+        total_tax:
+          type: number
+          format: double
+        net_earnings:
+          type: number
+          format: double
+        currency:
+          type: string
+        breakdown:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+              earned:
+                type: number
+                format: double
+              jobs:
+                type: integer
+
+    RatingStats:
+      type: object
+      properties:
+        avg_rating:
+          type: number
+          format: double
+        total_reviews:
+          type: integer
+        distribution:
+          type: object
+          properties:
+            "1":
+              type: integer
+            "2":
+              type: integer
+            "3":
+              type: integer
+            "4":
+              type: integer
+            "5":
+              type: integer
+
+    # --- KYC ---
+    KYCDocument:
+      type: object
+      required: [id, user_id, document_type, file_url, status, submitted_at]
+      properties:
+        id:
+          type: string
+        user_id:
+          type: string
+        user_name:
+          type: string
+        document_type:
+          type: string
+          enum: [aadhaar, pan, driving_license, passport, selfie]
+        file_url:
+          type: string
+        status:
+          type: string
+          enum: [pending, approved, rejected]
+        rejection_reason:
+          type: string
+        submitted_at:
+          type: string
+          format: date-time
+
+    # --- Admin ---
+    AdminStats:
+      type: object
+      properties:
+        total_users:
+          type: integer
+        total_providers:
+          type: integer
+        active_providers:
+          type: integer
+        total_jobs:
+          type: integer
+        jobs_today:
+          type: integer
+        revenue_this_month:
+          type: number
+          format: double
+        open_disputes:
+          type: integer
+        pending_kyc:
+          type: integer
+
+    AnalyticsData:
+      type: object
+      properties:
+        signups:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+              count:
+                type: integer
+        jobs:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+              created:
+                type: integer
+              completed:
+                type: integer
+        revenue:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+              amount:
+                type: number
+                format: double
+        top_categories:
+          type: array
+          items:
+            type: object
+            properties:
+              category:
+                type: string
+              job_count:
+                type: integer
+
+    # --- AI ---
+    AIChatResponse:
+      type: object
+      required: [message, conversation_id]
+      properties:
+        message:
+          type: string
+          description: AI response text
+        conversation_id:
+          type: string
+        actions:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+                enum: [search_providers, create_job, show_quote, navigate]
+              data:
+                type: object
+          description: Suggested actions for the client to execute
+
+    PhotoAnalysis:
+      type: object
+      properties:
+        category_id:
+          type: string
+          description: Suggested service category
+        category_name:
+          type: string
+        description:
+          type: string
+          description: AI-generated problem description
+        severity:
+          type: string
+          enum: [low, medium, high, urgent]
+        estimated_price_range:
+          type: object
+          properties:
+            min:
+              type: number
+              format: double
+            max:
+              type: number
+              format: double
+            currency:
+              type: string
+        recommendations:
+          type: array
+          items:
+            type: string
+
+    PriceEstimate:
+      type: object
+      properties:
+        category:
+          type: string
+        postcode:
+          type: string
+        min_price:
+          type: number
+          format: double
+        max_price:
+          type: number
+          format: double
+        median_price:
+          type: number
+          format: double
+        currency:
+          type: string
+        sample_size:
+          type: integer
+          description: Number of historical jobs used for the estimate
+        confidence:
+          type: number
+          format: double
+          description: Confidence score (0-1)

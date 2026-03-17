@@ -1,0 +1,120 @@
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-staging
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: ap-south-1
+  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com
+  KUBE_NAMESPACE: seva
+
+jobs:
+  build-and-push:
+    name: Build & Push Images
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    strategy:
+      matrix:
+        target:
+          - name: backend
+            context: ./backend
+            dockerfile: ./backend/Dockerfile
+            repository: seva/backend
+          - name: web
+            context: ./web
+            dockerfile: ./web/Dockerfile
+            repository: seva/web
+    outputs:
+      backend-image: ${{ steps.meta-backend.outputs.tags }}
+      web-image: ${{ steps.meta-web.outputs.tags }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        id: ecr-login
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.ECR_REGISTRY }}/${{ matrix.target.repository }}
+          tags: |
+            type=sha,prefix=staging-
+            type=raw,value=staging-latest
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.target.context }}
+          file: ${{ matrix.target.dockerfile }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            APP_ENV=staging
+
+  deploy:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    environment: staging
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Update kubeconfig
+        run: aws eks update-kubeconfig --name seva-staging --region ${{ env.AWS_REGION }}
+
+      - name: Deploy backend
+        run: |
+          kubectl set image deployment/seva-backend \
+            backend=${{ env.ECR_REGISTRY }}/seva/backend:staging-${GITHUB_SHA::7} \
+            -n ${{ env.KUBE_NAMESPACE }}
+          kubectl rollout status deployment/seva-backend -n ${{ env.KUBE_NAMESPACE }} --timeout=300s
+
+      - name: Deploy web
+        run: |
+          kubectl set image deployment/seva-web \
+            web=${{ env.ECR_REGISTRY }}/seva/web:staging-${GITHUB_SHA::7} \
+            -n ${{ env.KUBE_NAMESPACE }}
+          kubectl rollout status deployment/seva-web -n ${{ env.KUBE_NAMESPACE }} --timeout=300s
+
+      - name: Verify deployment
+        run: |
+          echo "Checking backend health..."
+          kubectl exec -n ${{ env.KUBE_NAMESPACE }} deployment/seva-backend -- wget -qO- http://localhost:8080/health/ready || true
+          echo "Deployment status:"
+          kubectl get deployments -n ${{ env.KUBE_NAMESPACE }}
+          kubectl get pods -n ${{ env.KUBE_NAMESPACE }}
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "Staging deployment failed for commit ${GITHUB_SHA::7}"

@@ -1,0 +1,142 @@
+# Hindi SMS Templates
+# All templates use DLT-registered format for Indian regulations.
+# Variables are enclosed in {curly_braces}.
+
+language: hi
+language_name: Hindi
+direction: ltr
+
+templates:
+  # Authentication
+  otp:
+    id: SEVA_OTP_HI
+    message: "Seva: Aapka OTP hai {otp_code}. Yeh {expiry_minutes} minute mein expire hoga. Kisi ke saath share na karein. - Seva App"
+    # Translation: Your OTP is {otp_code}. It will expire in {expiry_minutes} minutes. Do not share with anyone.
+    variables:
+      - otp_code
+      - expiry_minutes
+    max_length: 160
+
+  welcome:
+    id: SEVA_WELCOME_HI
+    message: "Seva mein aapka swagat hai, {user_name}! Ab apne aas-paas ke bharosemand service providers dhundein aur booking karein. Madad ke liye: {support_number}"
+    variables:
+      - user_name
+      - support_number
+
+  # Job notifications - Customer
+  job_posted:
+    id: SEVA_JOB_POST_HI
+    message: "Aapki job '{job_title}' post ho gayi hai. Hum aapke liye sabse acche provider dhundh rahe hain. Job ID: {job_id} - Seva"
+    variables:
+      - job_title
+      - job_id
+
+  job_matched:
+    id: SEVA_JOB_MATCH_HI
+    message: "Aapki job '{job_title}' ke liye {provider_name} milaya gaya hai. Rating: {rating} stars. App kholein details ke liye. - Seva"
+    variables:
+      - job_title
+      - provider_name
+      - rating
+
+  job_accepted:
+    id: SEVA_JOB_ACCEPT_HI
+    message: "{provider_name} ne aapki job '{job_title}' accept kar li hai. Woh {scheduled_date} ko {scheduled_time} baje aayenge. - Seva"
+    variables:
+      - provider_name
+      - job_title
+      - scheduled_date
+      - scheduled_time
+
+  job_started:
+    id: SEVA_JOB_START_HI
+    message: "{provider_name} ne aapki job '{job_title}' par kaam shuru kar diya hai. - Seva"
+    variables:
+      - provider_name
+      - job_title
+
+  job_completed:
+    id: SEVA_JOB_DONE_HI
+    message: "Aapki job '{job_title}' puri ho gayi hai! Kripya app mein jaake {provider_name} ko rating dein. Dhanyavaad! - Seva"
+    variables:
+      - job_title
+      - provider_name
+
+  job_cancelled:
+    id: SEVA_JOB_CANCEL_HI
+    message: "Aapki job '{job_title}' cancel ho gayi hai. Karan: {reason}. Koi aur booking karni ho toh app kholein. - Seva"
+    variables:
+      - job_title
+      - reason
+
+  # Job notifications - Provider
+  new_job_available:
+    id: SEVA_NEW_JOB_HI
+    message: "Naya kaam! '{job_title}' - {location}, {distance_km} km door. Budget: INR {budget}. App kholein accept karne ke liye. - Seva"
+    variables:
+      - job_title
+      - location
+      - distance_km
+      - budget
+
+  job_reminder:
+    id: SEVA_REMINDER_HI
+    message: "Yaad dilana: Aapka kaam '{job_title}' kal {scheduled_time} baje hai. Address: {address}. Taiyaar rahein! - Seva"
+    variables:
+      - job_title
+      - scheduled_time
+      - address
+
+  # Payments
+  payment_received:
+    id: SEVA_PAY_RECV_HI
+    message: "Aapko INR {amount} ka payment mila hai job '{job_title}' ke liye. Aapka balance: INR {balance}. - Seva"
+    variables:
+      - amount
+      - job_title
+      - balance
+
+  payout_processed:
+    id: SEVA_PAYOUT_HI
+    message: "INR {amount} ka payout aapke bank account mein transfer ho raha hai. 2-3 din mein credit hoga. - Seva"
+    variables:
+      - amount
+
+  # Reviews
+  new_review:
+    id: SEVA_REVIEW_HI
+    message: "Aapko {reviewer_name} se {rating}-star review mili hai! App mein dekhen. Aapka overall rating: {overall_rating} - Seva"
+    variables:
+      - reviewer_name
+      - rating
+      - overall_rating
+
+  # KYC
+  kyc_approved:
+    id: SEVA_KYC_OK_HI
+    message: "Badhai ho! Aapka KYC verification safal hua. Ab aap Seva par verified provider hain. Zyada jobs milenge! - Seva"
+
+  kyc_rejected:
+    id: SEVA_KYC_FAIL_HI
+    message: "Aapka KYC verification reject hua hai. Karan: {reason}. Kripya app mein jaake sahi documents upload karein. - Seva"
+    variables:
+      - reason
+
+  # Promotional
+  referral:
+    id: SEVA_REFER_HI
+    message: "{referrer_name} ne aapko Seva par invite kiya hai! Pehli booking par INR {discount} ki chhoot. Download karein: {app_link} - Seva"
+    variables:
+      - referrer_name
+      - discount
+      - app_link
+
+  seasonal_offer:
+    id: SEVA_OFFER_HI
+    message: "Seva Special: {service_name} par {discount_percent}% chhoot! {valid_until} tak. Abhi book karein: {link} - Seva"
+    variables:
+      - service_name
+      - discount_percent
+      - valid_until
+      - link

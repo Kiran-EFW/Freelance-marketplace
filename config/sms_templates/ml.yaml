@@ -1,0 +1,159 @@
+# Malayalam SMS Templates
+# All templates use DLT-registered format for Indian regulations.
+# Malayalam is written in its own script but SMS may use
+# transliterated (Manglish) format for wider compatibility.
+# Both Unicode and transliterated versions are provided.
+
+language: ml
+language_name: Malayalam
+direction: ltr
+encoding: unicode  # Use Unicode Malayalam script
+
+templates:
+  # Authentication
+  otp:
+    id: SEVA_OTP_ML
+    message: "Seva: Ningalude OTP {otp_code} aanu. {expiry_minutes} minute-il expire aakum. Aarumaayi share cheyyaruth. - Seva App"
+    # Malayalam script version:
+    message_unicode: "Seva: \u0D28\u0D3F\u0D19\u0D4D\u0D19\u0D33\u0D41\u0D1F\u0D46 OTP {otp_code} \u0D06\u0D23\u0D4D. {expiry_minutes} \u0D2E\u0D3F\u0D28\u0D3F\u0D31\u0D4D\u0D31\u0D3F\u0D7D \u0D0E\u0D15\u0D4D\u0D38\u0D4D\u200C\u0D2A\u0D2F\u0D7C \u0D06\u0D15\u0D41\u0D02. \u0D06\u0D30\u0D41\u0D2E\u0D3E\u0D2F\u0D3F \u0D37\u0D46\u0D2F\u0D7C \u0D1A\u0D46\u0D2F\u0D4D\u0D2F\u0D30\u0D41\u0D24\u0D4D. - Seva"
+    variables:
+      - otp_code
+      - expiry_minutes
+
+  welcome:
+    id: SEVA_WELCOME_ML
+    message: "Seva-yil ningale swagatham cheyyunnu, {user_name}! Ippol ningalude aduthu ulla vishwastha service providers-ne kandethaan booking cheyyaan saadikum. Sahaayathinu: {support_number}"
+    variables:
+      - user_name
+      - support_number
+
+  # Job notifications - Customer
+  job_posted:
+    id: SEVA_JOB_POST_ML
+    message: "Ningalude job '{job_title}' post cheythu. Njangal ningalkku vendi ettavum nalla provider-ne dhundhukayaanu. Job ID: {job_id} - Seva"
+    variables:
+      - job_title
+      - job_id
+
+  job_matched:
+    id: SEVA_JOB_MATCH_ML
+    message: "Ningalude job '{job_title}'-nu {provider_name}-ne match cheythu. Rating: {rating} stars. Koottuthal ariyaan app thurakku. - Seva"
+    variables:
+      - job_title
+      - provider_name
+      - rating
+
+  job_accepted:
+    id: SEVA_JOB_ACCEPT_ML
+    message: "{provider_name} ningalude job '{job_title}' accept cheythu. {scheduled_date}-nu {scheduled_time}-nu varum. - Seva"
+    variables:
+      - provider_name
+      - job_title
+      - scheduled_date
+      - scheduled_time
+
+  job_started:
+    id: SEVA_JOB_START_ML
+    message: "{provider_name} ningalude job '{job_title}'-il pani thudangi. - Seva"
+    variables:
+      - provider_name
+      - job_title
+
+  job_completed:
+    id: SEVA_JOB_DONE_ML
+    message: "Ningalude job '{job_title}' purthi aayi! Dayavayi app-il poi {provider_name}-nu rating nalkoo. Nanni! - Seva"
+    variables:
+      - job_title
+      - provider_name
+
+  job_cancelled:
+    id: SEVA_JOB_CANCEL_ML
+    message: "Ningalude job '{job_title}' cancel cheythu. Kaaranam: {reason}. Vere booking venamenkil app thurakku. - Seva"
+    variables:
+      - job_title
+      - reason
+
+  # Job notifications - Provider
+  new_job_available:
+    id: SEVA_NEW_JOB_ML
+    message: "Pudhiya pani! '{job_title}' - {location}, {distance_km} km doorathil. Budget: INR {budget}. Accept cheyyaan app thurakku. - Seva"
+    variables:
+      - job_title
+      - location
+      - distance_km
+      - budget
+
+  job_reminder:
+    id: SEVA_REMINDER_ML
+    message: "Ormaippeduthal: Ningalude pani '{job_title}' naale {scheduled_time}-nu. Address: {address}. Thayaaraayirikku! - Seva"
+    variables:
+      - job_title
+      - scheduled_time
+      - address
+
+  # Payments
+  payment_received:
+    id: SEVA_PAY_RECV_ML
+    message: "Ningalkku INR {amount} payment labhichu - '{job_title}' job-nu. Ningalude balance: INR {balance}. - Seva"
+    variables:
+      - amount
+      - job_title
+      - balance
+
+  payout_processed:
+    id: SEVA_PAYOUT_ML
+    message: "INR {amount} ningalude bank account-ilekku transfer cheyyukayaanu. 2-3 divasathil credit aakum. - Seva"
+    variables:
+      - amount
+
+  # Reviews
+  new_review:
+    id: SEVA_REVIEW_ML
+    message: "{reviewer_name} ningalkku {rating}-star review thannittundu! App-il kaanam. Overall rating: {overall_rating} - Seva"
+    variables:
+      - reviewer_name
+      - rating
+      - overall_rating
+
+  # KYC
+  kyc_approved:
+    id: SEVA_KYC_OK_ML
+    message: "Abhianandhangal! Ningalude KYC verification vijayichu. Ippol ningal Seva-yil verified provider aanu. Koottuthal jobs labhikkum! - Seva"
+
+  kyc_rejected:
+    id: SEVA_KYC_FAIL_ML
+    message: "Ningalude KYC verification niraakaricchu. Kaaranam: {reason}. Dayavayi app-il poi shari aaya documents upload cheyyoo. - Seva"
+    variables:
+      - reason
+
+  # Seasonal / Agricultural
+  coconut_plucking_reminder:
+    id: SEVA_COCONUT_ML
+    message: "Thengakkuru idunna samayamayi! Ningalude thenginu {days_since_last} divasam aayi. Ippol book cheyyoo - {link} - Seva"
+    variables:
+      - days_since_last
+      - link
+
+  monsoon_advisory:
+    id: SEVA_MONSOON_ML
+    message: "Mazhakaalam arambhichu. Thengideel, rubber tapping enniva safety-ode cheyyoo. Emergency service-nu: {support_number} - Seva"
+    variables:
+      - support_number
+
+  # Referral
+  referral:
+    id: SEVA_REFER_ML
+    message: "{referrer_name} ningale Seva-yilekku kshanikkunnu! Aadyathe booking-il INR {discount} discount. Download cheyyoo: {app_link} - Seva"
+    variables:
+      - referrer_name
+      - discount
+      - app_link
+
+  seasonal_offer:
+    id: SEVA_OFFER_ML
+    message: "Seva Special: {service_name}-il {discount_percent}% discount! {valid_until} vare. Ippol book cheyyoo: {link} - Seva"
+    variables:
+      - service_name
+      - discount_percent
+      - valid_until
+      - link

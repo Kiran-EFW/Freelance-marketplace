@@ -1,0 +1,700 @@
+categories:
+  - slug: "home-services"
+    name:
+      en: "Home Services"
+    icon: "home-repair"
+    requires_license: false
+    typical_pricing_model: "fixed"
+    subcategories:
+      - slug: "plumbing"
+        name:
+          en: "Plumbing"
+        icon: "pipe-wrench"
+        requires_license: true
+        typical_pricing_model: "hourly"
+        description: "Pipe fitting, leak repair, fixture installation, drainage work"
+
+      - slug: "electrical"
+        name:
+          en: "Electrical"
+        icon: "lightning-bolt"
+        requires_license: true
+        typical_pricing_model: "hourly"
+        description: "Wiring, switch/socket installation, panel upgrades, fault diagnosis"
+
+      - slug: "painting"
+        name:
+          en: "Painting"
+        icon: "paint-roller"
+        requires_license: false
+        typical_pricing_model: "per_sqft"
+        description: "Interior painting, exterior painting, texture coating, waterproofing"
+
+      - slug: "carpentry"
+        name:
+          en: "Carpentry"
+        icon: "hammer"
+        requires_license: false
+        typical_pricing_model: "fixed"
+        description: "Furniture making, cabinet installation, door/window fitting, wood repair"
+
+      - slug: "cleaning"
+        name:
+          en: "Cleaning"
+        icon: "sparkle"
+        requires_license: false
+        typical_pricing_model: "fixed"
+        description: "Home cleaning, office cleaning, post-construction cleanup"
+
+      - slug: "pest-control"
+        name:
+          en: "Pest Control"
+        icon: "bug-slash"
+        requires_license: true
+        typical_pricing_model: "fixed"
+        description: "Termite treatment, cockroach control, rodent control, mosquito fogging"
+
+      - slug: "appliance-repair"
+        name:
+          en: "Appliance Repair"
+        icon: "wrench"
+        requires_license: false
+        typical_pricing_model: "fixed"
+        description: "AC repair, washing machine repair, refrigerator repair, geyser repair"
+
+      - slug: "roofing"
+        name:
+          en: "Roofing"
+        icon: "roof"
+        requires_license: false
+        typical_pricing_model: "per_sqft"
+        description: "Roof repair, tile replacement, waterproofing, gutter installation"
+
+      - slug: "flooring"
+        name:
+          en: "Flooring"
+        icon: "grid"
+        requires_license: false
+        typical_pricing_model: "per_sqft"
+        description: "Tile laying, marble polishing, wooden flooring, epoxy coating"
+
+      - slug: "hvac"
+        name:
+          en: "HVAC"
+        icon: "thermometer"
+        requires_license: true
+        typical_pricing_model: "fixed"
+        description: "AC installation, central air systems, duct cleaning, heating systems"
+
+      - slug: "locksmith"
+        name:
+          en: "Locksmith"
+        icon: "key"
+        requires_license: false
+        typical_pricing_model: "fixed"
+        description: "Lock installation, key cutting, safe opening, digital lock setup"
+
+      - slug: "interior-design"
+        name:
+          en: "Interior Design"
+        icon: "palette"
+        requires_license: false
+        typical_pricing_model: "fixed"
+        description: "Space planning, material selection, 3D visualization, project management"
+
+  - slug: "professional-services"
+    name:
+      en: "Professional Services"
+    icon: "briefcase"
+    requires_license: true
+    typical_pricing_model: "hourly"
+    subcategories:
+      - slug: "legal"
+        name:
+          en: "Legal Services"
+        icon: "scale"
+        requires_license: true
+        typical_pricing_model: "hourly"
+        description: "Legal consultation, document drafting, court representation, arbitration"
+
+      - slug: "accounting-tax"
+        name:
+          en: "Accounting & Tax"
+        icon: "calculator"
+        requires_license: true
+        typical_pricing_model: "fixed"
+        description: "Tax filing, bookkeeping, GST returns, auditing, financial statements"
+
+      - slug: "architecture"
+        name:
+          en: "Architecture"
+        icon: "building"
+        requires_license: true
+        typical_pricing_model: "per_sqft"
+        description: "Building design, structural planning, blueprint creation, site supervision"
+
+      - slug: "surveying"
+        name:
+          en: "Surveying"
+        icon: "map-pin"
+        requires_license: true
+        typical_pricing_model: "fixed"
+        description: "Land surveying, boundary demarcation, topographical mapping"
+
+      - slug: "notary"
+        name:
+          en: "Notary Services"
+        icon: "stamp"
+        requires_license: true
+        typical_pricing_model: "per_unit"
+        description: "Document attestation, affidavit preparation, deed registration"
+
+      - slug: "financial-advisory"
+        name:
+          en: "Financial Advisory"
+        icon: "chart-line"
+        requires_license: true
+        typical_pricing_model: "hourly"
+        description: "Investment planning, retirement planning, wealth management, insurance advisory"
+
+      - slug: "insurance-agent"
+        name:
+          en: "Insurance Agent"
+        icon: "shield-check"
+        requires_license: true
+        typical_pricing_model: "fixed"
+        description: "Life insurance, health insurance, vehicle insurance, property insurance"
+
+      - slug: "real-estate-agent"
+        name:
+          en: "Real Estate Agent"
+        icon: "house-search"
+        requires_license: true
+        typical_pricing_model: "fixed"
+        description: "Property listing, buyer matching, negotiation, documentation assistance"
+
+  - slug: "crop-and-land"
+    name:
+      en: "Crop & Land Services"
+    icon: "sprout"
+    requires_license: false
+    typical_pricing_model: "fixed"
+    subcategories:
+      - slug: "tree-work"
+        name:
+          en: "Tree Work"
+        icon: "tree"
+        requires_license: false
+        typical_pricing_model: "per_unit"
+        description: "Tree climbing, coconut harvesting, pruning, tree felling, stump removal"
+
+      - slug: "field-preparation"
+        name:
+          en: "Field Preparation"
+        icon: "tractor"
+        requires_license: false
+        typical_pricing_model: "per_sqft"
+        description: "Ploughing, tilling, leveling, bund making, raised bed preparation"
+
+      - slug: "harvesting"
+        name:
+          en: "Harvesting"
+        icon: "wheat"
+        requires_license: false
+        typical_pricing_model: "per_unit"
+        description: "Crop harvesting, threshing, winnowing, collection and sorting"
+
+      - slug: "irrigation"
+        name:
+          en: "Irrigation"
+        icon: "droplets"
+        requires_license: false
+        typical_pricing_model: "fixed"
+        description: "Drip irrigation setup, sprinkler installation, canal work, pump maintenance"
+
+      - slug: "pest-management"
+        name:
+          en: "Pest Management"
+        icon: "shield-bug"
+        requires_license: true
+        typical_pricing_model: "per_sqft"
+        description: "Crop spraying, organic pest control, fungicide application, weed management"
+
+      - slug: "landscaping"
+        name:
+          en: "Landscaping"
+        icon: "flower"
+        requires_license: false
+        typical_pricing_model: "per_sqft"
+        description: "Garden design, lawn laying, plant installation, hardscape construction"
+
+      - slug: "soil-testing"
+        name:
+          en: "Soil Testing"
+        icon: "flask"
+        requires_license: true
+        typical_pricing_model: "per_unit"
+        description: "pH testing, nutrient analysis, soil composition report, amendment recommendations"
+
+      - slug: "equipment-rental"
+        name:
+          en: "Equipment Rental"
+        icon: "tractor-side"
+        requires_license: false
+        typical_pricing_model: "hourly"
+        description: "Tractor rental, tiller rental, harvester rental, pump set rental"
+
+  - slug: "automotive"
+    name:
+      en: "Automotive"
+    icon: "car"
+    requires_license: false
+    typical_pricing_model: "fixed"
+    subcategories:
+      - slug: "mechanic"
+        name:
+          en: "Mechanic"
+        icon: "engine"
+        requires_license: false
+        typical_pricing_model: "fixed"
+        description: "Engine repair, brake service, oil change, general maintenance, diagnostics"
+
+      - slug: "body-work"
+        name:
+          en: "Body Work"
+        icon: "car-crash"
+        requires_license: false
+        typical_pricing_model: "fixed"
+        description: "Dent removal, scratch repair, panel replacement, full body painting"
+
+      - slug: "towing"
+        name:
+          en: "Towing"
+        icon: "truck-tow"
+        requires_license: true
+        typical_pricing_model: "fixed"
+        description: "Vehicle towing, roadside assistance, flatbed transport, accident recovery"
+
+      - slug: "car-wash"
+        name:
+          en: "Car Wash & Detailing"
+        icon: "sparkle-car"
+        requires_license: false
+        typical_pricing_model: "fixed"
+        description: "Exterior wash, interior cleaning, ceramic coating, polishing, sanitization"
+
+      - slug: "tire-service"
+        name:
+          en: "Tire Service"
+        icon: "circle"
+        requires_license: false
+        typical_pricing_model: "per_unit"
+        description: "Tire replacement, puncture repair, wheel alignment, balancing, nitrogen fill"
+
+      - slug: "auto-electrical"
+        name:
+          en: "Auto Electrical"
+        icon: "battery"
+        requires_license: false
+        typical_pricing_model: "fixed"
+        description: "Battery replacement, alternator repair, wiring harness, accessory installation"
+
+  - slug: "health-wellness"
+    name:
+      en: "Health & Wellness"
+    icon: "heart-pulse"
+    requires_license: true
+    typical_pricing_model: "hourly"
+    subcategories:
+      - slug: "physiotherapy"
+        name:
+          en: "Physiotherapy"
+        icon: "person-stretch"
+        requires_license: true
+        typical_pricing_model: "hourly"
+        description: "Home physiotherapy, post-surgery rehab, sports injury treatment, pain management"
+
+      - slug: "home-nursing"
+        name:
+          en: "Home Nursing"
+        icon: "medical-cross"
+        requires_license: true
+        typical_pricing_model: "hourly"
+        description: "Patient care, wound dressing, injection administration, vital monitoring"
+
+      - slug: "elderly-care"
+        name:
+          en: "Elderly Care"
+        icon: "hand-holding-heart"
+        requires_license: false
+        typical_pricing_model: "hourly"
+        description: "Companion care, mobility assistance, medication reminders, daily living support"
+
+      - slug: "yoga-fitness"
+        name:
+          en: "Yoga & Fitness"
+        icon: "lotus"
+        requires_license: false
+        typical_pricing_model: "hourly"
+        description: "Personal yoga sessions, home fitness training, meditation, group classes"
+
+      - slug: "dietitian"
+        name:
+          en: "Dietitian"
+        icon: "apple"
+        requires_license: true
+        typical_pricing_model: "fixed"
+        description: "Diet planning, nutritional counseling, weight management, therapeutic diet"
+
+      - slug: "mental-health"
+        name:
+          en: "Mental Health"
+        icon: "brain"
+        requires_license: true
+        typical_pricing_model: "hourly"
+        description: "Counseling, therapy sessions, stress management, behavioral therapy"
+
+  - slug: "education-tutoring"
+    name:
+      en: "Education & Tutoring"
+    icon: "graduation-cap"
+    requires_license: false
+    typical_pricing_model: "hourly"
+    subcategories:
+      - slug: "academic"
+        name:
+          en: "Academic Tutoring"
+        icon: "book-open"
+        requires_license: false
+        typical_pricing_model: "hourly"
+        description: "School subjects, board exam prep, college courses, assignment help"
+
+      - slug: "test-prep"
+        name:
+          en: "Test Preparation"
+        icon: "clipboard-check"
+        requires_license: false
+        typical_pricing_model: "hourly"
+        description: "JEE/NEET coaching, UPSC prep, CAT coaching, GRE/GMAT, IELTS/TOEFL"
+
+      - slug: "language"
+        name:
+          en: "Language Tutoring"
+        icon: "globe"
+        requires_license: false
+        typical_pricing_model: "hourly"
+        description: "English speaking, foreign languages, regional languages, sign language"
+
+      - slug: "music-arts"
+        name:
+          en: "Music & Arts"
+        icon: "music-note"
+        requires_license: false
+        typical_pricing_model: "hourly"
+        description: "Vocal training, instrument lessons, drawing, painting, dance classes"
+
+      - slug: "vocational"
+        name:
+          en: "Vocational Training"
+        icon: "tools"
+        requires_license: false
+        typical_pricing_model: "fixed"
+        description: "Computer skills, tailoring, cooking, driving lessons, photography"
+
+      - slug: "special-needs"
+        name:
+          en: "Special Needs Education"
+        icon: "hand-heart"
+        requires_license: true
+        typical_pricing_model: "hourly"
+        description: "Learning disability support, speech therapy, occupational therapy, behavioral support"
+
+  - slug: "events"
+    name:
+      en: "Events & Occasions"
+    icon: "calendar-star"
+    requires_license: false
+    typical_pricing_model: "fixed"
+    subcategories:
+      - slug: "catering"
+        name:
+          en: "Catering"
+        icon: "utensils"
+        requires_license: true
+        typical_pricing_model: "per_unit"
+        description: "Wedding catering, party food, corporate events, home parties, live counters"
+
+      - slug: "photography"
+        name:
+          en: "Photography & Videography"
+        icon: "camera"
+        requires_license: false
+        typical_pricing_model: "fixed"
+        description: "Wedding photography, event coverage, product shoots, drone photography"
+
+      - slug: "decoration"
+        name:
+          en: "Decoration"
+        icon: "party-popper"
+        requires_license: false
+        typical_pricing_model: "fixed"
+        description: "Wedding decoration, birthday themes, floral arrangements, stage design"
+
+      - slug: "entertainment"
+        name:
+          en: "Entertainment"
+        icon: "microphone"
+        requires_license: false
+        typical_pricing_model: "fixed"
+        description: "DJ services, live music, emcee, magic shows, cultural performers"
+
+      - slug: "venue-management"
+        name:
+          en: "Venue Management"
+        icon: "building-columns"
+        requires_license: false
+        typical_pricing_model: "fixed"
+        description: "Venue booking, logistics coordination, vendor management, crowd management"
+
+      - slug: "wedding-planning"
+        name:
+          en: "Wedding Planning"
+        icon: "rings"
+        requires_license: false
+        typical_pricing_model: "fixed"
+        description: "Full wedding planning, day-of coordination, vendor sourcing, budget management"
+
+  - slug: "pet-services"
+    name:
+      en: "Pet Services"
+    icon: "paw"
+    requires_license: false
+    typical_pricing_model: "fixed"
+    subcategories:
+      - slug: "grooming"
+        name:
+          en: "Pet Grooming"
+        icon: "scissors"
+        requires_license: false
+        typical_pricing_model: "fixed"
+        description: "Bathing, hair trimming, nail clipping, ear cleaning, flea treatment"
+
+      - slug: "veterinary-home"
+        name:
+          en: "Veterinary Home Visit"
+        icon: "stethoscope"
+        requires_license: true
+        typical_pricing_model: "fixed"
+        description: "Health checkup, vaccination, deworming, minor treatments, emergency care"
+
+      - slug: "pet-sitting"
+        name:
+          en: "Pet Sitting & Walking"
+        icon: "dog-leash"
+        requires_license: false
+        typical_pricing_model: "hourly"
+        description: "Dog walking, pet sitting, overnight care, feeding visits"
+
+      - slug: "training"
+        name:
+          en: "Pet Training"
+        icon: "whistle"
+        requires_license: false
+        typical_pricing_model: "hourly"
+        description: "Obedience training, behavioral correction, puppy training, agility training"
+
+      - slug: "boarding"
+        name:
+          en: "Pet Boarding"
+        icon: "house-heart"
+        requires_license: false
+        typical_pricing_model: "fixed"
+        description: "Day boarding, overnight stays, long-term boarding, specialized care"
+
+  - slug: "tech-services"
+    name:
+      en: "Tech Services"
+    icon: "cpu"
+    requires_license: false
+    typical_pricing_model: "fixed"
+    subcategories:
+      - slug: "computer-repair"
+        name:
+          en: "Computer Repair"
+        icon: "laptop"
+        requires_license: false
+        typical_pricing_model: "fixed"
+        description: "Hardware repair, OS installation, virus removal, data backup, upgrades"
+
+      - slug: "networking"
+        name:
+          en: "Networking"
+        icon: "wifi"
+        requires_license: false
+        typical_pricing_model: "fixed"
+        description: "Router setup, LAN cabling, WiFi optimization, network troubleshooting"
+
+      - slug: "cctv-installation"
+        name:
+          en: "CCTV Installation"
+        icon: "video-camera"
+        requires_license: false
+        typical_pricing_model: "fixed"
+        description: "Camera installation, DVR/NVR setup, remote viewing, maintenance"
+
+      - slug: "smart-home"
+        name:
+          en: "Smart Home"
+        icon: "home-automation"
+        requires_license: false
+        typical_pricing_model: "fixed"
+        description: "Smart lighting, voice assistant setup, automation systems, IoT devices"
+
+      - slug: "data-recovery"
+        name:
+          en: "Data Recovery"
+        icon: "hard-drive"
+        requires_license: false
+        typical_pricing_model: "fixed"
+        description: "Hard drive recovery, phone data recovery, RAID recovery, cloud backup setup"
+
+  - slug: "logistics"
+    name:
+      en: "Logistics & Moving"
+    icon: "truck"
+    requires_license: false
+    typical_pricing_model: "fixed"
+    subcategories:
+      - slug: "local-moving"
+        name:
+          en: "Local Moving"
+        icon: "truck-moving"
+        requires_license: false
+        typical_pricing_model: "fixed"
+        description: "House shifting, office relocation, furniture moving, loading/unloading"
+
+      - slug: "packing"
+        name:
+          en: "Packing Services"
+        icon: "box"
+        requires_license: false
+        typical_pricing_model: "fixed"
+        description: "Professional packing, fragile item handling, unpacking, material supply"
+
+      - slug: "storage"
+        name:
+          en: "Storage"
+        icon: "warehouse"
+        requires_license: false
+        typical_pricing_model: "fixed"
+        description: "Short-term storage, long-term warehousing, climate-controlled units"
+
+      - slug: "courier"
+        name:
+          en: "Courier & Delivery"
+        icon: "package"
+        requires_license: false
+        typical_pricing_model: "fixed"
+        description: "Same-day delivery, parcel pickup, document courier, bulk delivery"
+
+      - slug: "freight"
+        name:
+          en: "Freight & Heavy Transport"
+        icon: "truck-container"
+        requires_license: true
+        typical_pricing_model: "fixed"
+        description: "Truck transport, container moving, heavy machinery transport, inter-city freight"
+
+  - slug: "beauty-personal-care"
+    name:
+      en: "Beauty & Personal Care"
+    icon: "sparkle-star"
+    requires_license: false
+    typical_pricing_model: "fixed"
+    subcategories:
+      - slug: "salon-home"
+        name:
+          en: "Salon at Home"
+        icon: "scissors-comb"
+        requires_license: false
+        typical_pricing_model: "fixed"
+        description: "Haircut, facial, waxing, threading, manicure, pedicure, hair spa"
+
+      - slug: "makeup"
+        name:
+          en: "Makeup Artist"
+        icon: "lipstick"
+        requires_license: false
+        typical_pricing_model: "fixed"
+        description: "Bridal makeup, party makeup, engagement looks, airbrush makeup"
+
+      - slug: "mehendi"
+        name:
+          en: "Mehendi"
+        icon: "hand-art"
+        requires_license: false
+        typical_pricing_model: "fixed"
+        description: "Bridal mehendi, Arabic designs, Indo-Western designs, party mehendi"
+
+      - slug: "tailoring"
+        name:
+          en: "Tailoring & Alteration"
+        icon: "needle-thread"
+        requires_license: false
+        typical_pricing_model: "per_unit"
+        description: "Custom stitching, blouse tailoring, alterations, embroidery work"
+
+      - slug: "laundry-alteration"
+        name:
+          en: "Laundry & Dry Cleaning"
+        icon: "shirt"
+        requires_license: false
+        typical_pricing_model: "per_unit"
+        description: "Wash and fold, dry cleaning, ironing, stain removal, pickup/delivery"
+
+  - slug: "cleaning-maintenance"
+    name:
+      en: "Cleaning & Maintenance"
+    icon: "broom"
+    requires_license: false
+    typical_pricing_model: "fixed"
+    subcategories:
+      - slug: "deep-cleaning"
+        name:
+          en: "Deep Cleaning"
+        icon: "spray-bottle"
+        requires_license: false
+        typical_pricing_model: "per_sqft"
+        description: "Full home deep clean, kitchen deep clean, bathroom deep clean, move-in/out cleaning"
+
+      - slug: "water-tank"
+        name:
+          en: "Water Tank Cleaning"
+        icon: "water-drop"
+        requires_license: false
+        typical_pricing_model: "fixed"
+        description: "Overhead tank cleaning, underground sump cleaning, UV treatment, anti-bacterial wash"
+
+      - slug: "chimney"
+        name:
+          en: "Chimney & Exhaust Cleaning"
+        icon: "fan"
+        requires_license: false
+        typical_pricing_model: "fixed"
+        description: "Kitchen chimney cleaning, exhaust fan service, duct cleaning, filter replacement"
+
+      - slug: "garden-maintenance"
+        name:
+          en: "Garden Maintenance"
+        icon: "leaf"
+        requires_license: false
+        typical_pricing_model: "hourly"
+        description: "Lawn mowing, hedge trimming, weeding, plant care, garden cleanup"
+
+      - slug: "pool-maintenance"
+        name:
+          en: "Pool Maintenance"
+        icon: "swimming-pool"
+        requires_license: false
+        typical_pricing_model: "fixed"
+        description: "Pool cleaning, chemical balancing, filter maintenance, equipment repair"

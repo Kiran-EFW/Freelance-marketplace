@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: seva-config
+  namespace: seva
+  labels:
+    app.kubernetes.io/name: seva
+data:
+  # Application
+  APP_ENV: "production"
+  APP_NAME: "seva"
+  LOG_LEVEL: "info"
+  LOG_FORMAT: "json"
+
+  # Server
+  SERVER_PORT: "8080"
+  SERVER_READ_TIMEOUT: "30s"
+  SERVER_WRITE_TIMEOUT: "30s"
+  SERVER_IDLE_TIMEOUT: "120s"
+
+  # Web frontend
+  WEB_ORIGIN: "https://seva.app"
+  PUBLIC_API_URL: "https://api.seva.app/v1"
+
+  # CORS
+  CORS_ALLOWED_ORIGINS: "https://seva.app,https://www.seva.app"
+
+  # File uploads
+  MAX_UPLOAD_SIZE_MB: "10"
+  UPLOAD_BUCKET: "seva-prod-uploads"
+  UPLOAD_CDN_URL: "https://cdn.seva.app"
+
+  # Default jurisdiction
+  DEFAULT_JURISDICTION: "IN"
+  DEFAULT_CURRENCY: "INR"
+  DEFAULT_LOCALE: "en-IN"
+
+  # Matching
+  MATCHING_MODEL_PATH: "s3://seva-prod-models/matching/matching_model_latest.onnx"
+  FRAUD_MODEL_PATH: "s3://seva-prod-models/fraud/fraud_model_latest.onnx"
+
+  # Rate limiting
+  RATE_LIMIT_REQUESTS_PER_MINUTE: "60"
+  RATE_LIMIT_AUTH_REQUESTS_PER_MINUTE: "10"
+
+  # OTP
+  OTP_EXPIRY_MINUTES: "5"
+  OTP_LENGTH: "6"
+  OTP_MAX_ATTEMPTS: "3"
+
+  # Job matching
+  MATCH_RADIUS_KM: "25"
+  MATCH_MAX_PROVIDERS: "10"
+
+  # Trust score weights
+  TRUST_RATING_WEIGHT: "0.3"
+  TRUST_COMPLETION_WEIGHT: "0.25"
+  TRUST_RESPONSE_WEIGHT: "0.2"
+  TRUST_KYC_WEIGHT: "0.15"
+  TRUST_TENURE_WEIGHT: "0.1"
+
+  # Notifications
+  PUSH_ENABLED: "true"
+  SMS_ENABLED: "true"
+  EMAIL_ENABLED: "true"
+
+  # Feature flags
+  FEATURE_AI_BOOKING: "true"
+  FEATURE_PHOTO_ANALYSIS: "true"
+  FEATURE_VOICE_IVR: "false"
+  FEATURE_ROUTE_OPTIMIZATION: "true"

@@ -1,0 +1,203 @@
+# Maharashtra Sugarcane Harvesting Seasonal Calendar
+# Sugarcane (Saccharum officinarum) harvesting in Maharashtra follows
+# the crushing season of sugar factories.
+
+service:
+  category: sugarcane-harvesting
+  region: Maharashtra
+  country: IN
+
+# Maharashtra is India's largest sugarcane producing state.
+# Crushing season: October to April.
+# Key districts: Kolhapur, Sangli, Pune, Satara, Solapur, Ahmednagar.
+# Migrant labor from Karnataka and northern districts is common.
+
+months:
+  january:
+    demand: very_high
+    availability: moderate
+    harvesting_active: true
+    notes: "Peak crushing season. Sugar factories running at full capacity. Highest demand for harvesting gangs."
+    sugar_recovery_rate: "12.5-13.5%"
+    typical_rate_per_tonne: 350
+    weather: cold_dry
+    advisory: "Book harvesting gangs 2-3 weeks in advance. Peak demand period."
+    factory_status: full_capacity
+    transport_demand: very_high
+    related_services:
+      - sugarcane-transport
+      - tractor-trolley-hire
+      - field-cleaning
+
+  february:
+    demand: very_high
+    availability: moderate
+    harvesting_active: true
+    notes: "Peak continues. Sugar content at maximum. Priority harvesting for fields with best sucrose."
+    sugar_recovery_rate: "13.0-14.0%"
+    typical_rate_per_tonne: 350
+    weather: mild
+    factory_status: full_capacity
+
+  march:
+    demand: high
+    availability: moderate
+    harvesting_active: true
+    notes: "Late season harvesting. Rising temperatures. Sugar content begins to decline. Holi festival impact."
+    sugar_recovery_rate: "12.0-13.0%"
+    typical_rate_per_tonne: 320
+    weather: warming
+    festival_impact:
+      - name: Holi
+        date_range: "March (varies)"
+        impact: "2-3 days disruption. Migrant workers may return home."
+    advisory: "Complete harvesting of remaining fields before April heat."
+
+  april:
+    demand: moderate
+    availability: high
+    harvesting_active: partial
+    notes: "Crushing season ending. Last fields being harvested. Sugar content declining with heat."
+    sugar_recovery_rate: "10.5-11.5%"
+    typical_rate_per_tonne: 280
+    weather: hot
+    factory_status: winding_down
+    advisory: "Factories closing. Ensure transport is arranged before factory closing date."
+    related_services:
+      - field-preparation
+      - ratoon-management
+
+  may:
+    demand: low
+    availability: high
+    harvesting_active: false
+    notes: "Off-season. Land preparation for new planting. Ratoon management for existing fields."
+    typical_rate_per_tonne: 0
+    weather: very_hot
+    related_services:
+      - land-preparation
+      - ploughing
+      - ratoon-management
+      - drip-irrigation-installation
+
+  june:
+    demand: low
+    availability: moderate
+    harvesting_active: false
+    notes: "Monsoon onset. Suru (pre-season) planting begins. Field activities focus on planting."
+    typical_rate_per_tonne: 0
+    weather: monsoon_onset
+    planting_season: suru
+    related_services:
+      - sugarcane-planting
+      - fertilizer-application
+      - pest-management
+
+  july:
+    demand: low
+    availability: low
+    harvesting_active: false
+    notes: "Active monsoon. Planting continues. Waterlogging risk in low-lying areas."
+    typical_rate_per_tonne: 0
+    weather: heavy_rain
+    related_services:
+      - drainage-work
+      - weed-management
+      - interculture-operations
+
+  august:
+    demand: low
+    availability: low
+    harvesting_active: false
+    notes: "Monsoon. Adsali (18-month crop) planting window. Pest and disease monitoring critical."
+    typical_rate_per_tonne: 0
+    weather: rain
+    pest_risk: high
+    common_pests:
+      - early_shoot_borer
+      - top_shoot_borer
+      - woolly_aphid
+    related_services:
+      - pest-control
+      - internode-borer-management
+
+  september:
+    demand: low
+    availability: moderate
+    harvesting_active: false
+    notes: "Pre-harvest preparations. Factories announce opening dates. Sugar content testing begins."
+    typical_rate_per_tonne: 0
+    weather: clearing
+    advisory: "Contact sugar factory for crushing schedule. Arrange harvesting gangs."
+    related_services:
+      - sugar-content-testing
+      - field-assessment
+
+  october:
+    demand: moderate
+    availability: moderate
+    harvesting_active: partial
+    notes: "Crushing season begins. Factories open in phases. Early harvesting of Adsali crop."
+    sugar_recovery_rate: "10.0-11.0%"
+    typical_rate_per_tonne: 300
+    weather: post_monsoon
+    factory_status: opening
+    festival_impact:
+      - name: Dussehra/Navratri
+        date_range: "October (varies)"
+        impact: "1 week disruption. Significant workforce reduction."
+      - name: Diwali
+        date_range: "October/November (varies)"
+        impact: "4-5 days complete shutdown. Workers return to villages."
+
+  november:
+    demand: high
+    availability: moderate
+    harvesting_active: true
+    notes: "Season fully underway. All major factories operational. Demand for skilled cutters rising."
+    sugar_recovery_rate: "11.5-12.5%"
+    typical_rate_per_tonne: 330
+    weather: dry
+    factory_status: operational
+
+  december:
+    demand: high
+    availability: high
+    harvesting_active: true
+    notes: "Full swing. Migrant labor gangs arrive from Karnataka and northern Maharashtra."
+    sugar_recovery_rate: "12.0-13.0%"
+    typical_rate_per_tonne: 350
+    weather: cold_dry
+    factory_status: full_capacity
+
+pricing:
+  payment_models:
+    per_tonne:
+      base_rate: 320
+      factors:
+        field_distance_to_factory:
+          under_5km: 1.0
+          5_to_15km: 1.1
+          over_15km: 1.2
+        field_condition:
+          lodged_fallen: 1.3
+          standing: 1.0
+        cutting_method:
+          manual: 1.0
+          mechanical: 0.7
+    gang_daily:
+      rate_per_worker: 600
+      typical_gang_size: 8
+      includes: "Cutting, cleaning, loading"
+  transport:
+    tractor_trolley_per_trip: 1500
+    bullock_cart_per_trip: 800
+
+# Labor dynamics
+labor:
+  peak_deficit: "30-40% shortfall during January-February"
+  migrant_sources:
+    - "Beed, Jalna districts (Marathwada)"
+    - "Belgaum, Dharwad districts (Karnataka)"
+  mechanization_trend: "Increasing adoption of mechanical harvesters since 2020"
+  gender: "Mixed; women constitute 40% of cutting gangs"

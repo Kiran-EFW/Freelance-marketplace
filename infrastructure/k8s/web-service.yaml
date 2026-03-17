@@ -1,0 +1,18 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: seva-web
+  namespace: seva
+  labels:
+    app: seva-web
+    app.kubernetes.io/name: seva-web
+    app.kubernetes.io/component: frontend
+spec:
+  type: ClusterIP
+  selector:
+    app: seva-web
+  ports:
+    - name: http
+      port: 80
+      targetPort: http
+      protocol: TCP

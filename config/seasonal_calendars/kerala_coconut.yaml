@@ -1,0 +1,192 @@
+# Kerala Coconut Plucking Seasonal Calendar
+# Governs provider availability, demand forecasting, and pricing adjustments
+# for coconut-related services across Kerala.
+
+service:
+  category: coconut-plucking
+  region: Kerala
+  country: IN
+
+# Coconut palms in Kerala produce year-round but with seasonal peaks.
+# Plucking is typically done every 45-60 days per tree.
+# Major factors: monsoon, festival seasons, copra prices.
+
+months:
+  january:
+    demand: high
+    availability: high
+    notes: "Post-harvest season. Good weather for climbing. Copra drying conditions excellent."
+    recommended_frequency: "Every 45 days"
+    typical_rate_per_tree: 40
+    weather: dry
+    related_services:
+      - coconut-oil-extraction
+      - copra-processing
+
+  february:
+    demand: high
+    availability: high
+    notes: "Peak season continues. Dry weather ideal for plucking and processing."
+    recommended_frequency: "Every 45 days"
+    typical_rate_per_tree: 40
+    weather: dry
+    related_services:
+      - coconut-oil-extraction
+      - copra-processing
+      - palm-pest-treatment
+
+  march:
+    demand: high
+    availability: moderate
+    notes: "Pre-summer. Rising temperatures make climbing harder in afternoon. Morning plucking preferred."
+    recommended_frequency: "Every 45 days"
+    typical_rate_per_tree: 45
+    weather: hot
+    advisory: "Schedule plucking before 10 AM to avoid heat stress."
+
+  april:
+    demand: moderate
+    availability: moderate
+    notes: "Vishu festival season. Some providers take holidays. Pre-monsoon showers begin."
+    recommended_frequency: "Every 50 days"
+    typical_rate_per_tree: 50
+    weather: hot_humid
+    festival_impact:
+      - name: Vishu
+        date_range: "April 14-15"
+        impact: "Providers may be unavailable for 2-3 days"
+    related_services:
+      - palm-pest-treatment
+      - rhinoceros-beetle-control
+
+  may:
+    demand: moderate
+    availability: moderate
+    notes: "Pre-monsoon period. Increasing humidity. Last chance for easy plucking before rains."
+    recommended_frequency: "Every 50 days"
+    typical_rate_per_tree: 50
+    weather: humid
+    advisory: "Complete pending plucking before June monsoon onset."
+    pest_risk: high
+    common_pests:
+      - rhinoceros_beetle
+      - red_palm_weevil
+
+  june:
+    demand: low
+    availability: low
+    notes: "Southwest monsoon onset (Edavappathi). Climbing is dangerous on wet palms. Most plucking suspended."
+    recommended_frequency: "Avoid if possible"
+    typical_rate_per_tree: 70
+    weather: heavy_rain
+    advisory: "Plucking NOT recommended during active rain. Risk of falls from wet palm trunks."
+    safety_notes:
+      - "Wet palm trunks are extremely slippery"
+      - "Lightning risk during thunderstorms"
+      - "Use mechanical pluckers where available"
+    surge_pricing: true
+    surge_multiplier: 1.5
+
+  july:
+    demand: low
+    availability: low
+    notes: "Peak monsoon. Continuous heavy rain in most districts. Minimal plucking activity."
+    recommended_frequency: "Emergency only"
+    typical_rate_per_tree: 80
+    weather: heavy_rain
+    advisory: "Only schedule if nuts are falling and causing safety hazard. Use mechanical pluckers."
+    surge_pricing: true
+    surge_multiplier: 1.8
+
+  august:
+    demand: low
+    availability: low
+    notes: "Monsoon continues. Onam festival season increases demand despite weather challenges."
+    recommended_frequency: "When weather permits"
+    typical_rate_per_tree: 70
+    weather: rain
+    festival_impact:
+      - name: Onam
+        date_range: "August/September (varies)"
+        impact: "High demand for fresh coconut for Onam feast preparation. Providers charge premium."
+    advisory: "Book well in advance for pre-Onam plucking."
+
+  september:
+    demand: moderate
+    availability: moderate
+    notes: "Northeast monsoon transition. Intermittent rain. Plucking resumes in dry spells."
+    recommended_frequency: "Every 55 days"
+    typical_rate_per_tree: 55
+    weather: intermittent_rain
+    related_services:
+      - palm-pest-treatment
+      - fallen-tree-removal
+
+  october:
+    demand: moderate
+    availability: moderate
+    notes: "Post-monsoon. Weather improving. Backlog of un-plucked trees creates high demand."
+    recommended_frequency: "Every 50 days"
+    typical_rate_per_tree: 50
+    weather: clearing
+    advisory: "Priority: trees not plucked during monsoon may have heavy nut loads. Check for pest damage."
+
+  november:
+    demand: high
+    availability: high
+    notes: "Dry season begins. Ideal plucking conditions. Good copra drying weather."
+    recommended_frequency: "Every 45 days"
+    typical_rate_per_tree: 40
+    weather: dry
+    related_services:
+      - copra-processing
+      - coconut-oil-extraction
+      - palm-maintenance
+
+  december:
+    demand: high
+    availability: moderate
+    notes: "Peak season. Christmas and New Year holidays reduce provider availability."
+    recommended_frequency: "Every 45 days"
+    typical_rate_per_tree: 45
+    weather: dry
+    festival_impact:
+      - name: Christmas
+        date_range: "December 24-26"
+        impact: "Christian-majority areas (Kottayam, Ernakulam) have reduced availability"
+
+# District-specific adjustments
+districts:
+  thiruvananthapuram:
+    monsoon_intensity: moderate
+    plucking_season_extension: "+15 days"
+  ernakulam:
+    monsoon_intensity: high
+    urban_premium: 10
+  kozhikode:
+    monsoon_intensity: very_high
+    monsoon_disruption_days: 90
+  wayanad:
+    monsoon_intensity: very_high
+    hill_terrain_premium: 20
+    notes: "Hill terrain requires experienced climbers"
+
+# Pricing factors
+pricing:
+  base_rate_per_tree: 40
+  factors:
+    tree_height:
+      tall_40ft_plus: 1.5
+      medium_25_40ft: 1.0
+      dwarf_under_25ft: 0.8
+    access_difficulty:
+      easy_road_access: 1.0
+      moderate_walk: 1.2
+      difficult_terrain: 1.5
+    quantity_discount:
+      10_plus_trees: 0.9
+      25_plus_trees: 0.85
+      50_plus_trees: 0.8
+    mechanical_plucker:
+      available: true
+      premium: -0.1  # Slightly cheaper as faster

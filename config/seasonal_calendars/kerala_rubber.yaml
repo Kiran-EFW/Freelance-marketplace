@@ -1,0 +1,196 @@
+# Kerala Rubber Tapping Seasonal Calendar
+# Rubber (Hevea brasiliensis) is tapped primarily in Central Kerala
+# (Kottayam, Ernakulam, Idukki districts).
+
+service:
+  category: rubber-tapping
+  region: Kerala
+  country: IN
+
+# Rubber tapping follows a strict seasonal pattern:
+# - Tapping season: October/November to May/June
+# - Resting (wintering) season: June to September
+# - Trees are tapped every 2-3 days in the early morning
+
+months:
+  january:
+    demand: high
+    availability: high
+    tapping_active: true
+    notes: "Peak tapping season. Dry weather, high latex yield. Best quality sheet rubber."
+    typical_daily_yield_kg: 1.5
+    latex_quality: excellent
+    tapping_time: "04:00-07:00"
+    typical_rate_per_acre_month: 3500
+    weather: dry
+
+  february:
+    demand: high
+    availability: high
+    tapping_active: true
+    notes: "Continued peak season. Refoliation begins in some varieties. Excellent yields."
+    typical_daily_yield_kg: 1.5
+    latex_quality: excellent
+    tapping_time: "04:00-07:00"
+    typical_rate_per_acre_month: 3500
+    weather: dry
+
+  march:
+    demand: high
+    availability: high
+    tapping_active: true
+    notes: "Wintering begins. Leaf fall starts. Yields begin to reduce. Watch for Abnormal Leaf Fall (ALF)."
+    typical_daily_yield_kg: 1.2
+    latex_quality: good
+    tapping_time: "04:00-07:00"
+    typical_rate_per_acre_month: 3500
+    weather: hot
+    pest_risk: moderate
+    common_diseases:
+      - abnormal_leaf_fall
+      - powdery_mildew
+
+  april:
+    demand: moderate
+    availability: moderate
+    tapping_active: true
+    notes: "Active wintering. Reduced leaf canopy. Some planters pause tapping. Yields declining."
+    typical_daily_yield_kg: 0.8
+    latex_quality: fair
+    tapping_time: "04:00-06:30"
+    typical_rate_per_acre_month: 3000
+    weather: hot
+    advisory: "Consider resting trees if leaf fall exceeds 70%."
+
+  may:
+    demand: low
+    availability: moderate
+    tapping_active: partial
+    notes: "Pre-monsoon. Many estates pause tapping. New leaf flush begins. Phytophthora risk increasing."
+    typical_daily_yield_kg: 0.5
+    latex_quality: fair
+    tapping_time: "04:00-06:00"
+    typical_rate_per_acre_month: 2500
+    weather: humid
+    advisory: "Rain guard installation recommended for monsoon preparation."
+    related_services:
+      - rain_guard_installation
+      - panel_treatment
+
+  june:
+    demand: very_low
+    availability: low
+    tapping_active: false
+    notes: "Monsoon onset. Tapping suspended in most estates. Rain prevents latex collection. ALF risk highest."
+    typical_daily_yield_kg: 0
+    latex_quality: n_a
+    typical_rate_per_acre_month: 0
+    weather: heavy_rain
+    advisory: "Tapping MUST stop. Apply Bordeaux mixture for ALF prevention. Time for panel maintenance."
+    disease_risk: very_high
+    common_diseases:
+      - abnormal_leaf_fall_phytophthora
+      - pink_disease
+      - black_stripe
+    related_services:
+      - phytophthora_treatment
+      - bordeaux_mixture_application
+      - panel_dressing
+
+  july:
+    demand: very_low
+    availability: very_low
+    tapping_active: false
+    notes: "Peak monsoon. Complete tapping rest. Focus on disease management and maintenance."
+    typical_daily_yield_kg: 0
+    latex_quality: n_a
+    typical_rate_per_acre_month: 0
+    weather: heavy_rain
+    related_services:
+      - disease_management
+      - fertilizer_application
+      - weed_management
+
+  august:
+    demand: very_low
+    availability: low
+    tapping_active: false
+    notes: "Monsoon continues. Maintenance activities. Fertilizer application during rain breaks."
+    typical_daily_yield_kg: 0
+    latex_quality: n_a
+    typical_rate_per_acre_month: 0
+    weather: rain
+    related_services:
+      - fertilizer_application
+      - weeding
+      - drainage_maintenance
+
+  september:
+    demand: low
+    availability: moderate
+    tapping_active: false
+    notes: "Monsoon receding. Preparation for tapping season. Panel marking and tool sharpening."
+    typical_daily_yield_kg: 0
+    latex_quality: n_a
+    typical_rate_per_acre_month: 0
+    weather: intermittent_rain
+    advisory: "Prepare for tapping resumption. Sharpen knives, check rain guards, clean collection cups."
+    related_services:
+      - tapping_panel_preparation
+      - rain_guard_repair
+      - equipment_maintenance
+
+  october:
+    demand: moderate
+    availability: moderate
+    tapping_active: partial
+    notes: "Tapping resumes in estates with rain guards. Slow start. Yields building up gradually."
+    typical_daily_yield_kg: 0.5
+    latex_quality: fair
+    tapping_time: "04:30-07:00"
+    typical_rate_per_acre_month: 2500
+    weather: clearing
+    advisory: "Resume tapping only when bark is dry. Test panels before full tapping."
+
+  november:
+    demand: high
+    availability: high
+    tapping_active: true
+    notes: "Full tapping season begins. Good weather conditions. Yields increasing."
+    typical_daily_yield_kg: 1.0
+    latex_quality: good
+    tapping_time: "04:00-07:00"
+    typical_rate_per_acre_month: 3000
+    weather: dry
+
+  december:
+    demand: high
+    availability: moderate
+    tapping_active: true
+    notes: "Strong season. Christmas holidays reduce availability in Christian-majority areas."
+    typical_daily_yield_kg: 1.3
+    latex_quality: excellent
+    tapping_time: "04:00-07:00"
+    typical_rate_per_acre_month: 3500
+    weather: dry
+    festival_impact:
+      - name: Christmas
+        date_range: "December 24-26"
+        impact: "Significant availability reduction in Kottayam, Ernakulam districts"
+
+pricing:
+  payment_models:
+    daily_wage:
+      rate: 700
+      includes: "Tapping + collection + basic sheet making"
+    per_acre_monthly:
+      small_holding_under_5_acres: 3500
+      medium_5_to_20_acres: 3000
+      large_over_20_acres: 2800
+    revenue_share:
+      tapper_percentage: 35
+      owner_percentage: 65
+      notes: "Common in smallholdings. Tapper gets 35% of rubber value."
+  skill_premium:
+    experienced_10_plus_years: 1.2
+    certified_rrii_trained: 1.15

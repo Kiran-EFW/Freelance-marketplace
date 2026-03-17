@@ -1,0 +1,225 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+  scrape_timeout: 10s
+  external_labels:
+    cluster: seva-prod
+    environment: production
+
+# Alert rules
+rule_files:
+  - "alert_rules.yml"
+
+# Alertmanager configuration
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets:
+            - alertmanager:9093
+
+# Scrape configurations
+scrape_configs:
+  # ---------------------------------------------------------------------------
+  # Go Backend API
+  # ---------------------------------------------------------------------------
+  - job_name: "seva-backend"
+    metrics_path: /metrics
+    kubernetes_sd_configs:
+      - role: pod
+        namespaces:
+          names:
+            - seva
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_label_app]
+        regex: seva-backend
+        action: keep
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        regex: "true"
+        action: keep
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_port]
+        regex: (.+)
+        target_label: __address__
+        replacement: ${1}:$1
+        action: replace
+      - source_labels: [__meta_kubernetes_pod_name]
+        target_label: pod
+      - source_labels: [__meta_kubernetes_namespace]
+        target_label: namespace
+
+  # ---------------------------------------------------------------------------
+  # Node Exporter (host metrics)
+  # ---------------------------------------------------------------------------
+  - job_name: "node-exporter"
+    kubernetes_sd_configs:
+      - role: node
+    relabel_configs:
+      - action: labelmap
+        regex: __meta_kubernetes_node_label_(.+)
+      - target_label: __address__
+        replacement: ${1}:9100
+
+  # ---------------------------------------------------------------------------
+  # Kubernetes API Server
+  # ---------------------------------------------------------------------------
+  - job_name: "kubernetes-apiservers"
+    kubernetes_sd_configs:
+      - role: endpoints
+    scheme: https
+    tls_config:
+      ca_file: /var/run/secrets/kubernetes.io/serviceaccount/ca.crt
+    bearer_token_file: /var/run/secrets/kubernetes.io/serviceaccount/token
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_namespace, __meta_kubernetes_service_name, __meta_kubernetes_endpoint_port_name]
+        action: keep
+        regex: default;kubernetes;https
+
+  # ---------------------------------------------------------------------------
+  # Kubernetes Pods (general)
+  # ---------------------------------------------------------------------------
+  - job_name: "kubernetes-pods"
+    kubernetes_sd_configs:
+      - role: pod
+    relabel_configs:
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_scrape]
+        action: keep
+        regex: "true"
+      - source_labels: [__meta_kubernetes_pod_annotation_prometheus_io_path]
+        action: replace
+        target_label: __metrics_path__
+        regex: (.+)
+      - source_labels: [__address__, __meta_kubernetes_pod_annotation_prometheus_io_port]
+        action: replace
+        regex: ([^:]+)(?::\d+)?;(\d+)
+        replacement: $1:$2
+        target_label: __address__
+      - action: labelmap
+        regex: __meta_kubernetes_pod_label_(.+)
+      - source_labels: [__meta_kubernetes_namespace]
+        action: replace
+        target_label: kubernetes_namespace
+      - source_labels: [__meta_kubernetes_pod_name]
+        action: replace
+        target_label: kubernetes_pod_name
+
+---
+# Alert Rules
+# Save as alert_rules.yml alongside prometheus.yml
+
+groups:
+  - name: seva.api
+    rules:
+      # High error rate (>5% of requests returning 5xx in 5 minutes)
+      - alert: HighErrorRate
+        expr: |
+          sum(rate(http_requests_total{status=~"5..", job="seva-backend"}[5m]))
+          /
+          sum(rate(http_requests_total{job="seva-backend"}[5m]))
+          > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High API error rate ({{ $value | humanizePercentage }})"
+          description: "More than 5% of API requests are failing with 5xx errors."
+
+      # High latency (p95 > 2s)
+      - alert: HighLatency
+        expr: |
+          histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{job="seva-backend"}[5m])) by (le))
+          > 2
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High API latency (p95 = {{ $value | humanizeDuration }})"
+          description: "95th percentile API latency exceeds 2 seconds."
+
+      # Too many active goroutines
+      - alert: HighGoroutineCount
+        expr: go_goroutines{job="seva-backend"} > 5000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High goroutine count ({{ $value }})"
+
+  - name: seva.infrastructure
+    rules:
+      # Pod restart loop
+      - alert: PodCrashLooping
+        expr: rate(kube_pod_container_status_restarts_total{namespace="seva"}[15m]) > 0
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Pod {{ $labels.pod }} is crash-looping"
+
+      # High CPU usage
+      - alert: HighCPUUsage
+        expr: |
+          sum(rate(container_cpu_usage_seconds_total{namespace="seva"}[5m])) by (pod)
+          /
+          sum(kube_pod_container_resource_limits{namespace="seva", resource="cpu"}) by (pod)
+          > 0.9
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Pod {{ $labels.pod }} CPU usage above 90%"
+
+      # High memory usage
+      - alert: HighMemoryUsage
+        expr: |
+          sum(container_memory_working_set_bytes{namespace="seva"}) by (pod)
+          /
+          sum(kube_pod_container_resource_limits{namespace="seva", resource="memory"}) by (pod)
+          > 0.9
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Pod {{ $labels.pod }} memory usage above 90%"
+
+      # Database connection pool exhaustion
+      - alert: DBConnectionPoolExhausted
+        expr: seva_db_pool_active_connections / seva_db_pool_max_connections > 0.85
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Database connection pool at {{ $value | humanizePercentage }}"
+
+      # Redis memory usage
+      - alert: RedisHighMemory
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.85
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis memory at {{ $value | humanizePercentage }}"
+
+  - name: seva.business
+    rules:
+      # No jobs created in 30 minutes (during business hours)
+      - alert: NoJobsCreated
+        expr: |
+          sum(increase(seva_jobs_created_total[30m])) == 0
+          and on() (hour() >= 6 and hour() <= 22)
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "No jobs created in the last 30 minutes"
+
+      # High job cancellation rate
+      - alert: HighCancellationRate
+        expr: |
+          sum(rate(seva_jobs_cancelled_total[1h]))
+          /
+          sum(rate(seva_jobs_created_total[1h]))
+          > 0.3
+        for: 30m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Job cancellation rate is {{ $value | humanizePercentage }}"

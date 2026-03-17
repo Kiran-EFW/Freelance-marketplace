@@ -1,0 +1,166 @@
+name: Deploy to Production
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to deploy (e.g., v1.2.3)"
+        required: true
+        type: string
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+env:
+  AWS_REGION: ap-south-1
+  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.ap-south-1.amazonaws.com
+  KUBE_NAMESPACE: seva
+
+jobs:
+  build-and-push:
+    name: Build Production Images
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    strategy:
+      matrix:
+        target:
+          - name: backend
+            context: ./backend
+            dockerfile: ./backend/Dockerfile
+            repository: seva/backend
+          - name: web
+            context: ./web
+            dockerfile: ./web/Dockerfile
+            repository: seva/web
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.release.tag_name || github.event.inputs.tag }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to ECR
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Determine version tag
+        id: version
+        run: |
+          TAG="${{ github.event.release.tag_name || github.event.inputs.tag }}"
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.ECR_REGISTRY }}/${{ matrix.target.repository }}
+          tags: |
+            type=raw,value=${{ steps.version.outputs.tag }}
+            type=raw,value=prod-latest
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.target.context }}
+          file: ${{ matrix.target.dockerfile }}
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            APP_ENV=production
+
+  approve:
+    name: Manual Approval
+    runs-on: ubuntu-latest
+    needs: build-and-push
+    environment: production
+    steps:
+      - name: Approval gate
+        run: echo "Production deployment approved"
+
+  deploy:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: approve
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Update kubeconfig
+        run: aws eks update-kubeconfig --name seva-prod --region ${{ env.AWS_REGION }}
+
+      - name: Determine version tag
+        id: version
+        run: |
+          TAG="${{ github.event.release.tag_name || github.event.inputs.tag }}"
+          echo "tag=${TAG}" >> $GITHUB_OUTPUT
+
+      - name: Deploy backend (canary)
+        run: |
+          # Scale canary to 1 replica with new image
+          kubectl set image deployment/seva-backend \
+            backend=${{ env.ECR_REGISTRY }}/seva/backend:${{ steps.version.outputs.tag }} \
+            -n ${{ env.KUBE_NAMESPACE }}
+
+          # Wait for rollout
+          kubectl rollout status deployment/seva-backend -n ${{ env.KUBE_NAMESPACE }} --timeout=600s
+
+      - name: Verify backend health
+        run: |
+          echo "Waiting 30s for stabilization..."
+          sleep 30
+
+          # Check all pods are ready
+          READY=$(kubectl get deployment seva-backend -n ${{ env.KUBE_NAMESPACE }} -o jsonpath='{.status.readyReplicas}')
+          DESIRED=$(kubectl get deployment seva-backend -n ${{ env.KUBE_NAMESPACE }} -o jsonpath='{.spec.replicas}')
+
+          if [ "$READY" != "$DESIRED" ]; then
+            echo "ERROR: Only $READY/$DESIRED replicas ready. Rolling back."
+            kubectl rollout undo deployment/seva-backend -n ${{ env.KUBE_NAMESPACE }}
+            exit 1
+          fi
+
+          echo "Backend healthy: $READY/$DESIRED replicas ready"
+
+      - name: Deploy web
+        run: |
+          kubectl set image deployment/seva-web \
+            web=${{ env.ECR_REGISTRY }}/seva/web:${{ steps.version.outputs.tag }} \
+            -n ${{ env.KUBE_NAMESPACE }}
+          kubectl rollout status deployment/seva-web -n ${{ env.KUBE_NAMESPACE }} --timeout=300s
+
+      - name: Post-deployment status
+        run: |
+          echo "=== Production Deployment Complete ==="
+          echo "Version: ${{ steps.version.outputs.tag }}"
+          echo ""
+          kubectl get deployments -n ${{ env.KUBE_NAMESPACE }}
+          kubectl get pods -n ${{ env.KUBE_NAMESPACE }}
+
+      - name: Rollback on failure
+        if: failure()
+        run: |
+          echo "Rolling back production deployment..."
+          kubectl rollout undo deployment/seva-backend -n ${{ env.KUBE_NAMESPACE }} || true
+          kubectl rollout undo deployment/seva-web -n ${{ env.KUBE_NAMESPACE }} || true
+          echo "Rollback completed."

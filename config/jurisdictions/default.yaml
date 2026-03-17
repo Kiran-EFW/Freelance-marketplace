@@ -1,0 +1,35 @@
+jurisdiction:
+  id: "default"
+  name: "Default Template"
+  default_language: "en"
+  supported_languages: ["en"]
+  currency: "USD"
+  currency_symbol: "$"
+  phone_prefix: "+1"
+  phone_format: "XXXXXXXXXX"
+  timezone: "UTC"
+
+  payment_gateways:
+    primary: "stripe"
+    fallback: null
+
+  sms_providers:
+    primary: "twilio"
+    fallback: null
+
+  tax:
+    type: "sales_tax"
+    rates:
+      standard: 0
+    provider_threshold: 0
+
+  verification:
+    provider_required: ["government_id"]
+    company_required: ["business_license", "tax_id", "bank_account"]
+
+  categories_enabled: ["home-services", "professional-services", "automotive", "health-wellness", "education-tutoring"]
+
+  regulations:
+    max_cash_payment: 0
+    invoice_required_above: 0
+    digital_payment_mandate: true
