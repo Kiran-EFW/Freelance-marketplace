@@ -15,6 +15,7 @@ export 'models/provider.dart';
 export 'models/category.dart';
 export 'models/review.dart';
 export 'models/notification.dart';
+export 'models/message.dart';
 export 'models/result.dart';
 
 // Repositories
@@ -22,6 +23,7 @@ export 'repositories/auth_repository.dart';
 export 'repositories/job_repository.dart';
 export 'repositories/provider_repository.dart';
 export 'repositories/notification_repository.dart';
+export 'repositories/message_repository.dart';
 
 // Services
 export 'services/auth_service.dart';

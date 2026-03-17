@@ -8,6 +8,7 @@ import (
 	"math"
 	"net/http"
 	"net/smtp"
+	"strings"
 	"time"
 
 	"github.com/hibiken/asynq"
@@ -77,6 +78,9 @@ type SendSeasonalReminderPayload struct {
 	JurisdictionID string `json:"jurisdiction_id"`
 	Season         string `json:"season"`
 	CategoryID     string `json:"category_id"`
+	CropID         string `json:"crop_id"`
+	Activity       string `json:"activity"`
+	Month          string `json:"month"`
 }
 
 // GenerateSEOContentPayload is the data passed to the SEO content generation task.
@@ -568,12 +572,118 @@ func (w *Worker) handleSendSeasonalReminder(_ context.Context, task *asynq.Task)
 		Str("jurisdiction_id", payload.JurisdictionID).
 		Str("season", payload.Season).
 		Str("category_id", payload.CategoryID).
+		Str("crop_id", payload.CropID).
+		Str("activity", payload.Activity).
+		Str("month", payload.Month).
 		Msg("processing SendSeasonalReminder task")
 
-	// TODO: query seasonal_calendars table to find upcoming seasonal events
-	// TODO: find consumers in the jurisdiction who might need related services
-	// TODO: send personalized reminders via SMS/push notification
-	// e.g., "Monsoon is approaching! Book waterproofing services now."
+	if w.deps == nil || w.deps.DB == nil {
+		log.Warn().Msg("DB not available, skipping seasonal reminder processing")
+		return nil
+	}
+
+	// Determine the crop identifier to search by. Prefer crop_id; fall back to category_id.
+	cropSlug := payload.CropID
+	if cropSlug == "" {
+		cropSlug = payload.CategoryID
+	}
+	if cropSlug == "" {
+		log.Warn().Msg("no crop_id or category_id provided, skipping seasonal reminder")
+		return nil
+	}
+
+	ctx := context.Background()
+
+	// Query users who have active jobs or subscriptions related to this crop/jurisdiction.
+	rows, err := w.deps.DB.Query(ctx,
+		`SELECT DISTINCT u.phone, u.name
+		 FROM users u
+		 JOIN jobs j ON (j.customer_id = u.id OR j.provider_id = u.id)
+		 JOIN categories c ON j.category_id = c.id
+		 WHERE c.slug LIKE '%' || $1 || '%'
+		   AND u.phone IS NOT NULL
+		   AND u.phone != ''
+		 LIMIT 500`,
+		cropSlug,
+	)
+	if err != nil {
+		return fmt.Errorf("query users for seasonal reminder (crop=%s): %w", cropSlug, err)
+	}
+	defer rows.Close()
+
+	type recipient struct {
+		Phone string
+		Name  string
+	}
+
+	var recipients []recipient
+	for rows.Next() {
+		var r recipient
+		if err := rows.Scan(&r.Phone, &r.Name); err != nil {
+			log.Error().Err(err).Msg("failed to scan seasonal reminder recipient row")
+			continue
+		}
+		recipients = append(recipients, r)
+	}
+	if err := rows.Err(); err != nil {
+		return fmt.Errorf("iterate seasonal reminder recipient rows: %w", err)
+	}
+
+	if len(recipients) == 0 {
+		log.Info().
+			Str("crop_id", cropSlug).
+			Msg("no users found for seasonal reminder, nothing to send")
+		return nil
+	}
+
+	// Build the SMS message based on the activity and crop.
+	activity := payload.Activity
+	if activity == "" {
+		activity = payload.Season
+	}
+
+	// Capitalize the crop name for display (e.g., "coconut" -> "Coconut").
+	cropDisplay := cropSlug
+	if len(cropDisplay) > 0 {
+		cropDisplay = strings.ToUpper(cropDisplay[:1]) + cropDisplay[1:]
+	}
+
+	message := fmt.Sprintf(
+		"Seva: %s %s season is approaching in your area. Book workers now to avoid the rush. Reply STOP to opt out.",
+		cropDisplay, activity,
+	)
+
+	// Send SMS notifications to each recipient.
+	sentCount := 0
+	failedCount := 0
+
+	if w.deps.SMSProvider == nil {
+		log.Warn().
+			Int("recipients", len(recipients)).
+			Msg("SMS provider not configured, logging seasonal reminders but not sending")
+		return nil
+	}
+
+	for _, r := range recipients {
+		if err := w.deps.SMSProvider.SendSMS(r.Phone, message); err != nil {
+			log.Warn().
+				Err(err).
+				Str("phone", r.Phone).
+				Str("name", r.Name).
+				Msg("failed to send seasonal reminder SMS")
+			failedCount++
+			continue
+		}
+		sentCount++
+	}
+
+	log.Info().
+		Str("crop_id", cropSlug).
+		Str("activity", activity).
+		Int("total_recipients", len(recipients)).
+		Int("sent", sentCount).
+		Int("failed", failedCount).
+		Msg("seasonal reminder processing complete")
 
 	return nil
 }
@@ -935,11 +1045,14 @@ func NewProcessPayoutTask(providerID string, amount float64, currency, jobID str
 }
 
 // NewSendSeasonalReminderTask creates a new SendSeasonalReminder task.
-func NewSendSeasonalReminderTask(jurisdictionID, season, categoryID string) (*asynq.Task, error) {
+func NewSendSeasonalReminderTask(jurisdictionID, season, categoryID, cropID, activity, month string) (*asynq.Task, error) {
 	payload, err := json.Marshal(SendSeasonalReminderPayload{
 		JurisdictionID: jurisdictionID,
 		Season:         season,
 		CategoryID:     categoryID,
+		CropID:         cropID,
+		Activity:       activity,
+		Month:          month,
 	})
 	if err != nil {
 		return nil, err

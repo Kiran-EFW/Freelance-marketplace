@@ -3,46 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:seva_core/core.dart';
 import 'package:seva_ui_kit/ui_kit.dart';
 
-/// A conversation summary displayed in the messages list.
-class Conversation {
-  final String id;
-  final String providerId;
-  final String providerName;
-  final String? providerAvatarUrl;
-  final String lastMessage;
-  final DateTime lastMessageAt;
-  final int unreadCount;
-  final String? jobId;
-  final String? jobTitle;
-
-  const Conversation({
-    required this.id,
-    required this.providerId,
-    required this.providerName,
-    this.providerAvatarUrl,
-    required this.lastMessage,
-    required this.lastMessageAt,
-    this.unreadCount = 0,
-    this.jobId,
-    this.jobTitle,
-  });
-
-  factory Conversation.fromJson(Map<String, dynamic> json) {
-    return Conversation(
-      id: json['id'] as String,
-      providerId: json['provider_id'] as String,
-      providerName: json['provider_name'] as String,
-      providerAvatarUrl: json['provider_avatar_url'] as String?,
-      lastMessage: json['last_message'] as String,
-      lastMessageAt: DateTime.parse(json['last_message_at'] as String),
-      unreadCount: json['unread_count'] as int? ?? 0,
-      jobId: json['job_id'] as String?,
-      jobTitle: json['job_title'] as String?,
-    );
-  }
-}
+import '../../main.dart';
 
 /// Screen listing all conversations for the customer.
 class MessagesScreen extends ConsumerStatefulWidget {
@@ -70,16 +34,22 @@ class _MessagesScreenState extends ConsumerState<MessagesScreen> {
     });
 
     try {
-      // TODO: Replace with actual API call when messaging endpoints are ready.
-      // final response = await apiClient.getConversations();
-      // For now, show empty state.
-      await Future.delayed(const Duration(milliseconds: 300));
+      final messageRepo = ref.read(messageRepositoryProvider);
+      final result = await messageRepo.getConversations();
 
-      if (mounted) {
-        setState(() {
-          _conversations = [];
-          _isLoading = false;
-        });
+      if (!mounted) return;
+
+      switch (result) {
+        case Success(:final data):
+          setState(() {
+            _conversations = data.items;
+            _isLoading = false;
+          });
+        case Failure(:final message):
+          setState(() {
+            _error = message;
+            _isLoading = false;
+          });
       }
     } catch (e) {
       if (mounted) {

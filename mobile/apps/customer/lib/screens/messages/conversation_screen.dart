@@ -2,11 +2,12 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:seva_core/core.dart';
 import 'package:seva_ui_kit/ui_kit.dart';
 
-import 'messages_screen.dart';
+import '../../main.dart';
 
-/// A single chat message in a conversation.
+/// A single chat message adapted for display in the conversation UI.
 class ChatMessage {
   final String id;
   final String senderId;
@@ -24,18 +25,29 @@ class ChatMessage {
     this.status = ChatMessageStatus.sent,
   });
 
-  factory ChatMessage.fromJson(
-    Map<String, dynamic> json, {
-    required String currentUserId,
-  }) {
+  /// Create a [ChatMessage] from a core [Message] model.
+  factory ChatMessage.fromMessage(Message message, {required String currentUserId}) {
     return ChatMessage(
-      id: json['id'] as String,
-      senderId: json['sender_id'] as String,
-      content: json['content'] as String,
-      sentAt: DateTime.parse(json['sent_at'] as String),
-      isFromCurrentUser: json['sender_id'] == currentUserId,
-      status: ChatMessageStatus.fromString(json['status'] as String? ?? 'sent'),
+      id: message.id,
+      senderId: message.senderId,
+      content: message.content,
+      sentAt: message.createdAt,
+      isFromCurrentUser: message.senderId == currentUserId,
+      status: _mapStatus(message.status),
     );
+  }
+
+  static ChatMessageStatus _mapStatus(MessageStatus status) {
+    switch (status) {
+      case MessageStatus.sending:
+        return ChatMessageStatus.sending;
+      case MessageStatus.sent:
+        return ChatMessageStatus.sent;
+      case MessageStatus.delivered:
+        return ChatMessageStatus.delivered;
+      case MessageStatus.read:
+        return ChatMessageStatus.read;
+    }
   }
 }
 
@@ -44,13 +56,6 @@ enum ChatMessageStatus {
   sent,
   delivered,
   read;
-
-  factory ChatMessageStatus.fromString(String value) {
-    return ChatMessageStatus.values.firstWhere(
-      (e) => e.name == value.toLowerCase(),
-      orElse: () => ChatMessageStatus.sent,
-    );
-  }
 }
 
 /// Full-screen chat view for a single conversation.
@@ -78,11 +83,18 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
   bool _isSending = false;
   bool _hasMore = true;
   int _currentPage = 1;
+  String? _error;
+
+  String get _currentUserId {
+    final authService = ref.read(authServiceProvider);
+    return authService.currentUser?.id ?? '';
+  }
 
   @override
   void initState() {
     super.initState();
     _loadMessages();
+    _markAsRead();
     _scrollController.addListener(_onScroll);
   }
 
@@ -104,24 +116,48 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     }
   }
 
+  /// Mark conversation as read (fire-and-forget).
+  void _markAsRead() {
+    final messageRepo = ref.read(messageRepositoryProvider);
+    messageRepo.markAsRead(widget.conversationId);
+  }
+
   Future<void> _loadMessages() async {
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
 
     try {
-      // TODO: Replace with actual API call.
-      // final response = await apiClient.getMessages(widget.conversationId);
-      await Future.delayed(const Duration(milliseconds: 300));
+      final messageRepo = ref.read(messageRepositoryProvider);
+      final result = await messageRepo.getMessages(widget.conversationId);
 
+      if (!mounted) return;
+
+      switch (result) {
+        case Success(:final data):
+          final currentUserId = _currentUserId;
+          setState(() {
+            _messages = data.items
+                .map((m) => ChatMessage.fromMessage(m, currentUserId: currentUserId))
+                .toList();
+            _hasMore = data.hasMore;
+            _currentPage = data.page;
+            _isLoading = false;
+          });
+          _scrollToBottom();
+        case Failure(:final message):
+          setState(() {
+            _error = message;
+            _isLoading = false;
+          });
+      }
+    } catch (e) {
       if (mounted) {
         setState(() {
-          _messages = [];
+          _error = 'Failed to load messages.';
           _isLoading = false;
         });
-        _scrollToBottom();
-      }
-    } catch (_) {
-      if (mounted) {
-        setState(() => _isLoading = false);
       }
     }
   }
@@ -129,24 +165,35 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
   Future<void> _loadOlderMessages() async {
     if (!_hasMore || _isLoading) return;
 
-    _currentPage++;
+    final nextPage = _currentPage + 1;
 
     try {
-      // TODO: Replace with actual API call.
-      // final response = await apiClient.getMessages(
-      //   widget.conversationId,
-      //   page: _currentPage,
-      // );
-      await Future.delayed(const Duration(milliseconds: 300));
+      final messageRepo = ref.read(messageRepositoryProvider);
+      final result = await messageRepo.getMessages(
+        widget.conversationId,
+        page: nextPage,
+      );
 
-      if (mounted) {
-        setState(() {
-          // Prepend older messages.
-          _hasMore = false; // Until API is wired up.
-        });
+      if (!mounted) return;
+
+      switch (result) {
+        case Success(:final data):
+          final currentUserId = _currentUserId;
+          final olderMessages = data.items
+              .map((m) => ChatMessage.fromMessage(m, currentUserId: currentUserId))
+              .toList();
+          setState(() {
+            // Prepend older messages to the beginning of the list.
+            _messages = [...olderMessages, ..._messages];
+            _hasMore = data.hasMore;
+            _currentPage = nextPage;
+          });
+        case Failure():
+          // Silently fail; user can scroll up again to retry.
+          break;
       }
     } catch (_) {
-      _currentPage--;
+      // Silently fail on pagination errors.
     }
   }
 
@@ -160,7 +207,7 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     // Optimistic insert.
     final tempMessage = ChatMessage(
       id: 'temp_${DateTime.now().millisecondsSinceEpoch}',
-      senderId: 'current_user',
+      senderId: _currentUserId,
       content: text,
       sentAt: DateTime.now(),
       isFromCurrentUser: true,
@@ -173,29 +220,34 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
     _scrollToBottom();
 
     try {
-      // TODO: Replace with actual API call.
-      // final response = await apiClient.sendMessage(
-      //   widget.conversationId,
-      //   content: text,
-      // );
-      await Future.delayed(const Duration(milliseconds: 500));
+      final messageRepo = ref.read(messageRepositoryProvider);
+      final result = await messageRepo.sendMessage(
+        widget.conversationId,
+        text,
+      );
 
-      if (mounted) {
-        setState(() {
-          // Replace temp message with server response.
-          final index = _messages.indexWhere((m) => m.id == tempMessage.id);
-          if (index != -1) {
-            _messages[index] = ChatMessage(
-              id: tempMessage.id,
-              senderId: tempMessage.senderId,
-              content: tempMessage.content,
-              sentAt: tempMessage.sentAt,
-              isFromCurrentUser: true,
-              status: ChatMessageStatus.sent,
+      if (!mounted) return;
+
+      switch (result) {
+        case Success(:final data):
+          final currentUserId = _currentUserId;
+          setState(() {
+            final index = _messages.indexWhere((m) => m.id == tempMessage.id);
+            if (index != -1) {
+              _messages[index] = ChatMessage.fromMessage(
+                data,
+                currentUserId: currentUserId,
+              );
+            }
+            _isSending = false;
+          });
+        case Failure(:final message):
+          setState(() => _isSending = false);
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(message)),
             );
           }
-          _isSending = false;
-        });
       }
     } catch (_) {
       if (mounted) {
@@ -293,6 +345,33 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
+    if (_error != null) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.error_outline, size: 64, color: SevaColors.neutral300),
+            const SizedBox(height: 12),
+            Text(
+              _error!,
+              textAlign: TextAlign.center,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyLarge
+                  ?.copyWith(color: SevaColors.textTertiary),
+            ),
+            const SizedBox(height: 16),
+            SevaButton(
+              label: 'Retry',
+              isFullWidth: false,
+              size: SevaButtonSize.small,
+              onPressed: _loadMessages,
+            ),
+          ],
+        ),
+      );
+    }
+
     if (_messages.isEmpty) {
       return Center(
         child: Column(
@@ -324,25 +403,28 @@ class _ConversationScreenState extends ConsumerState<ConversationScreen> {
       );
     }
 
-    return ListView.builder(
-      controller: _scrollController,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      itemCount: _messages.length,
-      itemBuilder: (context, index) {
-        final message = _messages[index];
-        final showDate = index == 0 ||
-            !_isSameDay(
-              _messages[index - 1].sentAt,
-              message.sentAt,
-            );
+    return RefreshIndicator(
+      onRefresh: _loadMessages,
+      child: ListView.builder(
+        controller: _scrollController,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        itemCount: _messages.length,
+        itemBuilder: (context, index) {
+          final message = _messages[index];
+          final showDate = index == 0 ||
+              !_isSameDay(
+                _messages[index - 1].sentAt,
+                message.sentAt,
+              );
 
-        return Column(
-          children: [
-            if (showDate) _DateSeparator(date: message.sentAt),
-            _ChatBubble(message: message),
-          ],
-        );
-      },
+          return Column(
+            children: [
+              if (showDate) _DateSeparator(date: message.sentAt),
+              _ChatBubble(message: message),
+            ],
+          );
+        },
+      ),
     );
   }
 

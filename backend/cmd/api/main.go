@@ -18,6 +18,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/rs/zerolog/log"
 
+	aiadapter "github.com/seva-platform/backend/internal/adapter/ai"
 	"github.com/seva-platform/backend/internal/adapter/payment"
 	"github.com/seva-platform/backend/internal/adapter/push"
 	"github.com/seva-platform/backend/internal/adapter/sms"
@@ -45,6 +46,8 @@ import (
 	reviewsvc "github.com/seva-platform/backend/internal/service/review"
 	routingsvc "github.com/seva-platform/backend/internal/service/routing"
 	searchsvc "github.com/seva-platform/backend/internal/service/search"
+	contentsvc "github.com/seva-platform/backend/internal/service/content"
+	fraudsvc "github.com/seva-platform/backend/internal/service/fraud"
 	subscriptionsvc "github.com/seva-platform/backend/internal/service/subscription"
 	usersvc "github.com/seva-platform/backend/internal/service/user"
 	"github.com/seva-platform/backend/internal/worker"
@@ -157,6 +160,32 @@ func main() {
 	// ---- Payment Gateway ----
 	paymentGateway := payment.NewPaymentGateway(cfg)
 
+	// ---- AI Adapters ----
+	var claudeClient aisvc.ClaudeProvider
+	var visionClient aisvc.VisionProvider
+	var translateClient aisvc.TranslateProvider
+
+	if cfg.ClaudeAPIKey != "" {
+		claudeClient = aiadapter.NewClaudeClient(cfg.ClaudeAPIKey)
+		log.Info().Msg("Claude AI client configured")
+	} else {
+		log.Warn().Msg("CLAUDE_API_KEY not set, AI chat will use rule-based fallback")
+	}
+
+	if cfg.GoogleVisionCredentials != "" {
+		visionClient = aiadapter.NewGoogleVisionClient(cfg.GoogleVisionCredentials)
+		log.Info().Msg("Google Vision client configured")
+	} else {
+		log.Warn().Msg("GOOGLE_VISION_CREDENTIALS not set, photo analysis will use generic fallback")
+	}
+
+	if cfg.GoogleTranslateCredentials != "" {
+		translateClient = aiadapter.NewGoogleTranslateClient(cfg.GoogleTranslateCredentials)
+		log.Info().Msg("Google Translate client configured")
+	} else {
+		log.Warn().Msg("GOOGLE_TRANSLATE_CREDENTIALS not set, translation will use passthrough fallback")
+	}
+
 	// ---- Crop Repository ----
 	cropRepo := postgres.NewCropRepository(dbPool)
 
@@ -172,9 +201,11 @@ func main() {
 	cropSvc := cropsvc.NewCropService(cropRepo)
 	searchSvc := searchsvc.NewSearchService(queries, dbPool)
 	adminSvc := adminsvc.NewAdminService(queries, dbPool, disputeRepo)
-	aiSvc := aisvc.NewAIService(queries, dbPool)
+	aiSvc := aisvc.NewAIService(queries, dbPool, claudeClient, visionClient, translateClient)
 	messagingSvc := messagingsvc.NewMessagingService(dbPool)
 	subscriptionSvc := subscriptionsvc.NewSubscriptionService(dbPool)
+	fraudService := fraudsvc.NewFraudService(dbPool)
+	contentSvc := contentsvc.NewContentService(dbPool)
 
 	// Suppress unused warnings for repos used only via adapters below.
 	_ = categoryRepo
@@ -200,6 +231,7 @@ func main() {
 	escrowSvcAdapter := svcadapter.NewEscrowServiceAdapter(queries)
 	recurringSvcAdapter := svcadapter.NewRecurringServiceAdapter(queries)
 	analyticsSvcAdapter := svcadapter.NewAnalyticsServiceAdapter(queries)
+	contentSvcAdapter := svcadapter.NewContentServiceAdapter(contentSvc)
 
 	// ---- Handlers ----
 	healthHandler := handler.NewHealthHandler(dbPool, rdb)
@@ -228,6 +260,8 @@ func main() {
 	messageHandler.SetHub(wsHub) // Wire hub into message handler for real-time push
 	subscriptionHandler := handler.NewSubscriptionHandler(subscriptionSvcAdapter)
 	analyticsHandler := handler.NewAnalyticsHandler(analyticsSvcAdapter)
+	fraudHandler := handler.NewFraudHandler(fraudService)
+	contentHandler := handler.NewContentHandler(contentSvcAdapter)
 
 	// ---- Jurisdiction Service ----
 	jurisdictionService := jurisdictionsvc.NewJurisdictionService(queries, cacheStore)
@@ -404,10 +438,15 @@ func main() {
 	// Crop Calendar (public — no auth required for browsing)
 	cropHandler.RegisterRoutes(api.Group("/crops"))
 
+	// Content / Education (public — no auth required for browsing articles)
+	contentHandler.RegisterRoutes(api.Group("/content"))
+
 	// --- Admin Routes (admin role required) ---
 	adminGroup := api.Group("/admin", jwtMiddleware, middleware.RequireAdmin())
 	adminHandler.RegisterRoutes(adminGroup)
+	fraudHandler.RegisterRoutes(adminGroup.Group("/fraud"))
 	disputeHandler.RegisterAdminRoutes(adminGroup.Group("/disputes"))
+	contentHandler.RegisterAdminRoutes(adminGroup.Group("/content"))
 
 	// --- Webhook Routes (signature-verified, no JWT) ---
 	webhookGroup := app.Group("/webhooks")
@@ -426,7 +465,7 @@ func main() {
 	smsInterfaceHandler.RegisterRoutes(webhookGroup.Group("/sms"))
 
 	// IVR handler (voice calls for basic phone users)
-	ivrHandler := handler.NewIVRHandler(cfg)
+	ivrHandler := handler.NewIVRHandler(cfg, dbPool)
 	ivrHandler.RegisterRoutes(webhookGroup.Group("/ivr"))
 
 	// ---- Graceful Shutdown ----

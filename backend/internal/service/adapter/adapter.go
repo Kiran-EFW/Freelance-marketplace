@@ -20,6 +20,7 @@ import (
 	"github.com/seva-platform/backend/internal/handler"
 	adminsvc "github.com/seva-platform/backend/internal/service/admin"
 	aisvc "github.com/seva-platform/backend/internal/service/ai"
+	contentsvc "github.com/seva-platform/backend/internal/service/content"
 	cropsvc "github.com/seva-platform/backend/internal/service/crop"
 	disputesvc "github.com/seva-platform/backend/internal/service/dispute"
 	gamificationsvc "github.com/seva-platform/backend/internal/service/gamification"
@@ -2083,3 +2084,137 @@ func (a *AnalyticsServiceAdapter) GetCompetitorDensity(ctx context.Context, prov
 	}
 	return result, nil
 }
+
+// ---------------------------------------------------------------------------
+// ContentServiceAdapter — implements handler.ContentServiceInterface
+// ---------------------------------------------------------------------------
+
+// ContentServiceAdapter wraps contentsvc.ContentService to match
+// handler.ContentServiceInterface. Since both layers use identical Article
+// struct shapes, the adapter performs direct field-level mapping.
+type ContentServiceAdapter struct {
+	svc *contentsvc.ContentService
+}
+
+func NewContentServiceAdapter(svc *contentsvc.ContentService) *ContentServiceAdapter {
+	return &ContentServiceAdapter{svc: svc}
+}
+
+func svcArticleToHandler(a *contentsvc.Article) *handler.ContentArticle {
+	if a == nil {
+		return nil
+	}
+	return &handler.ContentArticle{
+		ID:          a.ID,
+		Slug:        a.Slug,
+		Title:       a.Title,
+		Summary:     a.Summary,
+		Body:        a.Body,
+		Category:    a.Category,
+		Audience:    a.Audience,
+		Tags:        a.Tags,
+		Language:    a.Language,
+		AuthorName:  a.AuthorName,
+		IsPublished: a.IsPublished,
+		ViewCount:   a.ViewCount,
+		CreatedAt:   a.CreatedAt,
+		UpdatedAt:   a.UpdatedAt,
+	}
+}
+
+func handlerArticleToSvc(a *handler.ContentArticle) *contentsvc.Article {
+	if a == nil {
+		return nil
+	}
+	return &contentsvc.Article{
+		ID:          a.ID,
+		Slug:        a.Slug,
+		Title:       a.Title,
+		Summary:     a.Summary,
+		Body:        a.Body,
+		Category:    a.Category,
+		Audience:    a.Audience,
+		Tags:        a.Tags,
+		Language:    a.Language,
+		AuthorName:  a.AuthorName,
+		IsPublished: a.IsPublished,
+		ViewCount:   a.ViewCount,
+		CreatedAt:   a.CreatedAt,
+		UpdatedAt:   a.UpdatedAt,
+	}
+}
+
+func (a *ContentServiceAdapter) ListArticles(ctx context.Context, audience, category, lang string, limit, offset int) ([]handler.ContentArticle, int, error) {
+	articles, total, err := a.svc.ListArticles(ctx, audience, category, lang, limit, offset)
+	if err != nil {
+		return nil, 0, err
+	}
+	result := make([]handler.ContentArticle, len(articles))
+	for i, art := range articles {
+		result[i] = *svcArticleToHandler(&art)
+	}
+	return result, total, nil
+}
+
+func (a *ContentServiceAdapter) GetArticle(ctx context.Context, slug string) (*handler.ContentArticle, error) {
+	art, err := a.svc.GetArticle(ctx, slug)
+	if err != nil {
+		return nil, err
+	}
+	return svcArticleToHandler(art), nil
+}
+
+func (a *ContentServiceAdapter) GetArticleByID(ctx context.Context, id uuid.UUID) (*handler.ContentArticle, error) {
+	art, err := a.svc.GetArticleByID(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	return svcArticleToHandler(art), nil
+}
+
+func (a *ContentServiceAdapter) CreateArticle(ctx context.Context, article *handler.ContentArticle) error {
+	svcArticle := handlerArticleToSvc(article)
+	if err := a.svc.CreateArticle(ctx, svcArticle); err != nil {
+		return err
+	}
+	// Copy back generated fields (ID, Slug, timestamps).
+	article.ID = svcArticle.ID
+	article.Slug = svcArticle.Slug
+	article.CreatedAt = svcArticle.CreatedAt
+	article.UpdatedAt = svcArticle.UpdatedAt
+	return nil
+}
+
+func (a *ContentServiceAdapter) UpdateArticle(ctx context.Context, id uuid.UUID, updates map[string]interface{}) error {
+	return a.svc.UpdateArticle(ctx, id, updates)
+}
+
+func (a *ContentServiceAdapter) DeleteArticle(ctx context.Context, id uuid.UUID) error {
+	return a.svc.DeleteArticle(ctx, id)
+}
+
+func (a *ContentServiceAdapter) GetPopular(ctx context.Context, audience string, limit int) ([]handler.ContentArticle, error) {
+	articles, err := a.svc.GetPopular(ctx, audience, limit)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]handler.ContentArticle, len(articles))
+	for i, art := range articles {
+		result[i] = *svcArticleToHandler(&art)
+	}
+	return result, nil
+}
+
+func (a *ContentServiceAdapter) GetRelated(ctx context.Context, articleID uuid.UUID, limit int) ([]handler.ContentArticle, error) {
+	articles, err := a.svc.GetRelated(ctx, articleID, limit)
+	if err != nil {
+		return nil, err
+	}
+	result := make([]handler.ContentArticle, len(articles))
+	for i, art := range articles {
+		result[i] = *svcArticleToHandler(&art)
+	}
+	return result, nil
+}
+
+var _ handler.ContentServiceInterface = (*ContentServiceAdapter)(nil)

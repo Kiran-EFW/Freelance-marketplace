@@ -1265,6 +1265,37 @@ export const deviceTokens = {
 };
 
 // ---------------------------------------------------------------------------
+// Content / Education API
+// ---------------------------------------------------------------------------
+
+export const content = {
+	list(params?: {
+		audience?: string;
+		category?: string;
+		language?: string;
+		page?: number;
+		per_page?: number;
+	}): Promise<ApiResponse<any[]>> {
+		return request('/content', { params, auth: false });
+	},
+
+	popular(params?: {
+		audience?: string;
+		limit?: number;
+	}): Promise<ApiResponse<any[]>> {
+		return request('/content/popular', { params, auth: false });
+	},
+
+	getBySlug(slug: string): Promise<ApiResponse<any>> {
+		return request(`/content/${slug}`, { auth: false });
+	},
+
+	getRelated(id: string, limit?: number): Promise<ApiResponse<any[]>> {
+		return request(`/content/${id}/related`, { params: { limit }, auth: false });
+	}
+};
+
+// ---------------------------------------------------------------------------
 // Default export for convenience
 // ---------------------------------------------------------------------------
 
@@ -1296,6 +1327,7 @@ const api = {
 	jurisdictions,
 	crops,
 	deviceTokens,
+	content,
 	setTokens,
 	clearTokens,
 	getAccessToken

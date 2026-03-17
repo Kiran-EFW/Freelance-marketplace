@@ -415,6 +415,45 @@ class ApiClient {
   }
 
   // ---------------------------------------------------------------------------
+  // Messaging endpoints
+  // ---------------------------------------------------------------------------
+
+  /// List conversations for the current user.
+  Future<Response> getConversations({int page = 1, int limit = 20}) {
+    return _dio.get('/messages/conversations', queryParameters: {
+      'page': page,
+      'limit': limit,
+    });
+  }
+
+  /// Get messages in a conversation.
+  Future<Response> getMessages(String conversationId, {int page = 1}) {
+    return _dio.get('/messages/conversations/$conversationId', queryParameters: {
+      'page': page,
+    });
+  }
+
+  /// Send a message in a conversation.
+  Future<Response> sendMessage(String conversationId, String content) {
+    return _dio.post('/messages/conversations/$conversationId', data: {
+      'content': content,
+    });
+  }
+
+  /// Create a new conversation with a provider.
+  Future<Response> createConversation(String providerId, {String? jobId}) {
+    return _dio.post('/messages/conversations', data: {
+      'provider_id': providerId,
+      if (jobId != null) 'job_id': jobId,
+    });
+  }
+
+  /// Mark all messages in a conversation as read.
+  Future<Response> markMessagesRead(String conversationId) {
+    return _dio.put('/messages/conversations/$conversationId/read');
+  }
+
+  // ---------------------------------------------------------------------------
   // Photo analysis
   // ---------------------------------------------------------------------------
 

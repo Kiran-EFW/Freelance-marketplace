@@ -123,3 +123,7 @@ final providerRepositoryProvider = Provider<ProviderRepository>((ref) {
 final notificationRepositoryProvider = Provider<NotificationRepository>((ref) {
   return NotificationRepository(api: ref.watch(apiClientProvider));
 });
+
+final messageRepositoryProvider = Provider<MessageRepository>((ref) {
+  return MessageRepository(api: ref.watch(apiClientProvider));
+});
