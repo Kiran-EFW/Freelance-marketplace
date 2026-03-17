@@ -25,12 +25,12 @@ jobs:
       matrix:
         target:
           - name: backend
-            context: ./backend
-            dockerfile: ./backend/Dockerfile
+            context: .
+            dockerfile: ./infrastructure/docker/Dockerfile.backend
             repository: seva/backend
           - name: web
-            context: ./web
-            dockerfile: ./web/Dockerfile
+            context: .
+            dockerfile: ./infrastructure/docker/Dockerfile.web
             repository: seva/web
     outputs:
       backend-image: ${{ steps.meta-backend.outputs.tags }}

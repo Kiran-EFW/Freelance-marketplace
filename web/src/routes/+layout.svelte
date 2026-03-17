@@ -1,6 +1,6 @@
 <script lang="ts">
 	import '../app.css';
-	import { Bell, Menu, X, ChevronDown, User, LayoutDashboard, Settings, LogOut, Briefcase, Search, Award, MapPin, MessageSquare, Leaf, Building2, Shield, CalendarClock, Star, IndianRupee, CreditCard, Calendar } from 'lucide-svelte';
+	import { Bell, Menu, X, ChevronDown, User, LayoutDashboard, LogOut, Award, MapPin, MessageSquare, Star, CreditCard, Calendar } from 'lucide-svelte';
 	import { messages as messagesApi } from '$lib/api/client';
 	import { subscribe as authSubscribe, logout, type AuthState } from '$lib/stores/auth';
 	import { wsManager, type ConnectionStatus, type WSNewMessagePayload } from '$lib/api/websocket';
@@ -81,7 +81,6 @@
 
 	const isLoggedIn = $derived(authState.user !== null);
 	const isProviderUser = $derived(authState.user?.role === 'provider');
-	const isAdminUser = $derived(authState.user?.role === 'admin');
 
 	async function handleLogout() {
 		userDropdownOpen = false;
@@ -108,7 +107,7 @@
 				<span class="text-xl font-bold text-gray-900 dark:text-white">Seva</span>
 			</a>
 
-			<!-- Desktop Nav -->
+			<!-- Desktop Nav — Retail-facing only -->
 			<div class="hidden items-center gap-6 md:flex">
 				<a href="/providers" class="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
 					{t('nav.find_providers')}
@@ -120,24 +119,9 @@
 					<MapPin class="h-4 w-4" />
 					{t('nav.map')}
 				</a>
-				<a href="/seasonal-calendar" class="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
-					<Leaf class="h-4 w-4" />
-					{t('nav.seasonal_calendar')}
-				</a>
-				{#if isLoggedIn}
-					<a href="/recurring" class="flex items-center gap-1 text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
-						<CalendarClock class="h-4 w-4" />
-						{t('recurring.title')}
-					</a>
-				{/if}
 				{#if isLoggedIn && isProviderUser}
-					<a href="/provider/dashboard" class="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
+					<a href="/provider/dashboard" class="text-sm font-medium text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300">
 						{t('nav.provider_hub')}
-					</a>
-				{/if}
-				{#if isLoggedIn && isAdminUser}
-					<a href="/admin" class="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
-						{t('nav.admin')}
 					</a>
 				{/if}
 			</div>
@@ -191,6 +175,7 @@
 
 						{#if userDropdownOpen}
 							<div class="absolute right-0 mt-2 w-56 rounded-xl border border-gray-200 bg-white py-1 shadow-lg dark:border-gray-700 dark:bg-gray-800">
+								<!-- User info -->
 								<div class="border-b border-gray-100 px-4 py-3 dark:border-gray-700">
 									<p class="text-sm font-medium text-gray-900 dark:text-white">{authState.user?.name}</p>
 									<p class="text-xs text-gray-500 dark:text-gray-400">{authState.user?.phone}</p>
@@ -201,6 +186,8 @@
 										</div>
 									{/if}
 								</div>
+
+								<!-- Consumer section -->
 								<a href="/dashboard" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700" onclick={() => (userDropdownOpen = false)}>
 									<LayoutDashboard class="h-4 w-4" />
 									{t('nav.dashboard')}
@@ -209,40 +196,42 @@
 									<User class="h-4 w-4" />
 									{t('nav.profile')}
 								</a>
-								<a href="/points" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700" onclick={() => (userDropdownOpen = false)}>
-									<Award class="h-4 w-4" />
-									{t('nav.points')}
+								<a href="/payments" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700" onclick={() => (userDropdownOpen = false)}>
+									<CreditCard class="h-4 w-4" />
+									{t('nav.payments')}
 								</a>
 								<a href="/reviews" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700" onclick={() => (userDropdownOpen = false)}>
 									<Star class="h-4 w-4" />
 									{t('nav.reviews')}
 								</a>
-								<a href="/payments" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700" onclick={() => (userDropdownOpen = false)}>
-									<CreditCard class="h-4 w-4" />
-									{t('nav.payments')}
+								<a href="/points" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700" onclick={() => (userDropdownOpen = false)}>
+									<Award class="h-4 w-4" />
+									{t('nav.points')}
 								</a>
-								<a href="/organization" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700" onclick={() => (userDropdownOpen = false)}>
-									<Building2 class="h-4 w-4" />
-									{t('nav.organization')}
-								</a>
-								<a href="/safety" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700" onclick={() => (userDropdownOpen = false)}>
-									<Shield class="h-4 w-4" />
-									{t('nav.safety')}
-								</a>
-								<a href="/recurring" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700" onclick={() => (userDropdownOpen = false)}>
-									<CalendarClock class="h-4 w-4" />
-									{t('recurring.title')}
-								</a>
+
+								<!-- Provider section — only visible to providers -->
 								{#if isProviderUser}
-									<a href="/provider/subscription" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700" onclick={() => (userDropdownOpen = false)}>
-										<CreditCard class="h-4 w-4" />
-										{t('nav.subscription')}
-									</a>
-									<a href="/provider/schedule" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700" onclick={() => (userDropdownOpen = false)}>
-										<Calendar class="h-4 w-4" />
-										{t('nav.schedule')}
-									</a>
+									<div class="border-t border-gray-100 dark:border-gray-700">
+										<p class="px-4 pt-2 pb-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">{t('nav.provider_hub')}</p>
+										<a href="/provider/dashboard" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700" onclick={() => (userDropdownOpen = false)}>
+											<LayoutDashboard class="h-4 w-4" />
+											{t('nav.provider_hub')}
+										</a>
+										<a href="/provider/earnings" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700" onclick={() => (userDropdownOpen = false)}>
+											<CreditCard class="h-4 w-4" />
+											{t('footer.earnings')}
+										</a>
+										<a href="/provider/schedule" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700" onclick={() => (userDropdownOpen = false)}>
+											<Calendar class="h-4 w-4" />
+											{t('nav.schedule')}
+										</a>
+										<a href="/provider/subscription" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700" onclick={() => (userDropdownOpen = false)}>
+											<CreditCard class="h-4 w-4" />
+											{t('nav.subscription')}
+										</a>
+									</div>
 								{/if}
+
 								<div class="border-t border-gray-100 dark:border-gray-700">
 									<button
 										onclick={handleLogout}
@@ -301,6 +290,8 @@
 					<div class="mb-2 px-3">
 						<LanguageSwitcher />
 					</div>
+
+					<!-- Public / Consumer navigation -->
 					<a href="/providers" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
 						{t('nav.find_providers')}
 					</a>
@@ -310,65 +301,64 @@
 					<a href="/map" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
 						{t('nav.map')}
 					</a>
-					<a href="/seasonal-calendar" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
-						{t('nav.seasonal_calendar')}
-					</a>
+
 					{#if isLoggedIn}
-						<a href="/dashboard" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
-							{t('nav.dashboard')}
-						</a>
-						<a href="/messages" class="flex items-center justify-between rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
-							{t('nav.messages')}
-							{#if unreadMessageCount > 0}
-								<span class="rounded-full bg-primary-600 px-2 py-0.5 text-[10px] font-bold text-white">{unreadMessageCount}</span>
-							{/if}
-						</a>
-						<a href="/notifications" class="flex items-center justify-between rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
-							{t('nav.notifications')}
-							{#if authState.notificationCount > 0}
-								<span class="rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white">{authState.notificationCount}</span>
-							{/if}
-						</a>
-						<a href="/profile" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
-							{t('nav.profile')}
-						</a>
-						<a href="/points" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
-							{t('nav.points')}
-						</a>
-						<a href="/reviews" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
-							{t('nav.reviews')}
-						</a>
-						<a href="/payments" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
-							{t('nav.payments')}
-						</a>
-						<a href="/organization" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
-							{t('nav.organization')}
-						</a>
-						<a href="/safety" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
-							{t('nav.safety')}
-						</a>
-						<a href="/recurring" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
-							{t('recurring.title')}
-						</a>
+						<!-- Logged-in consumer actions -->
+						<div class="border-t border-gray-100 pt-2 mt-2 dark:border-gray-700">
+							<a href="/dashboard" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
+								{t('nav.dashboard')}
+							</a>
+							<a href="/messages" class="flex items-center justify-between rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
+								{t('nav.messages')}
+								{#if unreadMessageCount > 0}
+									<span class="rounded-full bg-primary-600 px-2 py-0.5 text-[10px] font-bold text-white">{unreadMessageCount}</span>
+								{/if}
+							</a>
+							<a href="/notifications" class="flex items-center justify-between rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
+								{t('nav.notifications')}
+								{#if authState.notificationCount > 0}
+									<span class="rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white">{authState.notificationCount}</span>
+								{/if}
+							</a>
+							<a href="/payments" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
+								{t('nav.payments')}
+							</a>
+							<a href="/reviews" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
+								{t('nav.reviews')}
+							</a>
+							<a href="/profile" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
+								{t('nav.profile')}
+							</a>
+							<a href="/points" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
+								{t('nav.points')}
+							</a>
+						</div>
+
+						<!-- Provider section — only for provider users -->
 						{#if isProviderUser}
-							<a href="/provider/dashboard" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
-								{t('nav.provider_hub')}
-							</a>
-							<a href="/provider/analytics" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
-								{t('analytics.title')}
-							</a>
-							<a href="/provider/subscription" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
-								{t('nav.subscription')}
-							</a>
-							<a href="/provider/schedule" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
-								{t('nav.schedule')}
-							</a>
+							<div class="border-t border-gray-100 pt-2 mt-2 dark:border-gray-700">
+								<p class="px-3 py-1 text-[10px] font-semibold uppercase tracking-wider text-gray-400 dark:text-gray-500">{t('nav.provider_hub')}</p>
+								<a href="/provider/dashboard" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
+									{t('nav.provider_hub')}
+								</a>
+								<a href="/provider/earnings" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
+									{t('footer.earnings')}
+								</a>
+								<a href="/provider/schedule" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
+									{t('nav.schedule')}
+								</a>
+								<a href="/provider/routes" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
+									{t('nav.routes') ?? 'Routes'}
+								</a>
+								<a href="/provider/analytics" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
+									{t('analytics.title')}
+								</a>
+								<a href="/provider/subscription" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
+									{t('nav.subscription')}
+								</a>
+							</div>
 						{/if}
-						{#if isAdminUser}
-							<a href="/admin" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
-								{t('nav.admin')}
-							</a>
-						{/if}
+
 						<div class="border-t border-gray-100 pt-2 dark:border-gray-700">
 							<button
 								onclick={handleLogout}

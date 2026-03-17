@@ -24,8 +24,10 @@ import (
 	"github.com/seva-platform/backend/internal/adapter/storage"
 	"github.com/seva-platform/backend/internal/adapter/whatsapp"
 	"github.com/seva-platform/backend/internal/config"
+	"github.com/seva-platform/backend/internal/database"
 	"github.com/seva-platform/backend/internal/handler"
 	"github.com/seva-platform/backend/internal/middleware"
+	"github.com/seva-platform/backend/internal/search"
 	"github.com/seva-platform/backend/internal/repository/postgres"
 	rediscache "github.com/seva-platform/backend/internal/repository/redis"
 	svcadapter "github.com/seva-platform/backend/internal/service/adapter"
@@ -75,6 +77,13 @@ func main() {
 	}
 	log.Info().Msg("connected to PostgreSQL")
 
+	// ---- Database Migrations ----
+	if cfg.AutoMigrate {
+		if err := database.RunMigrations(cfg.DatabaseURL, cfg.MigrationsPath); err != nil {
+			log.Fatal().Err(err).Msg("failed to run database migrations")
+		}
+	}
+
 	// ---- Redis ----
 	redisOpts, err := parseRedisURL(cfg.RedisURL)
 	if err != nil {
@@ -87,6 +96,23 @@ func main() {
 		log.Fatal().Err(err).Msg("failed to ping Redis")
 	}
 	log.Info().Msg("connected to Redis")
+
+	// ---- Meilisearch ----
+	if cfg.MeilisearchURL != "" {
+		meiliClient, err := search.NewMeiliClient(cfg.MeilisearchURL, cfg.MeilisearchKey)
+		if err != nil {
+			log.Warn().Err(err).Msg("meilisearch not available, search features will be degraded")
+		} else {
+			if err := meiliClient.InitIndexes(); err != nil {
+				log.Error().Err(err).Msg("failed to initialize meilisearch indexes")
+			} else {
+				log.Info().Msg("meilisearch indexes initialized successfully")
+			}
+			_ = meiliClient // available for services that need it
+		}
+	} else {
+		log.Warn().Msg("MEILISEARCH_URL not set, search indexing disabled")
+	}
 
 	// ---- SMS Adapter ----
 	smsProvider, err := sms.NewSMSProvider(cfg)
@@ -280,6 +306,7 @@ func main() {
 
 	// ---- Global Middleware ----
 	app.Use(recover.New())
+	app.Use(middleware.NewPrometheusMiddleware())
 	app.Use(requestid.New())
 	app.Use(logger.FiberLogger())
 	app.Use(middleware.NewCORS(cfg))
@@ -287,6 +314,9 @@ func main() {
 		Max:        cfg.RateLimitMax(),
 		Expiration: 1 * time.Second,
 	}))
+
+	// ---- Prometheus Metrics Endpoint ----
+	app.Get("/metrics", middleware.MetricsHandler())
 
 	// ---- Route Groups ----
 	api := app.Group("/api/v1")

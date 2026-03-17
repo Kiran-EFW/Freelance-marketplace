@@ -69,6 +69,14 @@ type Config struct {
 	R2AccessKeySecret string
 	R2Bucket          string
 	R2PublicURL       string // public base URL for serving uploaded files
+
+	// Meilisearch
+	MeilisearchURL string
+	MeilisearchKey string
+
+	// Database Migrations
+	MigrationsPath string // path to migration files
+	AutoMigrate    bool   // run migrations on startup
 }
 
 // Load reads configuration from environment variables with sensible defaults.
@@ -117,6 +125,10 @@ func Load() (*Config, error) {
 		R2AccessKeySecret: getEnv("R2_ACCESS_KEY_SECRET", ""),
 		R2Bucket:          getEnv("R2_BUCKET", "seva-uploads"),
 		R2PublicURL:       getEnv("R2_PUBLIC_URL", ""),
+		MeilisearchURL:    getEnv("MEILISEARCH_URL", ""),
+		MeilisearchKey:    getEnv("MEILISEARCH_KEY", ""),
+		MigrationsPath:    getEnv("MIGRATIONS_PATH", "migrations"),
+		AutoMigrate:       getEnv("AUTO_MIGRATE", "true") == "true",
 	}
 
 	return cfg, nil
