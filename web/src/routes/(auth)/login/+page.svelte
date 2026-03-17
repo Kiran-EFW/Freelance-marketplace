@@ -3,22 +3,23 @@
 	import { goto } from '$app/navigation';
 	import Button from '$lib/components/ui/Button.svelte';
 	import { toastError, toastSuccess } from '$lib/stores/toast';
+	import { jurisdictions, jurisdictionMap, type Jurisdiction } from '$lib/data/jurisdictions';
+	import { t } from '$lib/i18n/index.svelte';
 
 	let phone = $state('');
-	let countryCode = $state('+91');
+	let selectedJurisdiction = $state<Jurisdiction>(jurisdictionMap['IN']);
 	let otpDigits = $state<string[]>(['', '', '', '', '', '']);
 	let otpSent = $state(false);
 	let loading = $state(false);
 	let resendTimer = $state(0);
 	let otpInputs: HTMLInputElement[] = $state([]);
 
-	const countryCodes = [
-		{ code: '+91', country: 'IN' },
-		{ code: '+44', country: 'UK' },
-		{ code: '+1', country: 'US' },
-		{ code: '+61', country: 'AU' },
-		{ code: '+971', country: 'AE' }
-	];
+	function selectJurisdiction(code: string) {
+		const j = jurisdictionMap[code];
+		if (j) {
+			selectedJurisdiction = j;
+		}
+	}
 
 	function startResendTimer() {
 		resendTimer = 30;
@@ -39,11 +40,11 @@
 			await new Promise((r) => setTimeout(r, 1000));
 			otpSent = true;
 			startResendTimer();
-			toastSuccess('OTP sent to ' + countryCode + phone);
+			toastSuccess(t('auth.otp_sent_to', { phone: selectedJurisdiction.phoneCode + phone }));
 			// Focus first OTP input
 			setTimeout(() => otpInputs[0]?.focus(), 100);
 		} catch (err) {
-			toastError('Failed to send OTP. Please try again.');
+			toastError(t('auth.otp_failed'));
 		} finally {
 			loading = false;
 		}
@@ -57,10 +58,10 @@
 		try {
 			// Mock: in real app, call login from auth store
 			await new Promise((r) => setTimeout(r, 1000));
-			toastSuccess('Signed in successfully');
+			toastSuccess(t('auth.signed_in_success'));
 			goto('/dashboard');
 		} catch (err) {
-			toastError('Invalid OTP. Please try again.');
+			toastError(t('auth.invalid_otp_retry'));
 		} finally {
 			loading = false;
 		}
@@ -115,7 +116,7 @@
 </script>
 
 <svelte:head>
-	<title>Sign In - Seva</title>
+	<title>{t('auth.sign_in_title')} - Seva</title>
 </svelte:head>
 
 <div class="flex min-h-[calc(100vh-theme(spacing.32))] items-center justify-center px-4 py-12">
@@ -125,12 +126,12 @@
 				<div class="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-primary-100 dark:bg-primary-900/30">
 					<Phone class="h-6 w-6 text-primary-600" />
 				</div>
-				<h1 class="mt-4 text-2xl font-bold text-gray-900 dark:text-white">Sign in to Seva</h1>
+				<h1 class="mt-4 text-2xl font-bold text-gray-900 dark:text-white">{t('auth.sign_in_title')}</h1>
 				<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
 					{#if !otpSent}
-						Enter your phone number to receive a verification code.
+						{t('auth.sign_in_subtitle')}
 					{:else}
-						Enter the 6-digit code sent to {countryCode}{phone}
+						{t('auth.sign_in_otp_subtitle', { phone: selectedJurisdiction.phoneCode + phone })}
 					{/if}
 				</p>
 			</div>
@@ -139,15 +140,16 @@
 				<!-- Phone Number Step -->
 				<form onsubmit={requestOtp} class="mt-6">
 					<label for="phone" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-						Phone number
+						{t('auth.phone_number')}
 					</label>
 					<div class="mt-1 flex gap-2">
 						<select
-							bind:value={countryCode}
+							value={selectedJurisdiction.code}
+							onchange={(e) => selectJurisdiction((e.target as HTMLSelectElement).value)}
 							class="rounded-lg border border-gray-300 px-3 py-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
 						>
-							{#each countryCodes as cc}
-								<option value={cc.code}>{cc.country} {cc.code}</option>
+							{#each jurisdictions as j}
+								<option value={j.code}>{j.flag} {j.code} {j.phoneCode}</option>
 							{/each}
 						</select>
 						<div class="relative flex-1">
@@ -155,7 +157,8 @@
 								id="phone"
 								type="tel"
 								bind:value={phone}
-								placeholder="9876543210"
+								placeholder={selectedJurisdiction.phonePlaceholder}
+								maxlength={selectedJurisdiction.phoneMaxLength}
 								required
 								class="w-full rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
 							/>
@@ -169,14 +172,14 @@
 						disabled={!phone.trim()}
 						class="mt-4 w-full"
 					>
-						Send OTP
+						{t('auth.send_otp')}
 					</Button>
 				</form>
 			{:else}
 				<!-- OTP Verification Step -->
 				<form onsubmit={verifyOtp} class="mt-6">
 					<label class="block text-sm font-medium text-gray-700 dark:text-gray-300">
-						Verification code
+						{t('auth.verification_code')}
 					</label>
 					<!-- OTP Digit Inputs -->
 					<div class="mt-2 flex justify-center gap-2" onpaste={handleOtpPaste}>
@@ -202,7 +205,7 @@
 						disabled={otpDigits.some((d) => !d)}
 						class="mt-4 w-full"
 					>
-						Verify & Sign In
+						{t('auth.verify_sign_in')}
 					</Button>
 
 					<div class="mt-4 flex items-center justify-between">
@@ -211,7 +214,7 @@
 							onclick={() => { otpSent = false; otpDigits = ['', '', '', '', '', '']; }}
 							class="text-sm text-primary-600 hover:text-primary-700"
 						>
-							Change number
+							{t('auth.change_number')}
 						</button>
 						<button
 							type="button"
@@ -220,9 +223,9 @@
 							class="text-sm {resendTimer > 0 ? 'text-gray-400 dark:text-gray-500' : 'text-primary-600 hover:text-primary-700'}"
 						>
 							{#if resendTimer > 0}
-								Resend in {resendTimer}s
+								{t('auth.resend_in', { seconds: resendTimer })}
 							{:else}
-								Resend OTP
+								{t('auth.resend_otp')}
 							{/if}
 						</button>
 					</div>
@@ -230,8 +233,8 @@
 			{/if}
 
 			<p class="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
-				Don't have an account?
-				<a href="/register" class="font-medium text-primary-600 hover:text-primary-700">Register</a>
+				{t('auth.dont_have_account')}
+				<a href="/register" class="font-medium text-primary-600 hover:text-primary-700">{t('auth.register')}</a>
 			</p>
 		</div>
 	</div>

@@ -59,6 +59,142 @@ export const locales: Locale[] = [
 		speechCode: 'ml-IN',
 		region: 'indian'
 	},
+	{
+		code: 'as',
+		name: 'Assamese',
+		nativeName: '\u0985\u09B8\u09AE\u09C0\u09AF\u09BC\u09BE',
+		direction: 'ltr',
+		speechCode: 'as-IN',
+		region: 'indian'
+	},
+	{
+		code: 'bn',
+		name: 'Bengali',
+		nativeName: '\u09AC\u09BE\u0982\u09B2\u09BE',
+		direction: 'ltr',
+		speechCode: 'bn-IN',
+		region: 'indian'
+	},
+	{
+		code: 'brx',
+		name: 'Bodo',
+		nativeName: '\u092C\u0921\u093C\u094B',
+		direction: 'ltr',
+		speechCode: 'hi-IN',
+		region: 'indian'
+	},
+	{
+		code: 'doi',
+		name: 'Dogri',
+		nativeName: '\u0921\u094B\u0917\u0930\u0940',
+		direction: 'ltr',
+		speechCode: 'hi-IN',
+		region: 'indian'
+	},
+	{
+		code: 'gu',
+		name: 'Gujarati',
+		nativeName: '\u0A97\u0AC1\u0A9C\u0AB0\u0ABE\u0AA4\u0AC0',
+		direction: 'ltr',
+		speechCode: 'gu-IN',
+		region: 'indian'
+	},
+	{
+		code: 'ks',
+		name: 'Kashmiri',
+		nativeName: '\u0915\u0949\u0936\u0941\u0930',
+		direction: 'ltr',
+		speechCode: 'ur-IN',
+		region: 'indian'
+	},
+	{
+		code: 'kok',
+		name: 'Konkani',
+		nativeName: '\u0915\u094B\u0902\u0915\u0923\u0940',
+		direction: 'ltr',
+		speechCode: 'hi-IN',
+		region: 'indian'
+	},
+	{
+		code: 'mai',
+		name: 'Maithili',
+		nativeName: '\u092E\u0948\u0925\u093F\u0932\u0940',
+		direction: 'ltr',
+		speechCode: 'hi-IN',
+		region: 'indian'
+	},
+	{
+		code: 'mni',
+		name: 'Manipuri',
+		nativeName: '\u09AE\u09C8\u09A4\u09C8\u09B2\u09CB\u09A8\u09CD',
+		direction: 'ltr',
+		speechCode: 'bn-IN',
+		region: 'indian'
+	},
+	{
+		code: 'mr',
+		name: 'Marathi',
+		nativeName: '\u092E\u0930\u093E\u0920\u0940',
+		direction: 'ltr',
+		speechCode: 'mr-IN',
+		region: 'indian'
+	},
+	{
+		code: 'ne',
+		name: 'Nepali',
+		nativeName: '\u0928\u0947\u092A\u093E\u0932\u0940',
+		direction: 'ltr',
+		speechCode: 'ne-NP',
+		region: 'indian'
+	},
+	{
+		code: 'or',
+		name: 'Odia',
+		nativeName: '\u0B13\u0B21\u0B3C\u0B3F\u0B06',
+		direction: 'ltr',
+		speechCode: 'or-IN',
+		region: 'indian'
+	},
+	{
+		code: 'pa',
+		name: 'Punjabi',
+		nativeName: '\u0A2A\u0A70\u0A1C\u0A3E\u0A2C\u0A40',
+		direction: 'ltr',
+		speechCode: 'pa-IN',
+		region: 'indian'
+	},
+	{
+		code: 'sa',
+		name: 'Sanskrit',
+		nativeName: '\u0938\u0902\u0938\u094D\u0915\u0943\u0924\u092E\u094D',
+		direction: 'ltr',
+		speechCode: 'hi-IN',
+		region: 'indian'
+	},
+	{
+		code: 'sat',
+		name: 'Santali',
+		nativeName: '\u1CA5\u1C9F\u1CA8\u1C9B\u1C9F\u1CAC\u1C98',
+		direction: 'ltr',
+		speechCode: 'hi-IN',
+		region: 'indian'
+	},
+	{
+		code: 'sd',
+		name: 'Sindhi',
+		nativeName: '\u0633\u0646\u068C\u064A',
+		direction: 'ltr',
+		speechCode: 'sd-IN',
+		region: 'indian'
+	},
+	{
+		code: 'ur',
+		name: 'Urdu',
+		nativeName: '\u0627\u0631\u062F\u0648',
+		direction: 'rtl',
+		speechCode: 'ur-IN',
+		region: 'indian'
+	},
 
 	// European
 	{

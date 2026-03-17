@@ -2,32 +2,44 @@ import { defaultLocale, localeMap } from './locales';
 
 const STORAGE_KEY = 'seva-locale';
 
-let currentLocale = $state(defaultLocale);
-let translations = $state<Record<string, any>>({});
-let loading = $state(false);
-let fallbackTranslations = $state<Record<string, any>>({});
+// Use an object wrapper so we can export it without triggering
+// Svelte 5's "cannot export reassigned $state" restriction.
+const i18nState = $state({
+	locale: defaultLocale,
+	translations: {} as Record<string, any>,
+	fallback: {} as Record<string, any>,
+	loading: false
+});
+
+// Readonly derived getters for external use
+export function getCurrentLocale(): string {
+	return i18nState.locale;
+}
+
+// Direct property access for reactive reads in templates
+export const i18n = i18nState;
 
 async function loadTranslations(locale: string): Promise<void> {
-	loading = true;
+	i18nState.loading = true;
 
 	try {
 		const module = await import(`./translations/${locale}.json`);
-		translations = module.default;
-		currentLocale = locale;
+		i18nState.translations = module.default;
+		i18nState.locale = locale;
 	} catch (error) {
 		console.warn(`Failed to load translations for "${locale}", falling back to "${defaultLocale}".`);
 
 		if (locale !== defaultLocale) {
 			try {
 				const fallbackModule = await import(`./translations/${defaultLocale}.json`);
-				translations = fallbackModule.default;
-				currentLocale = defaultLocale;
+				i18nState.translations = fallbackModule.default;
+				i18nState.locale = defaultLocale;
 			} catch (fallbackError) {
 				console.error('Failed to load fallback translations:', fallbackError);
 			}
 		}
 	} finally {
-		loading = false;
+		i18nState.loading = false;
 	}
 }
 
@@ -46,10 +58,10 @@ function getNestedValue(obj: Record<string, any>, path: string): string | undefi
 }
 
 function t(key: string, params?: Record<string, string | number>): string {
-	let value = getNestedValue(translations, key);
+	let value = getNestedValue(i18nState.translations, key);
 
 	if (value === undefined) {
-		value = getNestedValue(fallbackTranslations, key);
+		value = getNestedValue(i18nState.fallback, key);
 	}
 
 	if (value === undefined) {
@@ -69,7 +81,7 @@ async function initLocale(): Promise<void> {
 	// Load English as fallback first
 	try {
 		const fallbackModule = await import(`./translations/${defaultLocale}.json`);
-		fallbackTranslations = fallbackModule.default;
+		i18nState.fallback = fallbackModule.default;
 	} catch (error) {
 		console.error('Failed to load fallback (English) translations:', error);
 	}
@@ -102,12 +114,14 @@ async function setLocale(locale: string): Promise<void> {
 	await loadTranslations(locale);
 }
 
-export {
-	currentLocale,
-	translations,
-	loading,
-	t,
-	initLocale,
-	setLocale,
-	loadTranslations
+// Export currentLocale as a getter property for backward compatibility
+// Components can read `currentLocale` reactively since it reads from $state
+export { t, initLocale, setLocale, loadTranslations };
+
+// For components that imported `currentLocale` directly, provide a derived-like export
+// They should use `i18n.locale` instead, but we re-export for convenience
+export const currentLocale = {
+	get value() {
+		return i18nState.locale;
+	}
 };

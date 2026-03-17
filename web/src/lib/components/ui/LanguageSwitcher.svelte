@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { Globe, Check, ChevronDown } from 'lucide-svelte';
 	import { locales, getLocalesByRegion, type Locale } from '$lib/i18n/locales';
-	import { currentLocale, setLocale } from '$lib/i18n/index.svelte';
+	import { i18n, setLocale } from '$lib/i18n/index.svelte';
 
 	interface Props {
 		class?: string;
@@ -13,7 +13,7 @@
 	let open = $state(false);
 	let containerEl: HTMLDivElement | undefined = $state();
 
-	const localeCode = $derived(currentLocale.toUpperCase());
+	const localeCode = $derived(i18n.locale.toUpperCase());
 
 	const regionLabels: Record<string, string> = {
 		global: 'Global',
@@ -81,17 +81,17 @@
 								type="button"
 								onclick={() => selectLocale(locale.code)}
 								class="flex w-full items-center gap-3 px-3 py-2 text-left text-sm transition-colors
-									{locale.code === currentLocale
+									{locale.code === i18n.locale
 										? 'bg-primary-50 text-primary-700 dark:bg-primary-900/20 dark:text-primary-400'
 										: 'text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700/50'}"
 								role="option"
-								aria-selected={locale.code === currentLocale}
+								aria-selected={locale.code === i18n.locale}
 							>
 								<span class="flex flex-1 items-baseline gap-2">
 									<span class="font-medium">{locale.nativeName}</span>
 									<span class="text-xs text-gray-400 dark:text-gray-500">{locale.name}</span>
 								</span>
-								{#if locale.code === currentLocale}
+								{#if locale.code === i18n.locale}
 									<Check class="h-4 w-4 shrink-0 text-primary-600 dark:text-primary-400" />
 								{/if}
 							</button>

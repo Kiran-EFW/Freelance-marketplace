@@ -4,6 +4,8 @@
 	import { subscribe as authSubscribe, logout, type AuthState } from '$lib/stores/auth';
 	import Avatar from '$lib/components/ui/Avatar.svelte';
 	import Toast from '$lib/components/ui/Toast.svelte';
+	import LanguageSwitcher from '$lib/components/ui/LanguageSwitcher.svelte';
+	import { initLocale, t } from '$lib/i18n/index.svelte';
 
 	let { children } = $props();
 
@@ -23,6 +25,12 @@
 			authState = state;
 		});
 		return unsub;
+	});
+
+	$effect(() => {
+		if (typeof window !== 'undefined') {
+			initLocale();
+		}
 	});
 
 	const isLoggedIn = $derived(authState.user !== null);
@@ -57,25 +65,26 @@
 			<!-- Desktop Nav -->
 			<div class="hidden items-center gap-6 md:flex">
 				<a href="/providers" class="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
-					Find Providers
+					{t('nav.find_providers')}
 				</a>
 				<a href="/jobs" class="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
-					Jobs
+					{t('nav.jobs')}
 				</a>
 				{#if isLoggedIn && isProviderUser}
 					<a href="/provider/dashboard" class="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
-						Provider Hub
+						{t('nav.provider_hub')}
 					</a>
 				{/if}
 				{#if isLoggedIn && isAdminUser}
 					<a href="/admin" class="text-sm text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-gray-100">
-						Admin
+						{t('nav.admin')}
 					</a>
 				{/if}
 			</div>
 
 			<!-- Desktop Right -->
 			<div class="hidden items-center gap-3 md:flex">
+				<LanguageSwitcher />
 				{#if isLoggedIn}
 					<!-- Notification Bell -->
 					<a href="/notifications" class="relative rounded-lg p-2 text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-800">
@@ -118,15 +127,15 @@
 								</div>
 								<a href="/dashboard" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700" onclick={() => (userDropdownOpen = false)}>
 									<LayoutDashboard class="h-4 w-4" />
-									Dashboard
+									{t('nav.dashboard')}
 								</a>
 								<a href="/profile" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700" onclick={() => (userDropdownOpen = false)}>
 									<User class="h-4 w-4" />
-									Profile
+									{t('nav.profile')}
 								</a>
 								<a href="/points" class="flex items-center gap-3 px-4 py-2.5 text-sm text-gray-700 hover:bg-gray-50 dark:text-gray-300 dark:hover:bg-gray-700" onclick={() => (userDropdownOpen = false)}>
 									<Award class="h-4 w-4" />
-									Points & Rewards
+									{t('nav.points')}
 								</a>
 								<div class="border-t border-gray-100 dark:border-gray-700">
 									<button
@@ -134,7 +143,7 @@
 										class="flex w-full items-center gap-3 px-4 py-2.5 text-sm text-red-600 hover:bg-gray-50 dark:text-red-400 dark:hover:bg-gray-700"
 									>
 										<LogOut class="h-4 w-4" />
-										Sign Out
+										{t('common.sign_out')}
 									</button>
 								</div>
 							</div>
@@ -145,7 +154,7 @@
 						href="/login"
 						class="rounded-lg bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700"
 					>
-						Sign In
+						{t('common.sign_in')}
 					</a>
 				{/if}
 			</div>
@@ -183,36 +192,39 @@
 					</div>
 				{/if}
 				<div class="space-y-1 px-4 pt-3">
+					<div class="mb-2 px-3">
+						<LanguageSwitcher />
+					</div>
 					<a href="/providers" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
-						Find Providers
+						{t('nav.find_providers')}
 					</a>
 					<a href="/jobs" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
-						Jobs
+						{t('nav.jobs')}
 					</a>
 					{#if isLoggedIn}
 						<a href="/dashboard" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
-							Dashboard
+							{t('nav.dashboard')}
 						</a>
 						<a href="/notifications" class="flex items-center justify-between rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
-							Notifications
+							{t('nav.notifications')}
 							{#if authState.notificationCount > 0}
 								<span class="rounded-full bg-red-500 px-2 py-0.5 text-[10px] font-bold text-white">{authState.notificationCount}</span>
 							{/if}
 						</a>
 						<a href="/profile" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
-							Profile
+							{t('nav.profile')}
 						</a>
 						<a href="/points" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
-							Points & Rewards
+							{t('nav.points')}
 						</a>
 						{#if isProviderUser}
 							<a href="/provider/dashboard" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
-								Provider Hub
+								{t('nav.provider_hub')}
 							</a>
 						{/if}
 						{#if isAdminUser}
 							<a href="/admin" class="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800" onclick={() => (mobileMenuOpen = false)}>
-								Admin Panel
+								{t('nav.admin')}
 							</a>
 						{/if}
 						<div class="border-t border-gray-100 pt-2 dark:border-gray-700">
@@ -220,7 +232,7 @@
 								onclick={handleLogout}
 								class="block w-full rounded-lg px-3 py-2 text-left text-sm text-red-600 hover:bg-gray-100 dark:text-red-400 dark:hover:bg-gray-800"
 							>
-								Sign Out
+								{t('common.sign_out')}
 							</button>
 						</div>
 					{:else}
@@ -230,7 +242,7 @@
 								class="block rounded-lg bg-primary-600 px-4 py-2.5 text-center text-sm font-medium text-white hover:bg-primary-700"
 								onclick={() => (mobileMenuOpen = false)}
 							>
-								Sign In
+								{t('common.sign_in')}
 							</a>
 						</div>
 					{/if}
@@ -252,31 +264,31 @@
 						<span class="text-lg font-bold text-gray-900 dark:text-white">Seva</span>
 					</div>
 					<p class="mt-3 text-sm text-gray-500 dark:text-gray-400">
-						Connecting trusted service providers with customers across India.
+						{t('footer.tagline')}
 					</p>
 				</div>
 				<div>
-					<h3 class="text-sm font-semibold text-gray-900 dark:text-white">For Customers</h3>
+					<h3 class="text-sm font-semibold text-gray-900 dark:text-white">{t('footer.for_customers')}</h3>
 					<ul class="mt-3 space-y-2 text-sm text-gray-500 dark:text-gray-400">
-						<li><a href="/providers" class="hover:text-primary-600">Find Providers</a></li>
-						<li><a href="/jobs/new" class="hover:text-primary-600">Post a Job</a></li>
-						<li><a href="/register" class="hover:text-primary-600">Create Account</a></li>
+						<li><a href="/providers" class="hover:text-primary-600">{t('footer.find_providers')}</a></li>
+						<li><a href="/jobs/new" class="hover:text-primary-600">{t('footer.post_job')}</a></li>
+						<li><a href="/register" class="hover:text-primary-600">{t('footer.create_account')}</a></li>
 					</ul>
 				</div>
 				<div>
-					<h3 class="text-sm font-semibold text-gray-900 dark:text-white">For Providers</h3>
+					<h3 class="text-sm font-semibold text-gray-900 dark:text-white">{t('footer.for_providers')}</h3>
 					<ul class="mt-3 space-y-2 text-sm text-gray-500 dark:text-gray-400">
-						<li><a href="/register?role=provider" class="hover:text-primary-600">Join as Provider</a></li>
-						<li><a href="/provider/dashboard" class="hover:text-primary-600">Provider Dashboard</a></li>
-						<li><a href="/provider/earnings" class="hover:text-primary-600">Earnings</a></li>
+						<li><a href="/register?role=provider" class="hover:text-primary-600">{t('footer.join_provider')}</a></li>
+						<li><a href="/provider/dashboard" class="hover:text-primary-600">{t('footer.provider_dashboard')}</a></li>
+						<li><a href="/provider/earnings" class="hover:text-primary-600">{t('footer.earnings')}</a></li>
 					</ul>
 				</div>
 				<div>
-					<h3 class="text-sm font-semibold text-gray-900 dark:text-white">Support</h3>
+					<h3 class="text-sm font-semibold text-gray-900 dark:text-white">{t('footer.support')}</h3>
 					<ul class="mt-3 space-y-2 text-sm text-gray-500 dark:text-gray-400">
-						<li><a href="#" class="hover:text-primary-600">Help Center</a></li>
-						<li><a href="#" class="hover:text-primary-600">Privacy Policy</a></li>
-						<li><a href="#" class="hover:text-primary-600">Terms of Service</a></li>
+						<li><a href="#" class="hover:text-primary-600">{t('footer.help_center')}</a></li>
+						<li><a href="#" class="hover:text-primary-600">{t('footer.privacy_policy')}</a></li>
+						<li><a href="#" class="hover:text-primary-600">{t('footer.terms')}</a></li>
 					</ul>
 				</div>
 			</div>

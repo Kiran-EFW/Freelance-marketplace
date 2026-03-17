@@ -22,7 +22,7 @@
 		detectLocation,
 		type DetectedLocation
 	} from '$lib/utils/geolocation';
-	import { t, currentLocale } from '$lib/i18n/index.svelte';
+	import { t, i18n } from '$lib/i18n/index.svelte';
 	import { localeMap } from '$lib/i18n/locales';
 
 	// -------------------------------------------------------------------------
@@ -59,7 +59,7 @@
 	// Derived data
 	// -------------------------------------------------------------------------
 
-	const speechCode = $derived(localeMap[currentLocale]?.speechCode || 'en-US');
+	const speechCode = $derived(localeMap[i18n.locale]?.speechCode || 'en-US');
 
 	/** Subcategories of the currently selected top-level category. */
 	const subcategories = $derived<ServiceCategory[]>(
@@ -67,7 +67,7 @@
 	);
 
 	/** Filter top-level categories (and their subs) by search query. */
-	const filteredTopLevel = $derived<ServiceCategory[]>(() => {
+	const filteredTopLevel = $derived.by<ServiceCategory[]>(() => {
 		const q = searchQuery.trim().toLowerCase();
 		if (!q) return topLevelCategories;
 
@@ -85,7 +85,7 @@
 	});
 
 	/** When searching, pre-filter subcategories too. */
-	const filteredSubcategories = $derived<ServiceCategory[]>(() => {
+	const filteredSubcategories = $derived.by<ServiceCategory[]>(() => {
 		const q = searchQuery.trim().toLowerCase();
 		if (!q) return subcategories;
 
@@ -98,7 +98,7 @@
 	 * The category object that will be used for the final URL slug.
 	 * Subcategory takes precedence; falls back to top-level.
 	 */
-	const resolvedCategory = $derived<ServiceCategory | undefined>(() => {
+	const resolvedCategory = $derived.by<ServiceCategory | undefined>(() => {
 		if (selectedSubcategory) {
 			return categories.find((c) => c.id === selectedSubcategory);
 		}

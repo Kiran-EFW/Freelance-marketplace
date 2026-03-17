@@ -86,7 +86,7 @@ export const categories: ServiceCategory[] = [
 		slug: 'masonry-civil',
 		icon: 'Construction',
 		parentId: 'home_repair',
-		translationKey: 'categories.masonry_civil',
+		translationKey: 'categories.masonry',
 		isActive: true,
 		color: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
 		order: 6
@@ -106,7 +106,7 @@ export const categories: ServiceCategory[] = [
 		slug: 'welding-fabrication',
 		icon: 'Flame',
 		parentId: 'home_repair',
-		translationKey: 'categories.welding_fabrication',
+		translationKey: 'categories.welding',
 		isActive: true,
 		color: 'bg-blue-100 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400',
 		order: 8
@@ -170,7 +170,7 @@ export const categories: ServiceCategory[] = [
 		slug: 'kitchen-deep-cleaning',
 		icon: 'CookingPot',
 		parentId: 'cleaning',
-		translationKey: 'categories.kitchen_deep_cleaning',
+		translationKey: 'categories.kitchen_cleaning',
 		isActive: true,
 		color: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
 		order: 2
@@ -180,7 +180,7 @@ export const categories: ServiceCategory[] = [
 		slug: 'bathroom-deep-cleaning',
 		icon: 'Bath',
 		parentId: 'cleaning',
-		translationKey: 'categories.bathroom_deep_cleaning',
+		translationKey: 'categories.bathroom_cleaning',
 		isActive: true,
 		color: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
 		order: 3
@@ -190,7 +190,7 @@ export const categories: ServiceCategory[] = [
 		slug: 'sofa-upholstery',
 		icon: 'Sofa',
 		parentId: 'cleaning',
-		translationKey: 'categories.sofa_upholstery',
+		translationKey: 'categories.sofa_cleaning',
 		isActive: true,
 		color: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
 		order: 4
@@ -210,7 +210,7 @@ export const categories: ServiceCategory[] = [
 		slug: 'water-tank-cleaning',
 		icon: 'Container',
 		parentId: 'cleaning',
-		translationKey: 'categories.water_tank_cleaning',
+		translationKey: 'categories.water_tank',
 		isActive: true,
 		color: 'bg-purple-100 text-purple-600 dark:bg-purple-900/30 dark:text-purple-400',
 		order: 6
@@ -294,7 +294,7 @@ export const categories: ServiceCategory[] = [
 		slug: 'yoga-instructor',
 		icon: 'Activity',
 		parentId: 'beauty_wellness',
-		translationKey: 'categories.yoga_instructor',
+		translationKey: 'categories.yoga',
 		isActive: true,
 		color: 'bg-pink-100 text-pink-600 dark:bg-pink-900/30 dark:text-pink-400',
 		order: 6
@@ -318,7 +318,7 @@ export const categories: ServiceCategory[] = [
 		slug: 'legal-services',
 		icon: 'Scale',
 		parentId: 'professional_services',
-		translationKey: 'categories.legal_services',
+		translationKey: 'categories.legal',
 		isActive: true,
 		color: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
 		order: 1
@@ -338,7 +338,7 @@ export const categories: ServiceCategory[] = [
 		slug: 'architecture-design',
 		icon: 'Ruler',
 		parentId: 'professional_services',
-		translationKey: 'categories.architecture_design',
+		translationKey: 'categories.architecture',
 		isActive: true,
 		color: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
 		order: 3
@@ -358,7 +358,7 @@ export const categories: ServiceCategory[] = [
 		slug: 'business-consulting',
 		icon: 'TrendingUp',
 		parentId: 'professional_services',
-		translationKey: 'categories.business_consulting',
+		translationKey: 'categories.consulting',
 		isActive: true,
 		color: 'bg-indigo-100 text-indigo-600 dark:bg-indigo-900/30 dark:text-indigo-400',
 		order: 5
@@ -392,7 +392,7 @@ export const categories: ServiceCategory[] = [
 		slug: 'two-wheeler-mechanic',
 		icon: 'Bike',
 		parentId: 'vehicle_services',
-		translationKey: 'categories.two_wheeler_mechanic',
+		translationKey: 'categories.two_wheeler',
 		isActive: true,
 		color: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',
 		order: 2
@@ -402,7 +402,7 @@ export const categories: ServiceCategory[] = [
 		slug: 'car-wash-detailing',
 		icon: 'Droplets',
 		parentId: 'vehicle_services',
-		translationKey: 'categories.car_wash_detailing',
+		translationKey: 'categories.car_wash',
 		isActive: true,
 		color: 'bg-red-100 text-red-600 dark:bg-red-900/30 dark:text-red-400',
 		order: 3
@@ -530,7 +530,7 @@ export const categories: ServiceCategory[] = [
 		slug: 'baby-sitter-nanny',
 		icon: 'Baby',
 		parentId: 'care_services',
-		translationKey: 'categories.baby_sitter_nanny',
+		translationKey: 'categories.babysitter',
 		isActive: true,
 		color: 'bg-rose-100 text-rose-600 dark:bg-rose-900/30 dark:text-rose-400',
 		order: 2
@@ -644,7 +644,7 @@ export const categories: ServiceCategory[] = [
 		slug: 'sound-dj',
 		icon: 'Speaker',
 		parentId: 'events_occasions',
-		translationKey: 'categories.sound_dj',
+		translationKey: 'categories.dj_music',
 		isActive: true,
 		color: 'bg-amber-100 text-amber-600 dark:bg-amber-900/30 dark:text-amber-400',
 		order: 6
@@ -688,7 +688,7 @@ export const categories: ServiceCategory[] = [
 		slug: 'local-courier',
 		icon: 'Send',
 		parentId: 'moving_logistics',
-		translationKey: 'categories.local_courier',
+		translationKey: 'categories.courier',
 		isActive: true,
 		color: 'bg-teal-100 text-teal-600 dark:bg-teal-900/30 dark:text-teal-400',
 		order: 3
@@ -722,7 +722,7 @@ export const categories: ServiceCategory[] = [
 		slug: 'computer-laptop-repair',
 		icon: 'Laptop',
 		parentId: 'tech_digital',
-		translationKey: 'categories.computer_laptop_repair',
+		translationKey: 'categories.computer_repair',
 		isActive: true,
 		color: 'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400',
 		order: 1
@@ -732,7 +732,7 @@ export const categories: ServiceCategory[] = [
 		slug: 'mobile-phone-repair',
 		icon: 'Smartphone',
 		parentId: 'tech_digital',
-		translationKey: 'categories.mobile_phone_repair',
+		translationKey: 'categories.mobile_repair',
 		isActive: true,
 		color: 'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400',
 		order: 2
@@ -742,7 +742,7 @@ export const categories: ServiceCategory[] = [
 		slug: 'cctv-installation',
 		icon: 'Eye',
 		parentId: 'tech_digital',
-		translationKey: 'categories.cctv_installation',
+		translationKey: 'categories.cctv_install',
 		isActive: true,
 		color: 'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400',
 		order: 3
@@ -752,7 +752,7 @@ export const categories: ServiceCategory[] = [
 		slug: 'wifi-network-setup',
 		icon: 'Wifi',
 		parentId: 'tech_digital',
-		translationKey: 'categories.wifi_network_setup',
+		translationKey: 'categories.network_setup',
 		isActive: true,
 		color: 'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400',
 		order: 4
@@ -762,7 +762,7 @@ export const categories: ServiceCategory[] = [
 		slug: 'smart-home-setup',
 		icon: 'Home',
 		parentId: 'tech_digital',
-		translationKey: 'categories.smart_home_setup',
+		translationKey: 'categories.smart_home',
 		isActive: true,
 		color: 'bg-cyan-100 text-cyan-600 dark:bg-cyan-900/30 dark:text-cyan-400',
 		order: 5
@@ -860,7 +860,7 @@ export const categories: ServiceCategory[] = [
 		slug: 'solar-panel-installation',
 		icon: 'Sun',
 		parentId: 'construction',
-		translationKey: 'categories.solar_panel_installation',
+		translationKey: 'categories.solar_panel',
 		isActive: true,
 		color: 'bg-orange-100 text-orange-600 dark:bg-orange-900/30 dark:text-orange-400',
 		order: 3

@@ -1,17 +1,20 @@
 <script lang="ts">
-	import { User, Briefcase, Phone, CheckCircle, MapPin, ArrowLeft, ArrowRight } from 'lucide-svelte';
+	import { User, Briefcase, Phone, CheckCircle, MapPin, ArrowLeft, ArrowRight, CreditCard, Smartphone, Banknote, Wallet, Building2 } from 'lucide-svelte';
 	import { page } from '$app/stores';
 	import { goto } from '$app/navigation';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
 	import { toastError, toastSuccess } from '$lib/stores/toast';
+	import { jurisdictions, jurisdictionMap, type Jurisdiction } from '$lib/data/jurisdictions';
+	import { topLevelCategories, getSubcategories } from '$lib/data/categories';
+	import { t } from '$lib/i18n/index.svelte';
 
 	type Role = 'customer' | 'provider' | null;
 
 	let step = $state(1);
 	let selectedRole: Role = $state(null);
 	let phone = $state('');
-	let countryCode = $state('+91');
+	let selectedJurisdiction = $state<Jurisdiction>(jurisdictionMap['IN']);
 	let otpDigits = $state<string[]>(['', '', '', '', '', '']);
 	let otpSent = $state(false);
 	let otpVerified = $state(false);
@@ -27,12 +30,15 @@
 	let bio = $state('');
 	let selectedSkills = $state<string[]>([]);
 	let serviceRadius = $state(10);
+	let selectedPaymentMethod = $state('');
 
-	const availableSkills = [
-		'Plumbing', 'Electrical', 'Cleaning', 'Gardening',
-		'Painting', 'Moving', 'Carpentry', 'HVAC',
-		'Roofing', 'Pest Control', 'Appliance Repair', 'Landscaping'
-	];
+	// Set default payment method when jurisdiction changes
+	$effect(() => {
+		const defaultMethod = selectedJurisdiction.paymentMethods.find((m) => m.isDefault);
+		if (defaultMethod) {
+			selectedPaymentMethod = defaultMethod.id;
+		}
+	});
 
 	$effect(() => {
 		const role = $page.url.searchParams.get('role');
@@ -41,6 +47,13 @@
 			step = 2;
 		}
 	});
+
+	function selectJurisdiction(code: string) {
+		const j = jurisdictionMap[code];
+		if (j) {
+			selectedJurisdiction = j;
+		}
+	}
 
 	function selectRole(role: Role) {
 		selectedRole = role;
@@ -63,10 +76,10 @@
 			await new Promise((r) => setTimeout(r, 1000));
 			otpSent = true;
 			startResendTimer();
-			toastSuccess('OTP sent to ' + countryCode + phone);
+			toastSuccess(t('auth.otp_sent_to', { phone: selectedJurisdiction.phoneCode + phone }));
 			setTimeout(() => otpInputs[0]?.focus(), 100);
 		} catch {
-			toastError('Failed to send OTP');
+			toastError(t('auth.otp_sent_failed'));
 		} finally {
 			loading = false;
 		}
@@ -81,9 +94,9 @@
 			await new Promise((r) => setTimeout(r, 1000));
 			otpVerified = true;
 			step = 3;
-			toastSuccess('Phone verified successfully');
+			toastSuccess(t('auth.phone_verified'));
 		} catch {
-			toastError('Invalid OTP');
+			toastError(t('auth.invalid_otp'));
 		} finally {
 			loading = false;
 		}
@@ -107,37 +120,54 @@
 		}
 	}
 
-	function toggleSkill(skill: string) {
-		if (selectedSkills.includes(skill)) {
-			selectedSkills = selectedSkills.filter((s) => s !== skill);
+	function toggleSkill(skillId: string) {
+		if (selectedSkills.includes(skillId)) {
+			selectedSkills = selectedSkills.filter((s) => s !== skillId);
 		} else {
-			selectedSkills = [...selectedSkills, skill];
+			selectedSkills = [...selectedSkills, skillId];
 		}
 	}
 
 	async function handleRegister(e?: Event) {
 		e?.preventDefault();
 		if (!name.trim()) {
-			toastError('Please enter your name');
+			toastError(t('auth.please_enter_name'));
 			return;
 		}
 		loading = true;
 		try {
 			await new Promise((r) => setTimeout(r, 1500));
 			step = 4;
-			toastSuccess('Account created successfully!');
+			toastSuccess(t('auth.account_created'));
 		} catch {
-			toastError('Registration failed. Please try again.');
+			toastError(t('auth.registration_failed'));
 		} finally {
 			loading = false;
 		}
 	}
 
-	const stepLabels = ['Role', 'Verify', 'Details', 'Done'];
+	const stepLabels = $derived([
+		t('auth.step_role'),
+		t('auth.step_verify'),
+		t('auth.step_details'),
+		t('auth.step_done')
+	]);
+
+	// Payment method icon mapping
+	function getPaymentIcon(iconName: string) {
+		const icons: Record<string, any> = {
+			CreditCard,
+			Smartphone,
+			Banknote,
+			Wallet,
+			Building2
+		};
+		return icons[iconName] || CreditCard;
+	}
 </script>
 
 <svelte:head>
-	<title>Register - Seva</title>
+	<title>{t('auth.sign_up_title')} - Seva</title>
 </svelte:head>
 
 <div class="flex min-h-[calc(100vh-theme(spacing.32))] items-center justify-center px-4 py-12">
@@ -168,8 +198,8 @@
 		<div class="rounded-xl border border-gray-200 bg-white p-8 shadow-sm dark:border-gray-700 dark:bg-gray-800">
 			<!-- Step 1: Role Selection -->
 			{#if step === 1}
-				<h1 class="text-2xl font-bold text-gray-900 dark:text-white">Create your account</h1>
-				<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">Choose how you want to use Seva.</p>
+				<h1 class="text-2xl font-bold text-gray-900 dark:text-white">{t('auth.sign_up_title')}</h1>
+				<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">{t('auth.sign_up_subtitle')}</p>
 
 				<div class="mt-6 grid gap-4">
 					<button
@@ -180,8 +210,8 @@
 							<User class="h-7 w-7" />
 						</div>
 						<div>
-							<h3 class="font-semibold text-gray-900 dark:text-white">I need a service</h3>
-							<p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">Find and book trusted providers near you</p>
+							<h3 class="font-semibold text-gray-900 dark:text-white">{t('auth.i_need_service')}</h3>
+							<p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">{t('auth.i_need_service_desc')}</p>
 						</div>
 					</button>
 					<button
@@ -192,8 +222,8 @@
 							<Briefcase class="h-7 w-7" />
 						</div>
 						<div>
-							<h3 class="font-semibold text-gray-900 dark:text-white">I provide services</h3>
-							<p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">List your services and grow your business</p>
+							<h3 class="font-semibold text-gray-900 dark:text-white">{t('auth.i_provide_services')}</h3>
+							<p class="mt-0.5 text-sm text-gray-500 dark:text-gray-400">{t('auth.i_provide_services_desc')}</p>
 						</div>
 					</button>
 				</div>
@@ -204,46 +234,48 @@
 					<button onclick={() => { step = 1; selectedRole = null; otpSent = false; otpDigits = ['','','','','','']; }} class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
 						<ArrowLeft class="h-5 w-5" />
 					</button>
-					<h1 class="text-2xl font-bold text-gray-900 dark:text-white">Verify your phone</h1>
+					<h1 class="text-2xl font-bold text-gray-900 dark:text-white">{t('auth.verify_phone')}</h1>
 				</div>
 				<div class="flex items-center gap-2 rounded-lg bg-gray-50 px-3 py-2 text-sm dark:bg-gray-700">
 					{#if selectedRole === 'customer'}
 						<User class="h-4 w-4 text-primary-600" />
-						<span class="text-gray-700 dark:text-gray-300">Registering as Customer</span>
+						<span class="text-gray-700 dark:text-gray-300">{t('auth.registering_as_customer')}</span>
 					{:else}
 						<Briefcase class="h-4 w-4 text-secondary-600" />
-						<span class="text-gray-700 dark:text-gray-300">Registering as Provider</span>
+						<span class="text-gray-700 dark:text-gray-300">{t('auth.registering_as_provider')}</span>
 					{/if}
 				</div>
 
 				{#if !otpSent}
 					<form onsubmit={sendOtp} class="mt-6">
-						<label for="reg-phone" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Phone number</label>
+						<label for="reg-phone" class="block text-sm font-medium text-gray-700 dark:text-gray-300">{t('auth.phone_number')}</label>
 						<div class="mt-1 flex gap-2">
 							<select
-								bind:value={countryCode}
+								value={selectedJurisdiction.code}
+								onchange={(e) => selectJurisdiction((e.target as HTMLSelectElement).value)}
 								class="rounded-lg border border-gray-300 px-3 py-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
 							>
-								<option value="+91">IN +91</option>
-								<option value="+44">UK +44</option>
-								<option value="+1">US +1</option>
+								{#each jurisdictions as j}
+									<option value={j.code}>{j.flag} {j.code} {j.phoneCode}</option>
+								{/each}
 							</select>
 							<input
 								id="reg-phone"
 								type="tel"
 								bind:value={phone}
-								placeholder="9876543210"
+								placeholder={selectedJurisdiction.phonePlaceholder}
+								maxlength={selectedJurisdiction.phoneMaxLength}
 								required
 								class="flex-1 rounded-lg border border-gray-300 px-4 py-3 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
 							/>
 						</div>
 						<Button type="submit" variant="primary" size="lg" {loading} disabled={!phone.trim()} class="mt-4 w-full">
-							Send Verification Code
+							{t('auth.send_verification_code')}
 						</Button>
 					</form>
 				{:else}
 					<form onsubmit={verifyOtp} class="mt-6">
-						<p class="text-sm text-gray-600 dark:text-gray-400">Enter the code sent to {countryCode}{phone}</p>
+						<p class="text-sm text-gray-600 dark:text-gray-400">{t('auth.otp_code_sent_to', { phone: selectedJurisdiction.phoneCode + phone })}</p>
 						<div class="mt-3 flex justify-center gap-2">
 							{#each otpDigits as digit, i}
 								<input
@@ -259,7 +291,7 @@
 							{/each}
 						</div>
 						<Button type="submit" variant="primary" size="lg" {loading} disabled={otpDigits.some(d => !d)} class="mt-4 w-full">
-							Verify
+							{t('auth.verify')}
 						</Button>
 						<div class="mt-3 text-center">
 							<button
@@ -268,7 +300,7 @@
 								disabled={resendTimer > 0}
 								class="text-sm {resendTimer > 0 ? 'text-gray-400' : 'text-primary-600 hover:text-primary-700'}"
 							>
-								{resendTimer > 0 ? `Resend in ${resendTimer}s` : 'Resend OTP'}
+								{resendTimer > 0 ? t('auth.resend_in', { seconds: resendTimer }) : t('auth.resend_otp')}
 							</button>
 						</div>
 					</form>
@@ -281,37 +313,49 @@
 						<ArrowLeft class="h-5 w-5" />
 					</button>
 					<h1 class="text-2xl font-bold text-gray-900 dark:text-white">
-						{selectedRole === 'provider' ? 'Provider Details' : 'Your Details'}
+						{selectedRole === 'provider' ? t('auth.provider_details') : t('auth.your_details')}
 					</h1>
 				</div>
 
 				<form onsubmit={handleRegister} class="space-y-4">
-					<Input label="Full Name" bind:value={name} required placeholder="Your full name" />
-					<Input label="Email (optional)" type="email" bind:value={email} placeholder="you@example.com" />
-					<Input label="Postcode" bind:value={postcode} required placeholder="560001" icon={MapPin} />
+					<Input label={t('auth.full_name')} bind:value={name} required placeholder={t('auth.your_full_name')} />
+					<Input label={t('auth.email_optional')} type="email" bind:value={email} placeholder={t('auth.email_placeholder')} />
+					<Input label={t('auth.postcode')} bind:value={postcode} required placeholder={selectedJurisdiction.postcodePlaceholder} icon={MapPin} />
 
 					{#if selectedRole === 'provider'}
 						<div>
-							<label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Skills / Services</label>
-							<div class="flex flex-wrap gap-2">
-								{#each availableSkills as skill}
-									<button
-										type="button"
-										onclick={() => toggleSkill(skill)}
-										class="rounded-full border px-3 py-1.5 text-xs font-medium transition
-											{selectedSkills.includes(skill)
-												? 'border-primary-500 bg-primary-50 text-primary-700 dark:border-primary-400 dark:bg-primary-900/20 dark:text-primary-400'
-												: 'border-gray-300 text-gray-600 hover:border-gray-400 dark:border-gray-600 dark:text-gray-400'}"
-									>
-										{skill}
-									</button>
+							<label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{t('auth.skills_services')}</label>
+							<div class="space-y-3">
+								{#each topLevelCategories as category}
+									{@const subcategories = getSubcategories(category.id)}
+									{#if subcategories.length > 0}
+										<div>
+											<p class="mb-1.5 text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">
+												{t(category.translationKey)}
+											</p>
+											<div class="flex flex-wrap gap-2">
+												{#each subcategories as sub}
+													<button
+														type="button"
+														onclick={() => toggleSkill(sub.id)}
+														class="rounded-full border px-3 py-1.5 text-xs font-medium transition
+															{selectedSkills.includes(sub.id)
+																? 'border-primary-500 bg-primary-50 text-primary-700 dark:border-primary-400 dark:bg-primary-900/20 dark:text-primary-400'
+																: 'border-gray-300 text-gray-600 hover:border-gray-400 dark:border-gray-600 dark:text-gray-400'}"
+													>
+														{t(sub.translationKey)}
+													</button>
+												{/each}
+											</div>
+										</div>
+									{/if}
 								{/each}
 							</div>
 						</div>
 
 						<div>
 							<label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">
-								Service Radius: {serviceRadius} km
+								{t('auth.service_radius_value', { radius: serviceRadius })}
 							</label>
 							<input
 								type="range"
@@ -327,19 +371,51 @@
 						</div>
 
 						<div>
-							<label for="bio" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">Bio</label>
+							<label for="bio" class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{t('auth.bio')}</label>
 							<textarea
 								id="bio"
 								bind:value={bio}
 								rows="3"
-								placeholder="Tell customers about yourself and your experience..."
+								placeholder={t('auth.bio_placeholder')}
 								class="w-full rounded-lg border border-gray-300 px-4 py-2.5 text-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20 dark:border-gray-600 dark:bg-gray-700 dark:text-white dark:placeholder-gray-400"
 							></textarea>
 						</div>
 					{/if}
 
+					<!-- Preferred Payment Method -->
+					<div>
+						<label class="mb-1.5 block text-sm font-medium text-gray-700 dark:text-gray-300">{t('auth.preferred_payment')}</label>
+						<div class="grid gap-2">
+							{#each selectedJurisdiction.paymentMethods as method}
+								{@const IconComponent = getPaymentIcon(method.icon)}
+								<button
+									type="button"
+									onclick={() => selectedPaymentMethod = method.id}
+									class="flex items-center gap-3 rounded-lg border-2 px-4 py-3 text-left text-sm transition
+										{selectedPaymentMethod === method.id
+											? 'border-primary-500 bg-primary-50 dark:border-primary-400 dark:bg-primary-900/20'
+											: 'border-gray-200 hover:border-gray-300 dark:border-gray-600 dark:hover:border-gray-500'}"
+								>
+									<div class="flex h-8 w-8 items-center justify-center rounded-lg
+										{selectedPaymentMethod === method.id
+											? 'bg-primary-100 text-primary-600 dark:bg-primary-900/30 dark:text-primary-400'
+											: 'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400'}">
+										<IconComponent class="h-4 w-4" />
+									</div>
+									<div class="flex-1">
+										<p class="font-medium text-gray-900 dark:text-white">{method.name}</p>
+										<p class="text-xs text-gray-500 dark:text-gray-400">{method.description}</p>
+									</div>
+									{#if selectedPaymentMethod === method.id}
+										<CheckCircle class="h-5 w-5 text-primary-600 dark:text-primary-400" />
+									{/if}
+								</button>
+							{/each}
+						</div>
+					</div>
+
 					<Button type="submit" variant="primary" size="lg" {loading} class="w-full">
-						Create Account
+						{t('auth.create_account')}
 					</Button>
 				</form>
 
@@ -349,14 +425,13 @@
 					<div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-secondary-100 dark:bg-secondary-900/30">
 						<CheckCircle class="h-8 w-8 text-secondary-600" />
 					</div>
-					<h1 class="mt-4 text-2xl font-bold text-gray-900 dark:text-white">Welcome to Seva!</h1>
+					<h1 class="mt-4 text-2xl font-bold text-gray-900 dark:text-white">{t('auth.welcome_to_seva')}</h1>
 					<p class="mt-2 text-sm text-gray-600 dark:text-gray-400">
-						Your account has been created successfully. You're ready to
-						{selectedRole === 'provider' ? 'start accepting jobs' : 'find service providers'}.
+						{t('auth.account_created_success', { action: selectedRole === 'provider' ? t('auth.start_accepting_jobs') : t('auth.find_providers') })}
 					</p>
 					<div class="mt-6">
 						<Button variant="primary" size="lg" href="/dashboard" class="w-full">
-							Go to Dashboard
+							{t('auth.go_to_dashboard')}
 						</Button>
 					</div>
 				</div>
@@ -364,8 +439,8 @@
 
 			{#if step < 4}
 				<p class="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
-					Already have an account?
-					<a href="/login" class="font-medium text-primary-600 hover:text-primary-700">Sign in</a>
+					{t('auth.already_have_account')}
+					<a href="/login" class="font-medium text-primary-600 hover:text-primary-700">{t('auth.sign_in')}</a>
 				</p>
 			{/if}
 		</div>
