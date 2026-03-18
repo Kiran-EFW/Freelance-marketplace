@@ -38,7 +38,8 @@
 		"reviews": "My Reviews",
 		"payments": "Payments",
 		"subscription": "Subscription",
-		"schedule": "Schedule"
+		"schedule": "Schedule",
+		"routes": "Routes"
 	},
 	"home": {
 		"hero_title": "Find trusted service providers",

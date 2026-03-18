@@ -31,7 +31,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
 
     if (mounted) {
       setState(() {
-        _notifications = result.items;
+        final paginated = result.dataOrNull;
+        _notifications = paginated?.items ?? [];
         _isLoading = false;
       });
     }

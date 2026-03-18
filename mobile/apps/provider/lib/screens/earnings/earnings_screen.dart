@@ -35,8 +35,10 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen> {
 
     if (mounted) {
       setState(() {
-        _earnings = results[0] as EarningsSummary?;
-        _payouts = (results[1] as PaginatedResult<Payout>).items;
+        final earningsResult = results[0] as Result<EarningsSummary>;
+        final payoutsResult = results[1] as Result<PaginatedResult<Payout>>;
+        _earnings = earningsResult.dataOrNull;
+        _payouts = payoutsResult.dataOrNull?.items ?? [];
         _isLoading = false;
       });
     }
@@ -67,12 +69,12 @@ class _EarningsScreenState extends ConsumerState<EarningsScreen> {
 
     if (confirmed != true || !mounted) return;
 
-    final payout = await ref
+    final result = await ref
         .read(providerRepositoryProvider)
         .requestPayout(_earnings!.availableBalance);
 
     if (mounted) {
-      if (payout != null) {
+      if (result.isSuccess) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Payout requested!')),
         );

@@ -29,10 +29,10 @@ class _ProviderJobDetailScreenState
 
   Future<void> _loadJob() async {
     setState(() => _isLoading = true);
-    final job = await ref.read(jobRepositoryProvider).getJob(widget.jobId);
+    final result = await ref.read(jobRepositoryProvider).getJob(widget.jobId);
     if (mounted) {
       setState(() {
-        _job = job;
+        _job = result.dataOrNull;
         _isLoading = false;
       });
     }
@@ -40,15 +40,18 @@ class _ProviderJobDetailScreenState
 
   Future<void> _acceptJob() async {
     setState(() => _isActioning = true);
-    final job = await ref.read(jobRepositoryProvider).acceptJob(widget.jobId);
+    final result = await ref.read(jobRepositoryProvider).acceptJob(widget.jobId);
     if (mounted) {
+      final job = result.dataOrNull;
       setState(() {
         _isActioning = false;
         if (job != null) _job = job;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Job accepted!')),
-      );
+      if (result.isSuccess) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Job accepted!')),
+        );
+      }
     }
   }
 
@@ -95,17 +98,20 @@ class _ProviderJobDetailScreenState
 
   Future<void> _startJob() async {
     setState(() => _isActioning = true);
-    final job = await ref
+    final result = await ref
         .read(jobRepositoryProvider)
         .updateStatus(widget.jobId, 'in_progress');
     if (mounted) {
+      final job = result.dataOrNull;
       setState(() {
         _isActioning = false;
         if (job != null) _job = job;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Job started!')),
-      );
+      if (result.isSuccess) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Job started!')),
+        );
+      }
     }
   }
 
@@ -133,16 +139,19 @@ class _ProviderJobDetailScreenState
     if (confirmed != true || !mounted) return;
 
     setState(() => _isActioning = true);
-    final job =
+    final result =
         await ref.read(jobRepositoryProvider).completeJob(widget.jobId);
     if (mounted) {
+      final job = result.dataOrNull;
       setState(() {
         _isActioning = false;
         if (job != null) _job = job;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Job completed!')),
-      );
+      if (result.isSuccess) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Job completed!')),
+        );
+      }
     }
   }
 

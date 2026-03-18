@@ -901,3 +901,24 @@ export interface EmergencyContact {
 	relationship?: string;
 	created_at: string;
 }
+
+// --- Content / Education ---
+
+export interface ContentArticle {
+	id: string;
+	slug: string;
+	title: string;
+	body: string;
+	audience: string;
+	category?: string;
+	language: string;
+	view_count: number;
+	published: boolean;
+	created_at: string;
+	updated_at: string;
+}
+
+export interface VerificationOTP {
+	otp: string;
+	expires_at: string;
+}

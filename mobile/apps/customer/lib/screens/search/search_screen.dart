@@ -101,12 +101,13 @@ class _SearchScreenState extends ConsumerState<SearchScreen> {
 
     if (mounted) {
       setState(() {
+        final paginated = result.dataOrNull;
         if (_page == 1) {
-          _providers = result.items;
+          _providers = paginated?.items ?? [];
         } else {
-          _providers.addAll(result.items);
+          _providers.addAll(paginated?.items ?? []);
         }
-        _hasMore = result.hasMore;
+        _hasMore = paginated?.hasMore ?? false;
         _isLoading = false;
       });
     }

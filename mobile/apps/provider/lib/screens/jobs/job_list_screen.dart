@@ -55,7 +55,8 @@ class _JobListScreenState extends ConsumerState<JobListScreen>
 
     if (mounted) {
       setState(() {
-        _jobsByTab[tab] = result.items;
+        final paginated = result.dataOrNull;
+        _jobsByTab[tab] = paginated?.items ?? [];
         _loadingByTab[tab] = false;
       });
     }

@@ -28,7 +28,8 @@
 		"points": "Punktid ja auhinnad",
 		"notifications": "Teavitused",
 		"settings": "Seaded",
-		"account": "Konto"
+		"account": "Konto",
+		"routes": "Marsruudid"
 	},
 	"home": {
 		"hero_title": "Leidke usaldusväärsed teenusepakkujad",

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:seva_core/core.dart';
-import 'package:seva_ui_kit/ui_kit.dart';
 import 'main.dart';
 import 'screens/home/home_screen.dart';
 import 'screens/search/search_screen.dart';

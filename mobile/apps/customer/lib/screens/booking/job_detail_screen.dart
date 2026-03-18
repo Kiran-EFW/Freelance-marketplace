@@ -28,10 +28,10 @@ class _JobDetailScreenState extends ConsumerState<JobDetailScreen> {
 
   Future<void> _loadJob() async {
     setState(() => _isLoading = true);
-    final job = await ref.read(jobRepositoryProvider).getJob(widget.jobId);
+    final result = await ref.read(jobRepositoryProvider).getJob(widget.jobId);
     if (mounted) {
       setState(() {
-        _job = job;
+        _job = result.dataOrNull;
         _isLoading = false;
       });
     }
@@ -78,13 +78,13 @@ class _JobDetailScreenState extends ConsumerState<JobDetailScreen> {
     if (reason == null || !mounted) return;
 
     setState(() => _isActioning = true);
-    final success = await ref
+    final result = await ref
         .read(jobRepositoryProvider)
         .cancelJob(widget.jobId, reason: reason);
 
     if (mounted) {
       setState(() => _isActioning = false);
-      if (success) {
+      if (result.isSuccess) {
         _loadJob();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Job cancelled')),

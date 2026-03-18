@@ -52,10 +52,10 @@ class _CreateJobScreenState extends ConsumerState<CreateJobScreen> {
   }
 
   Future<void> _loadCategories() async {
-    final categories =
+    final result =
         await ref.read(providerRepositoryProvider).getCategories();
-    if (mounted) {
-      setState(() => _categories = categories);
+    if (mounted && result.isSuccess) {
+      setState(() => _categories = result.dataOrNull ?? []);
     }
   }
 
@@ -116,7 +116,7 @@ class _CreateJobScreenState extends ConsumerState<CreateJobScreen> {
     setState(() => _isSubmitting = true);
 
     final jobRepo = ref.read(jobRepositoryProvider);
-    final job = await jobRepo.createJob(
+    final result = await jobRepo.createJob(
       categoryId: _selectedCategoryId!,
       title: _titleController.text.trim(),
       description: _descriptionController.text.trim(),
@@ -135,6 +135,7 @@ class _CreateJobScreenState extends ConsumerState<CreateJobScreen> {
     if (mounted) {
       setState(() => _isSubmitting = false);
 
+      final job = result.dataOrNull;
       if (job != null) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Job posted successfully!')),

@@ -41,7 +41,17 @@ import type {
 	SubscriptionPlan,
 	ProviderSubscription,
 	DeviceToken,
-	CropCalendarEntry
+	CropCalendarEntry,
+	Organization,
+	OrganizationMember,
+	OrganizationServiceRequest,
+	OrgStats,
+	SOSAlert,
+	LocationShare,
+	EmergencyContact,
+	RecurringSchedule,
+	ContentArticle,
+	VerificationOTP
 } from '$lib/types';
 
 // ---------------------------------------------------------------------------
@@ -980,27 +990,27 @@ export const organizations = {
 		country?: string;
 		contact_phone?: string;
 		contact_email?: string;
-	}): Promise<ApiResponse<any>> {
+	}): Promise<ApiResponse<Organization>> {
 		return request('/organizations', { method: 'POST', body: data });
 	},
 
-	get(id: string): Promise<ApiResponse<any>> {
+	get(id: string): Promise<ApiResponse<Organization>> {
 		return request(`/organizations/${id}`);
 	},
 
-	getStats(id: string): Promise<ApiResponse<any>> {
+	getStats(id: string): Promise<ApiResponse<OrgStats>> {
 		return request(`/organizations/${id}/stats`);
 	},
 
-	addMember(orgId: string, data: { user_id: string; role?: string }): Promise<ApiResponse<any>> {
+	addMember(orgId: string, data: { user_id: string; role?: string }): Promise<ApiResponse<OrganizationMember>> {
 		return request(`/organizations/${orgId}/members`, { method: 'POST', body: data });
 	},
 
-	listMembers(orgId: string, params?: { page?: number; limit?: number }): Promise<ApiResponse<any>> {
+	listMembers(orgId: string, params?: { page?: number; limit?: number }): Promise<ApiResponse<OrganizationMember[]>> {
 		return request(`/organizations/${orgId}/members`, { params });
 	},
 
-	removeMember(orgId: string, userId: string): Promise<ApiResponse<any>> {
+	removeMember(orgId: string, userId: string): Promise<ApiResponse<void>> {
 		return request(`/organizations/${orgId}/members/${userId}`, { method: 'DELETE' });
 	},
 
@@ -1011,7 +1021,7 @@ export const organizations = {
 		priority?: string;
 		scheduled_at?: string;
 		notes?: string;
-	}): Promise<ApiResponse<any>> {
+	}): Promise<ApiResponse<OrganizationServiceRequest>> {
 		return request(`/organizations/${orgId}/requests`, { method: 'POST', body: data });
 	},
 
@@ -1020,18 +1030,18 @@ export const organizations = {
 		limit?: number;
 		status?: string;
 		priority?: string;
-	}): Promise<ApiResponse<any>> {
+	}): Promise<ApiResponse<OrganizationServiceRequest[]>> {
 		return request(`/organizations/${orgId}/requests`, { params });
 	},
 
-	assignProvider(orgId: string, requestId: string, providerId: string): Promise<ApiResponse<any>> {
+	assignProvider(orgId: string, requestId: string, providerId: string): Promise<ApiResponse<OrganizationServiceRequest>> {
 		return request(`/organizations/${orgId}/requests/${requestId}/assign`, {
 			method: 'PUT',
 			body: { provider_id: providerId }
 		});
 	},
 
-	updateRequestStatus(orgId: string, requestId: string, status: string): Promise<ApiResponse<any>> {
+	updateRequestStatus(orgId: string, requestId: string, status: string): Promise<ApiResponse<OrganizationServiceRequest>> {
 		return request(`/organizations/${orgId}/requests/${requestId}/status`, {
 			method: 'PUT',
 			body: { status }
@@ -1049,15 +1059,15 @@ export const safety = {
 		longitude: number;
 		job_id?: string;
 		notes?: string;
-	}): Promise<ApiResponse<any>> {
+	}): Promise<ApiResponse<SOSAlert>> {
 		return request('/safety/sos', { method: 'POST', body: data });
 	},
 
-	resolveSOS(id: string, data: { status?: string; notes?: string }): Promise<ApiResponse<any>> {
+	resolveSOS(id: string, data: { status?: string; notes?: string }): Promise<ApiResponse<SOSAlert>> {
 		return request(`/safety/sos/${id}/resolve`, { method: 'PUT', body: data });
 	},
 
-	listAlerts(params?: { page?: number; limit?: number }): Promise<ApiResponse<any>> {
+	listAlerts(params?: { page?: number; limit?: number }): Promise<ApiResponse<SOSAlert[]>> {
 		return request('/safety/sos', { params });
 	},
 
@@ -1066,15 +1076,15 @@ export const safety = {
 		latitude: number;
 		longitude: number;
 		accuracy?: number;
-	}): Promise<ApiResponse<any>> {
+	}): Promise<ApiResponse<LocationShare>> {
 		return request('/safety/location', { method: 'POST', body: data });
 	},
 
-	getProviderLocation(jobId: string, params?: { page?: number; limit?: number }): Promise<ApiResponse<any>> {
+	getProviderLocation(jobId: string, params?: { page?: number; limit?: number }): Promise<ApiResponse<LocationShare[]>> {
 		return request(`/safety/location/${jobId}`, { params });
 	},
 
-	listEmergencyContacts(): Promise<ApiResponse<any>> {
+	listEmergencyContacts(): Promise<ApiResponse<EmergencyContact[]>> {
 		return request('/safety/contacts');
 	},
 
@@ -1082,15 +1092,15 @@ export const safety = {
 		name: string;
 		phone: string;
 		relationship?: string;
-	}): Promise<ApiResponse<any>> {
+	}): Promise<ApiResponse<EmergencyContact>> {
 		return request('/safety/contacts', { method: 'POST', body: data });
 	},
 
-	removeEmergencyContact(id: string): Promise<ApiResponse<any>> {
+	removeEmergencyContact(id: string): Promise<ApiResponse<void>> {
 		return request(`/safety/contacts/${id}`, { method: 'DELETE' });
 	},
 
-	generateVerificationOTP(jobId: string): Promise<ApiResponse<any>> {
+	generateVerificationOTP(jobId: string): Promise<ApiResponse<VerificationOTP>> {
 		return request(`/safety/verify/${jobId}`);
 	}
 };
@@ -1104,11 +1114,11 @@ export const recurring = {
 		page?: number;
 		limit?: number;
 		role?: 'customer' | 'provider';
-	}): Promise<ApiResponse<any[]>> {
+	}): Promise<ApiResponse<RecurringSchedule[]>> {
 		return request('/recurring', { params });
 	},
 
-	get(id: string): Promise<ApiResponse<any>> {
+	get(id: string): Promise<ApiResponse<RecurringSchedule>> {
 		return request(`/recurring/${id}`);
 	},
 
@@ -1124,7 +1134,7 @@ export const recurring = {
 		amount: number;
 		currency?: string;
 		max_occurrences?: number;
-	}): Promise<ApiResponse<any>> {
+	}): Promise<ApiResponse<RecurringSchedule>> {
 		return request('/recurring', { method: 'POST', body: data });
 	},
 
@@ -1137,15 +1147,15 @@ export const recurring = {
 		preferred_time?: string;
 		amount?: number;
 		max_occurrences?: number;
-	}): Promise<ApiResponse<any>> {
+	}): Promise<ApiResponse<RecurringSchedule>> {
 		return request(`/recurring/${id}`, { method: 'PUT', body: data });
 	},
 
-	pause(id: string): Promise<ApiResponse<any>> {
+	pause(id: string): Promise<ApiResponse<RecurringSchedule>> {
 		return request(`/recurring/${id}/pause`, { method: 'PUT' });
 	},
 
-	resume(id: string): Promise<ApiResponse<any>> {
+	resume(id: string): Promise<ApiResponse<RecurringSchedule>> {
 		return request(`/recurring/${id}/resume`, { method: 'PUT' });
 	},
 
@@ -1275,22 +1285,22 @@ export const content = {
 		language?: string;
 		page?: number;
 		per_page?: number;
-	}): Promise<ApiResponse<any[]>> {
+	}): Promise<ApiResponse<ContentArticle[]>> {
 		return request('/content', { params, auth: false });
 	},
 
 	popular(params?: {
 		audience?: string;
 		limit?: number;
-	}): Promise<ApiResponse<any[]>> {
+	}): Promise<ApiResponse<ContentArticle[]>> {
 		return request('/content/popular', { params, auth: false });
 	},
 
-	getBySlug(slug: string): Promise<ApiResponse<any>> {
+	getBySlug(slug: string): Promise<ApiResponse<ContentArticle>> {
 		return request(`/content/${slug}`, { auth: false });
 	},
 
-	getRelated(id: string, limit?: number): Promise<ApiResponse<any[]>> {
+	getRelated(id: string, limit?: number): Promise<ApiResponse<ContentArticle[]>> {
 		return request(`/content/${id}/related`, { params: { limit }, auth: false });
 	}
 };

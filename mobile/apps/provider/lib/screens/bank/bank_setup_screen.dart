@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:seva_core/core.dart';
 import 'package:seva_ui_kit/ui_kit.dart';
-
-import '../../main.dart';
 
 /// Screen for setting up bank account details for payouts.
 class BankSetupScreen extends ConsumerStatefulWidget {
