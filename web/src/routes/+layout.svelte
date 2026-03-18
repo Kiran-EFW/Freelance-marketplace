@@ -2,7 +2,7 @@
 	import '../app.css';
 	import { Bell, Menu, X, ChevronDown, User, LayoutDashboard, LogOut, Award, MapPin, MessageSquare, Star, CreditCard, Calendar } from 'lucide-svelte';
 	import { messages as messagesApi } from '$lib/api/client';
-	import { subscribe as authSubscribe, logout, type AuthState } from '$lib/stores/auth';
+	import { subscribe as authSubscribe, logout, initAuth, type AuthState } from '$lib/stores/auth';
 	import { wsManager, type ConnectionStatus, type WSNewMessagePayload } from '$lib/api/websocket';
 	import Avatar from '$lib/components/ui/Avatar.svelte';
 	import Toast from '$lib/components/ui/Toast.svelte';
@@ -34,6 +34,7 @@
 	$effect(() => {
 		if (typeof window !== 'undefined') {
 			initLocale();
+			initAuth();
 		}
 	});
 

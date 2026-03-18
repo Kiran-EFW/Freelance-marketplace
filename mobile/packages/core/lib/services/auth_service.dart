@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import '../api/api_client.dart';
 import '../models/user.dart';
@@ -18,7 +19,10 @@ enum AuthState {
 
 /// Manages authentication lifecycle: OTP login, auto-login on cold start,
 /// session monitoring, and sign-out.
-class AuthService {
+///
+/// Extends [ChangeNotifier] so GoRouter can use it as a [refreshListenable]
+/// and re-evaluate redirects whenever auth state changes.
+class AuthService extends ChangeNotifier {
   final AuthRepository _authRepository;
   final FlutterSecureStorage _storage;
 
@@ -137,10 +141,18 @@ class AuthService {
     _setUnauthenticated();
   }
 
+  /// Called by [ApiClient] when token refresh fails on a 401.
+  /// Forces the auth state to unauthenticated so the router redirects to login.
+  void forceSignOut() {
+    _setUnauthenticated();
+  }
+
   /// Dispose of stream controllers.
+  @override
   void dispose() {
     _authStateController.close();
     _userController.close();
+    super.dispose();
   }
 
   void _setAuthenticated(User user) {
@@ -148,6 +160,7 @@ class AuthService {
     _state = AuthState.authenticated;
     _authStateController.add(AuthState.authenticated);
     _userController.add(user);
+    notifyListeners();
   }
 
   void _setUnauthenticated() {
@@ -155,5 +168,6 @@ class AuthService {
     _state = AuthState.unauthenticated;
     _authStateController.add(AuthState.unauthenticated);
     _userController.add(null);
+    notifyListeners();
   }
 }

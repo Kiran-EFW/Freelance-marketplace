@@ -42,6 +42,9 @@ void main() async {
   final authService = AuthService(authRepository: authRepository);
   await authService.initialize();
 
+  // Wire token expiration callback so the router redirects on 401.
+  apiClient.onTokenExpired = authService.forceSignOut;
+
   // Initialize push notifications.
   final pushNotificationService = PushNotificationService(
     apiClient: apiClient,

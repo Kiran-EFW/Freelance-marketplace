@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ui';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -17,6 +18,10 @@ class ApiClient {
   /// concurrent requests that hit 401 simultaneously.
   bool _isRefreshing = false;
   final List<Function(String)> _pendingRequests = [];
+
+  /// Called when token refresh fails and user must re-authenticate.
+  /// Set this to [AuthService.forceSignOut] after construction.
+  VoidCallback? onTokenExpired;
 
   ApiClient({
     required String baseUrl,
@@ -118,6 +123,7 @@ class ApiClient {
     } on DioException {
       await clearTokens();
       _pendingRequests.clear();
+      onTokenExpired?.call();
       return handler.next(error);
     } finally {
       _isRefreshing = false;
